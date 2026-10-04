@@ -1,0 +1,1997 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pídelo Bien: ¿te toca un aumento?</title>
+<meta name="description" content="Test gratis de 90 segundos: compara tu sueldo con el mercado peruano y descubre si es momento de pedir aumento y cuánto pedir.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFFFFF;
+  --surface:#F1F4F8;
+  --surface-2:#E6EBF2;
+  --ink:#16233D;
+  --ink-2:#4B5770;
+  --rule:#D3DAE4;
+  --go:#127A4A; --go-soft:#E2F2E9;
+  --wait:#9C6209; --wait-soft:#FAEFD9;
+  --stop:#B3261E; --stop-soft:#FBE6E4;
+  --on-ink:#FFFFFF;
+  --focus:#2F6FED;
+  --font-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1424; --surface:#132037; --surface-2:#1A2945;
+    --ink:#E6EBF3; --ink-2:#A3AEC1; --rule:#28354E;
+    --go:#4FC48D; --go-soft:rgba(79,196,141,.14);
+    --wait:#E3AA3F; --wait-soft:rgba(227,170,63,.14);
+    --stop:#F2766C; --stop-soft:rgba(242,118,108,.14);
+    --on-ink:#0C1424; --focus:#8DB5FF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1424; --surface:#132037; --surface-2:#1A2945;
+  --ink:#E6EBF3; --ink-2:#A3AEC1; --rule:#28354E;
+  --go:#4FC48D; --go-soft:rgba(79,196,141,.14);
+  --wait:#E3AA3F; --wait-soft:rgba(227,170,63,.14);
+  --stop:#F2766C; --stop-soft:rgba(242,118,108,.14);
+  --on-ink:#0C1424; --focus:#8DB5FF; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:1.0625rem;line-height:1.55;-webkit-font-smoothing:antialiased}
+body.no-scroll{overflow:hidden}
+img{max-width:100%}
+.wrap{width:100%;max-width:36rem;margin:0 auto;padding-left:20px;padding-right:20px}
+h1,h2,h3{font-family:var(--font-display);color:var(--ink);margin:0}
+h1{font-size:clamp(2rem,8vw,3rem);line-height:1.04;letter-spacing:-.025em;font-weight:780;font-variation-settings:"opsz" 96}
+h2{font-size:clamp(1.42rem,5.4vw,1.85rem);line-height:1.14;letter-spacing:-.015em;font-weight:720}
+h3{font-size:1.18rem;line-height:1.25;font-weight:700;letter-spacing:-.005em}
+p{margin:.6em 0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+
+/* Cabecera */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:18px;padding-bottom:6px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.15rem;letter-spacing:-.02em;text-decoration:none;background:none;border:0;padding:4px 0;cursor:pointer}
+.tag{font-size:.8rem;color:var(--ink-2);border:1px solid var(--rule);border-radius:999px;padding:3px 10px;white-space:nowrap}
+
+/* Héroe y preguntas */
+.hero{padding:22px 0 6px}
+.lede{font-size:1.12rem;color:var(--ink-2);max-width:32rem;margin-top:14px}
+.q{padding:18px 0 8px}
+.progress{display:flex;gap:4px;margin:4px 0 6px}
+.progress span{flex:1;height:4px;border-radius:2px;background:var(--rule)}
+.progress span.on{background:var(--ink)}
+.count{font-size:.85rem;color:var(--ink-2);margin:0 0 14px}
+.q h2{outline:none}
+.help{color:var(--ink-2);font-size:.95rem;margin:.5em 0 0}
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.opts.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{display:flex;align-items:center;min-height:54px;width:100%;text-align:left;padding:12px 14px;border:1.5px solid var(--rule);border-radius:12px;background:var(--paper);cursor:pointer;line-height:1.25;transition:border-color .12s ease}
+.opts.grid .opt{min-height:58px;font-size:.98rem}
+.opt:hover{border-color:var(--ink)}
+.opt.is-on{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.q-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;min-height:28px}
+.link{background:none;border:0;padding:4px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer;color:var(--ink-2);font-size:.95rem}
+.link.inline{padding:0;font-size:inherit;color:var(--ink)}
+.fine{font-size:.86rem;color:var(--ink-2)}
+.check,.consent{display:flex;gap:12px;align-items:flex-start;margin-top:16px;cursor:pointer;font-size:.97rem}
+.check input,.consent input{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:var(--ink)}
+.consent{background:var(--surface);border-radius:12px;padding:14px}
+.money{display:flex;align-items:center;gap:10px;margin-top:18px;border:1.5px solid var(--rule);border-radius:12px;padding:6px 14px;background:var(--paper)}
+.money:focus-within{border-color:var(--ink)}
+.money .cur{font-family:var(--font-display);font-weight:700;font-size:1.4rem;color:var(--ink-2)}
+.money input{border:0;outline:0;background:transparent;color:var(--ink);font-family:var(--font-display);font-weight:700;font-size:2rem;width:100%;padding:6px 0;font-variant-numeric:tabular-nums}
+.money.small input{font-size:1.25rem}
+.money.small .cur{font-size:1.05rem}
+.small-label{display:block;margin-top:18px;font-size:.95rem;color:var(--ink-2)}
+.warn{color:var(--wait);font-size:.92rem;margin-top:10px}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;margin-top:20px;padding:12px 18px;border:0;border-radius:12px;background:var(--ink);color:var(--on-ink);font-weight:700;font-size:1.05rem;cursor:pointer;text-decoration:none;text-align:center}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+.btn-ghost{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;margin-top:12px;padding:10px 16px;border:1.5px solid var(--ink);border-radius:12px;background:transparent;font-weight:700;cursor:pointer;text-decoration:none;text-align:center}
+.btn-ghost[disabled]{opacity:.4;cursor:not-allowed}
+.btn-sm{display:inline-flex;align-items:center;min-height:36px;padding:6px 12px;border:1.5px solid var(--rule);border-radius:10px;background:var(--paper);font-size:.9rem;font-weight:700;cursor:pointer}
+.btn-sm:hover{border-color:var(--ink)}
+
+/* Boleta del resultado */
+.result{padding:16px 0 8px}
+.slip{position:relative;background:var(--surface);padding:30px 22px 26px;margin-top:6px;
+  -webkit-mask:radial-gradient(circle 7px at 12px 0,transparent 98%,#000) top/24px 51% repeat-x,radial-gradient(circle 7px at 12px 100%,transparent 98%,#000) bottom/24px 51% repeat-x;
+  mask:radial-gradient(circle 7px at 12px 0,transparent 98%,#000) top/24px 51% repeat-x,radial-gradient(circle 7px at 12px 100%,transparent 98%,#000) bottom/24px 51% repeat-x}
+.slip-head{display:flex;justify-content:space-between;gap:12px;font-size:.88rem;color:var(--ink-2)}
+.stamp{display:inline-block;margin:26px 0 10px;padding:10px 16px 11px;border:3px solid currentColor;border-radius:10px;box-shadow:inset 0 0 0 2px var(--surface),inset 0 0 0 4px currentColor;font-family:var(--font-display);font-weight:800;font-size:clamp(1.6rem,7.4vw,2.25rem);line-height:1.05;letter-spacing:-.02em;transform:rotate(-3deg);transform-origin:left center}
+.stamp.go{color:var(--go)} .stamp.wait{color:var(--wait)} .stamp.stop{color:var(--stop)}
+.stamp.landing{animation:stamp-in .42s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes stamp-in{0%{opacity:0;transform:rotate(-3deg) scale(1.4)}60%{opacity:1;transform:rotate(-3deg) scale(.96)}100%{opacity:1;transform:rotate(-3deg) scale(1)}}
+.verdict{font-size:1.1rem;margin-top:8px}
+.tear{border:0;border-top:2px dashed var(--rule);margin:22px 0 18px}
+.slip h3{margin-bottom:8px}
+.meter{position:relative;margin:30px 0 8px}
+.track{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.zone{display:block;height:100%}
+.zone.z1{width:35%;background:var(--wait-soft)} .zone.z2{width:35%;background:var(--go-soft)} .zone.z3{width:30%;background:var(--surface-2)}
+.marker{position:absolute;top:-26px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:.8rem;font-weight:700}
+.marker::after{content:"";display:block;width:3px;height:26px;margin-top:2px;background:var(--ink);border-radius:2px}
+.zl{display:flex;font-size:.8rem;color:var(--ink-2);margin-top:6px}
+.zl span:nth-child(1){width:35%} .zl span:nth-child(2){width:35%} .zl span:nth-child(3){width:30%;text-align:right}
+.facts{margin:8px 0 0;padding:0;list-style:none}
+.facts li{position:relative;padding-left:20px;margin:8px 0}
+.facts li::before{content:"";position:absolute;left:2px;top:.55em;width:9px;height:9px;border-radius:50%}
+.facts li.plus::before{background:var(--go)} .facts li.minus::before{background:var(--wait)}
+.band-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.95rem}
+.band-table th{font-weight:400;color:var(--ink-2);text-align:left;font-size:.82rem;padding:0 0 4px}
+.band-table td{font-family:var(--font-display);font-weight:700;font-size:1.1rem;font-variant-numeric:tabular-nums}
+
+/* Bloques de contenido */
+.block{padding:26px 0 4px;border-top:1px solid var(--rule);margin-top:26px}
+.block:first-of-type{border-top:0;margin-top:0}
+.quote{font-family:var(--font-display);font-weight:700;font-size:1.25rem;margin:.4em 0}
+.label{font-weight:700}
+.locked{background:var(--surface);border-radius:14px;padding:22px 18px;margin-top:26px}
+.preview{margin:12px 0 0;padding:0;list-style:none}
+.preview li{padding:10px 0;border-bottom:1px dashed var(--rule)}
+.preview li:last-child{border-bottom:0}
+.blur{filter:blur(5px);user-select:none;-webkit-user-select:none}
+.row-actions{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:10px}
+
+/* Kit */
+.kit-head{padding:18px 0 4px}
+.kit-tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.status{font-size:.92rem;color:var(--ink-2);min-height:1.2em;margin-top:8px}
+.nums{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
+.num{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 14px;border-radius:12px;background:var(--surface)}
+.num.main{background:var(--ink);color:var(--on-ink)}
+.num .k{font-size:.95rem}
+.num .v{font-family:var(--font-display);font-weight:800;font-size:1.5rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.say{background:var(--surface);border-radius:12px;padding:14px 16px;margin-top:10px;white-space:pre-wrap}
+.say + .tools{margin-top:8px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.speech{margin:10px 0 0;padding:0;list-style:none;counter-reset:s}
+.speech li{position:relative;padding:12px 0 12px 40px;border-bottom:1px dashed var(--rule)}
+.speech li:last-child{border-bottom:0}
+.speech li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:12px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700}
+.speech .part{display:block;font-size:.85rem;color:var(--ink-2);margin-bottom:2px}
+.obj{padding:14px 0;border-bottom:1px solid var(--rule)}
+.obj:last-child{border-bottom:0}
+.obj p{margin:.35em 0}
+.plain{margin:10px 0 0;padding-left:1.2em}
+.plain li{margin:6px 0}
+.field{display:block;margin-top:16px}
+.field span{display:block;font-weight:700;font-size:.97rem;margin-bottom:6px}
+.field small{display:block;color:var(--ink-2);font-size:.85rem;margin-top:4px;font-weight:400}
+.field input,.field textarea{width:100%;border:1.5px solid var(--rule);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;padding:12px 14px}
+.field textarea{min-height:84px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:42px;padding:8px 14px;border:1.5px solid var(--rule);border-radius:999px;background:var(--paper);cursor:pointer;font-size:.95rem}
+.chip.is-on{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+
+/* Simulador */
+.chat{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.bubble{max-width:88%;padding:10px 14px;border-radius:14px;white-space:pre-wrap}
+.bubble.boss{align-self:flex-start;background:var(--surface);border-bottom-left-radius:4px}
+.bubble.me{align-self:flex-end;background:var(--ink);color:var(--on-ink);border-bottom-right-radius:4px}
+.bubble .who{display:block;font-size:.78rem;opacity:.75;margin-bottom:2px}
+.coach{align-self:stretch;border-left:3px solid var(--rule);padding:4px 0 4px 12px;font-size:.93rem}
+.coach .ok{color:var(--go)} .coach .no{color:var(--wait)}
+.coach p{margin:.25em 0}
+.composer{margin-top:12px}
+.composer textarea{width:100%;min-height:80px;border:1.5px solid var(--rule);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;padding:12px 14px;resize:vertical}
+.composer textarea:focus{outline:none;border-color:var(--ink)}
+.score{font-family:var(--font-display);font-weight:800;font-size:2.4rem;line-height:1}
+
+/* Hoja modal */
+#modal-root[hidden]{display:none}
+.overlay{position:fixed;inset:0;background:rgba(8,14,26,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{width:100%;max-width:36rem;max-height:92vh;overflow:auto;background:var(--paper);border-radius:18px 18px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px))}
+@media (min-width:640px){.overlay{align-items:center}.sheet{border-radius:18px}}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet h2{outline:none}
+.price{font-family:var(--font-display);font-weight:800;font-size:2rem;margin:10px 0 0}
+.code-row{display:flex;gap:8px;margin-top:10px}
+.code-row input{flex:1;min-width:0;border:1.5px solid var(--rule);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;padding:12px 14px;text-transform:uppercase}
+.code-row input:focus{outline:none;border-color:var(--ink)}
+.code-row .btn-sm{min-height:50px}
+.owner{border:1.5px dashed var(--rule);border-radius:12px;padding:12px 14px;margin-top:18px}
+.err{color:var(--stop);font-size:.92rem;min-height:1.2em;margin-top:6px}
+
+.h1-sm{font-size:clamp(1.8rem,7vw,2.4rem)}
+.exit-title{margin-top:22px}
+.say.feedback{white-space:normal}
+.interview{padding-bottom:8px}
+.foot{padding-top:30px;padding-bottom:30px;color:var(--ink-2);font-size:.85rem}
+.foot p{margin:.4em 0}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media print{.top .tag,.kit-tools,.foot,.no-print,#modal-root{display:none!important}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <button class="brand" type="button" data-action="home" aria-label="Pídelo Bien, volver al inicio">Pídelo Bien</button>
+  <span class="tag">Versión de validación</span>
+</header>
+<main id="app" class="wrap"></main>
+<footer class="foot wrap">
+  <p>Referencia de mercado, no asesoría legal ni promesa de aumento. En esta versión las bandas salariales son preliminares.</p>
+  <p><button type="button" class="link" data-action="privacy">Cómo cuidamos tus datos</button></p>
+</footer>
+<div id="modal-root" hidden></div>
+<noscript><p class="wrap">Activa JavaScript para usar el test.</p></noscript>
+<script>
+'use strict';
+/* ============================================================
+   CONFIGURACIÓN — editar antes de lanzar
+   ============================================================ */
+const CONFIG = {
+  brand: 'Pídelo Bien',
+  price: 29.90,
+  payUrl: '',        // Link de pago (Culqi, Mercado Pago u otro). Vacío = sin botón de pago.
+  whatsapp: '',      // WhatsApp para pedir el código, formato 51XXXXXXXXX. Vacío = sin botón.
+  rmv: 1230,         // RMV desde el 1 de octubre de 2026 (D.S. 015-2026-TR)
+  annualFactor: 15.35, // 12 sueldos + 2 gratificaciones + bonificación extraordinaria + CTS (régimen general)
+  capNoPromotion: 0.20, // tope del ancla sin ascenso
+  employerFactor: 16.4, // costo anual aprox. para la empresa por cada sol mensual: 12 + 2 grati + bonif. + CTS + EsSalud
+  // SHA-256 de códigos de acceso (el código en mayúsculas, sin espacios)
+  codeHashes: [
+    'c60c1c17b07d992bf3a1d9457eadc28996fbf690c177f204a2803dad7af93386',
+    '181c6fa54272c04acf59075021d568b61fda905ba66a6196c849ef342e7274f3',
+    '6480870c52daec1a86f9314257b37d7d40cccd620b8e83ca66771a7a38455d6c'
+  ]
+};
+
+/* ============================================================
+   BANDAS PRELIMINARES — reemplazar por datos verificados
+   Mediana base (S/ brutos mensuales) para Lima, empresa de 101 a 500
+   personas, sector de referencia y 3 a 5 años de experiencia.
+   Cuartiles: P25 = 0.80 × mediana, P75 = 1.25 × mediana.
+   ============================================================ */
+const LEVELS = [
+  { id: 'asistente', label: 'Asistente o practicante', base: 1900 },
+  { id: 'analista',  label: 'Analista o junior', base: 3300 },
+  { id: 'senior',    label: 'Especialista o senior', base: 5200 },
+  { id: 'jefe',      label: 'Supervisor, coordinador o jefe', base: 8000 },
+  { id: 'gerente',   label: 'Gerente', base: 14000 }
+];
+
+const ROLES = [
+  { id: 'contabilidad',   label: 'Contabilidad', mult: 0.95 },
+  { id: 'datos',          label: 'Datos y BI', mult: 1.15 },
+  { id: 'software',       label: 'Desarrollo de software', mult: 1.30 },
+  { id: 'soporte',        label: 'Soporte e infraestructura TI', mult: 0.95 },
+  { id: 'ing_industrial', label: 'Ingeniería industrial', mult: 1.05 },
+  { id: 'ing_civil',      label: 'Ingeniería civil y obras', mult: 1.12 },
+  { id: 'ing_minas',      label: 'Ingeniería de minas', mult: 1.25 },
+  { id: 'seguridad',      label: 'Seguridad y salud (SSOMA)', mult: 1.05 },
+  { id: 'ventas',         label: 'Ventas y comercial', mult: 0.90 },
+  { id: 'rrhh',           label: 'Recursos humanos', mult: 0.95 },
+  { id: 'logistica',      label: 'Logística y compras', mult: 0.95 },
+  { id: 'finanzas',       label: 'Finanzas y tesorería', mult: 1.10 },
+  { id: 'administracion', label: 'Administración', mult: 0.95 },
+  { id: 'marketing',      label: 'Marketing y comunicación', mult: 0.95 },
+  { id: 'enfermeria',     label: 'Enfermería en clínica', mult: 0.95 },
+  { id: 'legal',          label: 'Legal', mult: 1.10 },
+  { id: 'atencion',       label: 'Atención al cliente', mult: 0.78 },
+  { id: 'otro',           label: 'Otro puesto', mult: 1.00 }
+];
+
+const SECTORS = [
+  { id: 'mineria',      label: 'Minería y energía', mult: 1.25 },
+  { id: 'banca',        label: 'Banca, seguros y finanzas', mult: 1.12 },
+  { id: 'tecnologia',   label: 'Tecnología y telecomunicaciones', mult: 1.10 },
+  { id: 'industria',    label: 'Industria y manufactura', mult: 1.00 },
+  { id: 'construccion', label: 'Construcción e inmobiliaria', mult: 1.00 },
+  { id: 'servicios',    label: 'Servicios profesionales', mult: 1.00 },
+  { id: 'comercio',     label: 'Comercio y retail', mult: 0.92 },
+  { id: 'salud',        label: 'Salud privada', mult: 0.95 },
+  { id: 'agro',         label: 'Agroindustria y pesca', mult: 0.92 },
+  { id: 'educacion',    label: 'Educación privada', mult: 0.85 },
+  { id: 'turismo',      label: 'Turismo y restaurantes', mult: 0.85 },
+  { id: 'otro',         label: 'Otro sector', mult: 0.95 }
+];
+
+const REGIONS = [
+  { id: 'lima',       label: 'Lima y Callao', mult: 1.00 },
+  { id: 'arequipa',   label: 'Arequipa', mult: 0.90 },
+  { id: 'libertad',   label: 'La Libertad', mult: 0.86 },
+  { id: 'piura',      label: 'Piura', mult: 0.86 },
+  { id: 'lambayeque', label: 'Lambayeque', mult: 0.85 },
+  { id: 'cusco',      label: 'Cusco', mult: 0.84 },
+  { id: 'ica',        label: 'Ica', mult: 0.88 },
+  { id: 'junin',      label: 'Junín', mult: 0.84 },
+  { id: 'ancash',     label: 'Áncash', mult: 0.88 },
+  { id: 'otra',       label: 'Otra región', mult: 0.82 }
+];
+const FIELD_MULT = 1.12; // unidad minera, obra o campo
+
+const SIZES = [
+  { id: 's1', label: 'De 1 a 10', mult: 0.78 },
+  { id: 's2', label: 'De 11 a 100', mult: 0.90 },
+  { id: 's3', label: 'De 101 a 500', mult: 1.00 },
+  { id: 's4', label: 'Más de 500', mult: 1.10 }
+];
+
+const CONTRACTS = [
+  { id: 'indefinido', label: 'Indefinido' },
+  { id: 'plazo',      label: 'A plazo fijo' },
+  { id: 'rxh',        label: 'Recibos por honorarios' },
+  { id: 'publico',    label: 'Trabajo en el sector público' },
+  { id: 'civil',      label: 'Obrero de construcción civil' }
+];
+
+const EXPIRY = [
+  { id: 'v1',  label: 'En menos de 1 mes' },
+  { id: 'v3',  label: 'En 1 a 3 meses' },
+  { id: 'v6',  label: 'En 3 a 6 meses' },
+  { id: 'v12', label: 'En más de 6 meses' }
+];
+
+const EXPERIENCE = [
+  { id: 'e0',  label: 'Menos de 1 año', mult: 0.90 },
+  { id: 'e1',  label: 'De 1 a 3 años', mult: 0.96 },
+  { id: 'e3',  label: 'De 3 a 5 años', mult: 1.00 },
+  { id: 'e5',  label: 'De 5 a 10 años', mult: 1.05 },
+  { id: 'e10', label: 'Más de 10 años', mult: 1.08 }
+];
+
+const TENURE = [
+  { id: 't0', label: 'Menos de 3 meses' },
+  { id: 't1', label: 'De 3 a 12 meses' },
+  { id: 't2', label: 'De 1 a 2 años' },
+  { id: 't3', label: 'Más de 2 años' }
+];
+
+const LASTRAISE = [
+  { id: 'a6',    label: 'Hace menos de 6 meses' },
+  { id: 'a12',   label: 'Hace 6 a 12 meses' },
+  { id: 'a24',   label: 'Hace 1 a 2 años' },
+  { id: 'a99',   label: 'Hace más de 2 años' },
+  { id: 'nunca', label: 'Nunca me han subido' },
+  { id: 'no',    label: 'Lo pedí hace poco y me dijeron que no' }
+];
+
+const FUNCTIONS = [
+  { id: 'personas', label: 'Sí, ahora tengo personas a cargo' },
+  { id: 'mas',      label: 'Sí, tengo más responsabilidades' },
+  { id: 'no',       label: 'No' }
+];
+
+const COMPANY = [
+  { id: 'crece',   label: 'Creciendo' },
+  { id: 'estable', label: 'Estable' },
+  { id: 'recorta', label: 'Recortando gastos o personal' }
+];
+
+const APPROVERS = [
+  { id: 'jefe',     label: 'Mi jefe directo' },
+  { id: 'gerencia', label: 'Gerencia' },
+  { id: 'rrhh',     label: 'Recursos Humanos' },
+  { id: 'dueno',    label: 'El dueño' }
+];
+
+const BOSS_STYLES = [
+  { id: 'analitico', label: 'Pide datos', desc: 'analítico: pide datos y números para todo' },
+  { id: 'cercano',   label: 'Cuida la relación', desc: 'cercano: valora la relación y suaviza los "no"' },
+  { id: 'directo',   label: 'Va al grano', desc: 'directo: va al grano y responde corto' },
+  { id: 'evasivo',   label: 'Posterga', desc: 'evasivo: posterga y deriva las decisiones' },
+  { id: 'duro',      label: 'Dice que no', desc: 'duro: dice que no varias veces y solo considera algo si el colaborador propone metas concretas con fecha' }
+];
+
+const OFFERS = [
+  { id: 'no',       label: 'No' },
+  { id: 'proceso',  label: 'Estoy en un proceso' },
+  { id: 'escrita',  label: 'Sí, por escrito' }
+];
+
+const TRATO = [
+  { id: 'tu',    label: 'De tú' },
+  { id: 'usted', label: 'De usted' }
+];
+
+const STEPS = [
+  { id: 'puesto', title: '¿Cuál es tu puesto?', type: 'grid', options: ROLES },
+  { id: 'nivel', title: '¿En qué nivel estás?', type: 'list', options: LEVELS },
+  { id: 'sector', title: '¿En qué sector trabaja tu empresa?', type: 'grid', options: SECTORS },
+  { id: 'region', title: '¿Dónde trabajas?', type: 'grid', options: REGIONS },
+  { id: 'tamano', title: '¿Cuántas personas trabajan en tu empresa?', type: 'list', options: SIZES },
+  { id: 'contrato', title: '¿Cómo es tu contrato?', type: 'list', options: CONTRACTS },
+  { id: 'vence', title: '¿Cuándo vence tu contrato?', type: 'list', options: EXPIRY, when: a => a.contrato === 'plazo' },
+  { id: 'experiencia', title: '¿Cuánta experiencia tienes en este tipo de puesto?', type: 'list', options: EXPERIENCE },
+  { id: 'antiguedad', title: '¿Cuánto tiempo llevas en tu puesto actual?', type: 'list', options: TENURE },
+  { id: 'sueldo', title: '¿Cuánto ganas al mes, en bruto?', type: 'salary' },
+  { id: 'aumento', title: '¿Cuándo fue tu último aumento?', type: 'list', options: LASTRAISE },
+  { id: 'funciones', title: 'En el último año, ¿te sumaron funciones sin ajustar tu sueldo?', type: 'list', options: FUNCTIONS },
+  { id: 'empresa', title: '¿Cómo ves a tu empresa este año?', type: 'list', options: COMPANY }
+];
+
+const EXIT_ROUTES = ['publico', 'civil', 'rxh'];
+
+const byId = (arr, id) => arr.find(x => x.id === id);
+/* ============================================================
+   MOTOR — reglas fijas y auditables (la IA no decide nada aquí)
+   ============================================================ */
+const Engine = (() => {
+  const round50 = x => Math.round(x / 50) * 50;
+  const round100 = x => Math.round(x / 100) * 100;
+
+  // Abramowitz-Stegun 7.1.26
+  function erf(x) {
+    const s = x < 0 ? -1 : 1; x = Math.abs(x);
+    const t = 1 / (1 + 0.3275911 * x);
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return s * y;
+  }
+  const normCdf = z => 0.5 * (1 + erf(z / Math.SQRT2));
+
+  function route(a) {
+    return EXIT_ROUTES.includes(a.contrato) ? a.contrato : null;
+  }
+
+  function band(a) {
+    const level = byId(LEVELS, a.nivel) || LEVELS[1];
+    const role = byId(ROLES, a.puesto) || byId(ROLES, 'otro');
+    const mult = role.mult
+      * ((byId(SECTORS, a.sector) || {}).mult || 1)
+      * ((byId(REGIONS, a.region) || {}).mult || 1)
+      * ((byId(SIZES, a.tamano) || {}).mult || 1)
+      * ((byId(EXPERIENCE, a.experiencia) || {}).mult || 1)
+      * (a.campo ? FIELD_MULT : 1);
+    let p50 = level.base * mult;
+    let p25 = Math.max(p50 * 0.80, CONFIG.rmv);
+    p50 = Math.max(p50, CONFIG.rmv * 1.08);
+    let p75 = Math.max(p50 * 1.25, CONFIG.rmv * 1.25);
+    if (p50 <= p25) p50 = p25 * 1.12;
+    if (p75 <= p50) p75 = p50 * 1.15;
+    return {
+      p25: round50(p25), p50: round50(p50), p75: round50(p75),
+      confidence: 'baja', preliminary: true,
+      otherRole: role.id === 'otro'
+    };
+  }
+
+  function percentile(salary, b) {
+    const mu = Math.log(b.p50);
+    const sigma = Math.log(b.p75 / b.p25) / (2 * 0.6744898);
+    const z = (Math.log(Math.max(salary, 1)) - mu) / sigma;
+    return Math.max(1, Math.min(99, Math.round(normCdf(z) * 100)));
+  }
+
+  // Brecha frente a la mediana, con la incertidumbre de una banda preliminar (±8%)
+  function gapRange(salary, b) {
+    const u = 0.08;
+    const lo = b.p50 * (1 - u), hi = b.p50 * (1 + u);
+    const g1 = (lo - salary) / lo * 100, g2 = (hi - salary) / hi * 100;
+    return [Math.round(Math.min(g1, g2)), Math.round(Math.max(g1, g2))];
+  }
+
+  const position = pct => pct < 35 ? 'bajo' : (pct <= 70 ? 'rango' : 'alto');
+
+  function caseScore(a, pos) {
+    let score = 0;
+    const strengths = [], weaknesses = [];
+    if (a.funciones === 'personas') { score += 2; strengths.push('Ahora tienes personas a cargo y tu sueldo no cambió: es tu argumento más fuerte.'); }
+    else if (a.funciones === 'mas') { score += 1.5; strengths.push('Asumiste más responsabilidades sin ajuste de sueldo.'); }
+    if (a.aumento === 'nunca') { score += 2; strengths.push('Nunca te han subido el sueldo en este puesto.'); }
+    else if (a.aumento === 'a99') { score += 2; strengths.push('Llevas más de dos años sin aumento.'); }
+    else if (a.aumento === 'a24') { score += 1.5; strengths.push('Llevas más de un año sin ajuste.'); }
+    else if (a.aumento === 'a12') { score += 0.5; }
+    else if (a.aumento === 'a6') { score -= 1; weaknesses.push('Tu último ajuste fue hace menos de seis meses.'); }
+    else if (a.aumento === 'no') { score += 0.5; weaknesses.push('Te dijeron que no hace poco: insistir de inmediato suele cerrar más la puerta.'); }
+    if (pos === 'bajo') strengths.push('Estás por debajo de la mediana de tu perfil.');
+    if (a.antiguedad === 't3') { score += 1; strengths.push('Tienes más de dos años en el puesto: conoces el trabajo y se nota.'); }
+    else if (a.antiguedad === 't2') { score += 0.5; }
+    else if (a.antiguedad === 't0') { score -= 2; weaknesses.push('Llevas menos de tres meses en el puesto.'); }
+    if (a.experiencia === 'e5' || a.experiencia === 'e10') score += 0.5;
+    if (a.contrato === 'plazo' && (a.vence === 'v1' || a.vence === 'v3')) strengths.push('Tu contrato vence pronto: la conversación igual va a ocurrir.');
+    if (a.empresa === 'crece') strengths.push('Tu empresa está creciendo.');
+    if (pos === 'alto') weaknesses.push('Ya estás sobre la mediana: un aumento de base será difícil.');
+    if (a.empresa === 'recorta') weaknesses.push('Tu empresa está recortando gastos.');
+    const level = score >= 3.5 ? 'fuerte' : (score >= 2 ? 'medio' : 'debil');
+    return {
+      score, level,
+      strength: strengths[0] || null,
+      weakness: weaknesses[0] || 'Todavía no sabemos tus logros con números, y es lo que más pesa en la reunión.'
+    };
+  }
+
+  function moment(a, now) {
+    const m = now.getMonth() + 1;
+    const closed = [], open = [];
+    if (a.antiguedad === 't0') closed.push({ t: 'Estás en tus primeros meses: primero consolida tu puesto.', cuando: 'Cuando termines tu periodo de prueba y tengas resultados que mostrar.' });
+    if (a.aumento === 'a6') closed.push({ t: 'Tu último ajuste fue hace menos de seis meses.', cuando: 'Cuando se cumpla un año de tu último ajuste.' });
+    if (a.aumento === 'no') closed.push({ t: 'Te dijeron que no hace poco.', cuando: 'En tres a seis meses, con un caso más fuerte.' });
+    if (a.empresa === 'recorta') closed.push({ t: 'Tu empresa está recortando: un pedido ahora tiene pocas probabilidades.', cuando: 'Cuando la empresa se estabilice. Mientras, junta logros con números.' });
+    if (a.contrato === 'plazo' && (a.vence === 'v1' || a.vence === 'v3')) open.push('Tu contrato vence pronto: la renovación es una conversación que igual va a ocurrir.');
+    if (m >= 9 && m <= 11) open.push('Es temporada de presupuestos: lo que se pide ahora puede entrar al del próximo año.');
+    if (m >= 1 && m <= 3) open.push('Es temporada de evaluaciones y ajustes anuales.');
+    if (a.empresa === 'crece') open.push('Tu empresa está creciendo.');
+    if (closed.length) return { state: 'cerrado', label: 'Momento cerrado', text: closed[0].t, cuando: closed[0].cuando };
+    if (open.length) return { state: 'abierto', label: 'Buen momento', text: open.slice(0, 2).join(' ') };
+    return { state: 'neutro', label: 'Momento neutro', text: 'No hay nada en contra, pero tampoco un empuje claro: elige bien la fecha.' };
+  }
+
+  const VERDICTS = {
+    pide_ahora:  { color: 'go',   stamp: 'Pide ahora', sub: 'Estás bajo el mercado, tu caso es sólido y el momento ayuda.' },
+    pide_pronto: { color: 'go',   stamp: 'Pide en unas semanas', sub: 'Estás bajo el mercado y tienes caso. Prepara la conversación y elige bien la fecha.' },
+    construye:   { color: 'wait', stamp: 'Prepárate 60 días', sub: 'Estás bajo el mercado, pero tu caso todavía es débil. Junta logros con números y pide en dos meses.' },
+    merito:      { color: 'go',   stamp: 'Pide por mérito', sub: 'Estás dentro del rango de tu perfil. Un aumento es posible si lo sustentas con resultados.' },
+    alcance:     { color: 'wait', stamp: 'Pide crecer, no plata', sub: 'Estás en rango y tu caso es débil. Hoy rinde más pedir un proyecto, un título o una capacitación.' },
+    otra_cosa:   { color: 'wait', stamp: 'Negocia otra cosa', sub: 'Ya estás sobre la mediana. Un aumento de base será difícil; un bono, horario o capacitación, no tanto.' },
+    no_pidas:    { color: 'stop', stamp: 'No pidas por ahora', sub: 'Estás sobre la mediana y tu caso es débil. Pedir ahora te gasta una carta que conviene guardar.' },
+    esperar:     { color: 'wait', stamp: 'Todavía no', sub: '' },
+    mercado:     { color: 'wait', stamp: 'Mira afuera', sub: 'Estás muy por debajo del mercado y adentro la puerta está cerrada. Tu mejor aumento puede ser otra oferta.' }
+  };
+
+  function recommend(a, now = new Date()) {
+    const r = { route: route(a) };
+    if (r.route) return r;
+    const s = Number(a.sueldo) || 0;
+    r.band = band(a);
+    r.pct = percentile(s, r.band);
+    r.pos = position(r.pct);
+    r.gap = gapRange(s, r.band);
+    r.caso = caseScore(a, r.pos);
+    r.momento = moment(a, now);
+    let code;
+    if (r.pct < 20 && (a.aumento === 'no' || a.empresa === 'recorta')) code = 'mercado';
+    else if (r.momento.state === 'cerrado') code = 'esperar';
+    else if (r.pos === 'bajo') code = r.caso.level === 'debil' ? 'construye' : (r.momento.state === 'abierto' ? 'pide_ahora' : 'pide_pronto');
+    else if (r.pos === 'rango') code = r.caso.level === 'debil' ? 'alcance' : 'merito';
+    else code = r.caso.level === 'debil' ? 'no_pidas' : 'otra_cosa';
+    const v = VERDICTS[code];
+    r.code = code;
+    r.color = v.color;
+    r.stamp = v.stamp;
+    r.sub = code === 'esperar' ? r.momento.text + ' Usa este tiempo para preparar tu caso.' : v.sub;
+    r.cuando = r.momento.cuando || null;
+    return r;
+  }
+
+  // Número preciso, no redondo: se percibe calculado, no inventado
+  function precise(x, cap) {
+    let v = Math.round(x / 10) * 10;
+    if (v % 50 === 0) v += 20;
+    if (cap && v > cap) {
+      v = Math.floor(cap / 10) * 10;
+      if (v % 50 === 0) v -= 20;
+    }
+    return v;
+  }
+
+  // Cifras del kit: ancla (lo que dices), objetivo (lo que esperas), piso (lo que aceptas)
+  // y escalera de concesiones decrecientes, con el último número preciso
+  function numbers(a, r) {
+    const s = Number(a.sueldo) || 0, b = r.band;
+    const out = { anchor: null, target: null, floor: null, annual: null, pretFrom: round100(b.p50), pretTo: round100(b.p75) };
+    const asksRaise = ['pide_ahora', 'pide_pronto', 'construye', 'merito', 'esperar', 'mercado'].includes(r.code) && r.pos !== 'alto';
+    if (!asksRaise) return out;
+    const cap = s * (1 + CONFIG.capNoPromotion);
+    let target, anchor, floor;
+    if (r.pos === 'bajo') {
+      target = Math.min(b.p50, s * 1.15);
+      anchor = Math.min(Math.max(target * 1.05, target), cap);
+      floor = Math.max(s * 1.05, s + (target - s) * 0.5);
+    } else {
+      target = s * 1.08;
+      anchor = s * 1.12;
+      floor = s * 1.04;
+    }
+    target = round50(target); floor = round50(floor);
+    anchor = precise(anchor, cap);
+    if (anchor <= target) anchor = precise(target + 30, cap);
+    if (anchor <= target) anchor = target;
+    if (floor > target) floor = target;
+    if (floor <= s) floor = round50(s * 1.03) > s ? round50(s * 1.03) : s + 50;
+    if (target <= s) target = floor;
+    if (anchor <= s) anchor = target;
+    out.anchor = anchor; out.target = target; out.floor = floor;
+    out.annual = Math.round((target - s) * CONFIG.annualFactor / 10) * 10;
+    const gap = anchor - target;
+    const ladder = [anchor];
+    if (gap >= 30) {
+      ladder.push(precise(anchor - gap * 2 / 3));
+      ladder.push(target);
+      ladder.push(Math.max(precise(target - gap / 6), precise(floor + 10)));
+    } else {
+      ladder.push(Math.max(precise(target - 20), precise(floor + 10)));
+    }
+    out.ladder = ladder.filter((v, i, arr) => i === 0 || (v < arr[i - 1] && v >= floor));
+    return out;
+  }
+
+  return { band, percentile, gapRange, position, caseScore, moment, recommend, numbers, route, round50, round100, precise };
+})();
+/* ============================================================
+   KIT — plantillas determinísticas (funcionan sin IA)
+   ============================================================ */
+const Kit = (() => {
+  const DAYS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+  const money = n => 'S/\u00A0' + Math.round(n).toLocaleString('en-US');
+  const clean = s => String(s || '').trim().replace(/\s+/g, ' ').replace(/[.\s]+$/, '');
+  const lowerFirst = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+
+  // Doble alternativa: dos días hábiles, desde pasado mañana
+  function dayPair(now) {
+    const d = new Date(now.getTime());
+    d.setDate(d.getDate() + 2);
+    const out = [];
+    while (out.length < 2) {
+      const w = d.getDay();
+      if (w !== 0 && w !== 6) out.push(DAYS[w]);
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+  function monthPair(now) {
+    const m = now.getMonth();
+    if (m >= 8) return ['enero', 'febrero'];
+    return [MONTHS[(m + 2) % 12], MONTHS[(m + 3) % 12]];
+  }
+
+  const RAISE_CODES = ['pide_ahora', 'pide_pronto', 'construye', 'merito', 'esperar', 'mercado'];
+
+  function build(a, r, n, k, now = new Date()) {
+    const T = (tu, usted) => (k.trato === 'usted' ? usted : tu);
+    const [d1, d2] = dayPair(now);
+    const [m1, m2] = monthPair(now);
+    const jefe = clean(k.jefe);
+    const role = byId(ROLES, a.puesto) || byId(ROLES, 'otro');
+    const level = byId(LEVELS, a.nivel) || LEVELS[1];
+    const tenure = byId(TENURE, a.antiguedad);
+    const raise = RAISE_CODES.includes(r.code) && n.anchor;
+    const resp = clean(k.responsabilidades) || (a.funciones === 'personas'
+      ? 'ahora tengo personas a cargo'
+      : a.funciones === 'mas' ? 'asumí responsabilidades que antes no tenía' : 'aporto más de lo que se esperaba cuando se fijó mi sueldo');
+    const logro1 = clean(k.logro1) || '[tu logro principal, con un número]';
+    const logro2 = clean(k.logro2) || '[un segundo logro, también con un número]';
+    const alt = r.code === 'otra_cosa' ? 'un bono por resultados' : 'una capacitación o certificación pagada por la empresa';
+    const plan = clean(k.plan) || '[lo que quieres lograr en los próximos seis meses]';
+    const impacto = clean(k.impacto) || '[qué ganó la empresa: ahorro, ventas, tiempo o errores evitados]';
+    const reviewMonth = MONTHS[(now.getMonth() + 3) % 12];
+    const tight = a.contrato === 'plazo' && (a.vence === 'v1' || a.vence === 'v3');
+    const kit = { generatedAt: now.toISOString(), raise: !!raise, code: r.code, trato: k.trato === 'usted' ? 'usted' : 'tu', reviewMonth };
+
+    // Antes de la reunión: metas acordadas, registro de logros y avances
+    kit.prep = {
+      timing: tight
+        ? 'Tu contrato vence pronto: haz esta conversación esta misma semana, en versión corta, y pide la reunión de sueldo antes de la renovación.'
+        : (r.code === 'pide_ahora'
+          ? 'Si puedes esperar de 4 a 8 semanas, haz primero esta conversación y llegarás con metas acordadas. Si no, ve directo a la reunión.'
+          : 'Empieza con esta conversación de 8 a 12 semanas antes de pedir. Ahí se gana el aumento: llegas a la reunión con metas acordadas y cumplidas.'),
+      ask: `${jefe ? 'Hola, ' + jefe + '.' : 'Hola.'} ¿${T('Tienes', 'Tiene')} 15 minutos esta semana para conversar sobre mi desarrollo? ¿El ${d1} o el ${d2}?`,
+      script: tight
+        ? `Quiero crecer aquí y aportar más. ¿Qué es lo que más ${T('valoras', 'valora')} de mi trabajo y qué tendría que reforzar para ser de alto desempeño? Mi contrato se renueva pronto y me gustaría que la renovación refleje lo que aporto. ¿Podemos conversarlo antes de firmar?`
+        : `Quiero crecer aquí y aportar más. ¿Qué tendría que lograr en los próximos tres meses para que ${T('me consideres', 'me considere')} de alto desempeño? Me gustaría que lo definamos con dos o tres metas concretas. Y si las cumplo, me gustaría conversar sobre mi crecimiento y mi remuneración en ${reviewMonth}. ¿${T('Te', 'Le')} parece?`,
+      checkin: `Cada tres o cuatro semanas, un mensaje corto: "Así voy con lo que acordamos: [tu avance, con número]. ¿Algo que ${T('quieras', 'quiera')} que ajuste?"`,
+      log: 'Lleva un registro semanal de logros: fecha, qué hiciste, el resultado con número y quién lo vio. En dos meses tendrás tu maletín casi listo.'
+    };
+
+    // Cifras
+    kit.numbers = { anchor: n.anchor, target: n.target, floor: n.floor, annual: n.annual, band: r.band, pretFrom: n.pretFrom, pretTo: n.pretTo };
+    if (!raise) {
+      kit.alternatives = [
+        'Liderar un proyecto visible, con metas y fecha.',
+        'Una capacitación o certificación pagada por la empresa.',
+        'Un título o nivel nuevo, con revisión de sueldo en seis meses.',
+        'Horario flexible o días de trabajo remoto.',
+        r.code === 'otra_cosa' ? 'Un bono atado a resultados medibles.' : 'Que tu sueldo se revise en la próxima evaluación, con criterios claros.'
+      ];
+    }
+    if (r.code === 'esperar' && r.cuando) kit.cuando = r.cuando;
+    if (a.contrato === 'plazo' && a.vence === 'v1') kit.urgent = 'Tu contrato vence en menos de un mes: pide la reunión hoy. La conversación tiene que ocurrir antes de firmar la renovación.';
+
+    // Mensaje para pedir la reunión
+    const saludo = jefe ? `Hola, ${jefe}. ¿Cómo ${T('estás', 'está')}?` : `Hola, ¿cómo ${T('estás', 'está')}?`;
+    kit.whatsapp = `${saludo} Quería ${T('pedirte', 'pedirle')} 20 minutos esta semana para conversar sobre mis responsabilidades y mi desarrollo en el equipo. ¿${T('Te', 'Le')} acomoda el ${d1} en la mañana o ${T('prefieres', 'prefiere')} el ${d2} en la tarde?`;
+    const approverText = { gerencia: 'alguien de gerencia', rrhh: 'Recursos Humanos', dueno: 'el dueño' }[k.aprueba];
+    kit.whatsappFollow = approverText
+      ? `Y para aprovechar bien el tiempo: ¿lo vemos solo ${T('contigo', 'con usted')} o conviene que esté también ${approverText}?`
+      : null;
+    kit.whatsappNote = 'No negocies por WhatsApp: el mensaje solo pide la reunión. Si te preguntan de qué se trata, responde: "De mis funciones y mi desarrollo; prefiero conversarlo en persona."';
+
+    if (k.oferta === 'escrita') kit.offerNote = 'Tienes una oferta por escrito. Úsala solo si de verdad estás dispuesto a irte, y sin amenazar: "Recibí una propuesta formal. Prefiero seguir aquí; ¿podemos acercarnos a esa cifra?"';
+    else if (k.oferta === 'proceso') kit.offerNote = 'Estás en un proceso afuera: no lo menciones hasta tener una oferta por escrito. Una oferta que no existe se nota.';
+
+    // Speech
+    const mercado = r.pos === 'bajo'
+      ? 'Revisé referencias de mercado para mi puesto, mi experiencia y el tamaño de la empresa, y mi sueldo actual está por debajo de la mediana.'
+      : 'Revisé referencias de mercado y mi sueldo está dentro del rango; lo que busco es que refleje lo que estoy aportando hoy.';
+    const AUDIT = {
+      analitico: 'que no traigo números suficientes, que el presupuesto ya está armado y que lo que voy a pedir es mucho',
+      cercano: 'que esta conversación puede ser incómoda, que no es el mejor momento y que lo que voy a pedir es mucho',
+      directo: `que esto ${T('te', 'le')} va a quitar tiempo, que el presupuesto ya está armado y que lo que voy a pedir es mucho`,
+      evasivo: 'que no es el momento, que hay muchas otras prioridades y que esto podría esperar',
+      duro: 'que la respuesta va a ser que no, que el presupuesto está cerrado y que lo que voy a pedir es mucho'
+    };
+    const audit = AUDIT[k.estilo] || AUDIT.cercano;
+    kit.speech = {
+      auditoria: `Gracias por el tiempo. Antes de empezar: quizá ${T('pienses', 'piense')} ${audit}. Es justo que lo ${T('pienses', 'piense')}, y aun así quiero ${T('mostrarte', 'mostrarle')} por qué creo que vale la pena conversarlo.`,
+      apertura: `Me entusiasma mi trabajo aquí y quiero seguir creciendo; por eso quería conversar ${T('contigo', 'con usted')} sobre mi sueldo. En el último año mi puesto cambió: ${lowerFirst(resp)}.`,
+      prueba: `Dos ejemplos concretos: ${lowerFirst(logro1)}. Y ${lowerFirst(logro2)}.`,
+      plan: `Traje un resumen de mis resultados y de lo que quiero lograr en los próximos seis meses: ${lowerFirst(plan)}.`,
+      mercado: r.pos === 'alto' ? 'Sé que mi sueldo está bien ubicado frente al mercado; por eso no vengo a pedir un aumento de base.' : mercado,
+      pedido: raise
+        ? `Con base en mis resultados y en lo que paga el mercado por este puesto, quiero proponer llevar mi sueldo a ${money(n.anchor)} mensuales.`
+        : `Por eso quiero proponer dos cosas: liderar un proyecto concreto este semestre, con metas claras, y que eso venga con ${alt}. Y dejar fijada una revisión de mi sueldo en seis meses.`,
+      silencio: 'Después de decir tu propuesta, haz silencio y deja que responda primero. No la expliques de nuevo ni la rebajes.',
+      cierre: `¿Cuándo podríamos tener una respuesta? ¿${T('Te', 'Le')} parece si lo vemos el ${d1} de la próxima semana o ${T('prefieres', 'prefiere')} el ${d2}?`
+    };
+
+    // Objeciones
+    const respShort = lowerFirst(resp);
+    const ask = raise ? `que el ajuste sea a ${money(n.anchor)}` : 'crecer en la siguiente evaluación';
+    const list = [
+      { id: 'presupuesto', q: 'No hay presupuesto.',
+        means: 'Casi siempre quiere decir "no está en el presupuesto de este año", no "no hay plata".',
+        reply: `Parece que este año el presupuesto está muy ajustado. [Pausa] ¿Qué tendría que pasar para dejarlo considerado en el próximo? ¿${T('Te', 'Le')} parece si fijamos hoy la revisión, en ${m1} o en ${m2}?`,
+        avoid: '"Entonces me tendré que ir." Sin una oferta real, es una amenaza vacía.' },
+      { id: 'evaluacion', q: 'Esperemos a la evaluación de desempeño.',
+        means: 'Busca un criterio objetivo, o ganar tiempo.',
+        reply: `Suena a que ${T('prefieres', 'prefiere')} decidirlo con criterios claros. ¿Qué resultados tendría que mostrar en esa evaluación para ${ask}? Así llego con los números que importan.`,
+        avoid: 'Aceptar sin fijar criterios ni fecha.' },
+      { id: 'banda', q: 'Ya estás dentro de la banda. Todos en tu puesto ganan lo mismo.',
+        means: 'Hay una política salarial, y por ley tu empresa debe informarte sus criterios, aunque no los montos.',
+        reply: 'Entiendo que hay una política. ¿Cómo se pasa al siguiente nivel? ¿Qué criterios se usan y en qué plazo? Quiero saber qué me falta.',
+        avoid: 'Comparar tu sueldo con el de un compañero.' },
+      { id: 'nivel', q: 'Todavía no estás en ese nivel.',
+        means: 'Hay una distancia entre lo que haces y lo que la empresa espera para esa cifra, y nadie la ha definido.',
+        reply: `Parece que hay algo de mi trabajo que todavía no ${T('ves', 've')} en ese nivel. ¿Qué tendría que lograr concretamente, y en qué plazo? Si lo cumplo, ¿revisamos mi sueldo en ${reviewMonth}?`,
+        avoid: 'Discutir si estás o no en ese nivel. Convierte la crítica en metas con fecha.' }
+    ];
+    if (a.aumento === 'a12' || a.aumento === 'a24' || a.aumento === 'a6') {
+      list.push({ id: 'yatesubimos', q: 'Ya te subimos el año pasado.',
+        means: 'Mide el aumento contra el pasado, no contra lo que aportas hoy.',
+        reply: `Sí, y lo agradezco. Desde entonces mis funciones cambiaron: ${respShort}. ¿Cómo podríamos hacer para que el sueldo refleje el puesto que tengo hoy?`,
+        avoid: 'Minimizar el aumento anterior.' });
+    } else {
+      list.push({ id: 'momento', q: 'Ahorita no es buen momento.',
+        means: 'Puede ser cierto o una forma de postergar.',
+        reply: `Parece que hay mucho en juego ahora mismo. ¿Sería un problema dejarlo agendado para ${m1} o para ${m2}?`,
+        avoid: 'Quedarte con "más adelante" sin fecha.' });
+    }
+    list.push(
+      { id: 'bono', q: 'Te puedo dar un bono, pero el sueldo se queda igual.',
+        means: 'Prefiere un gasto único a uno permanente.',
+        reply: raise
+          ? `Gracias, lo valoro. Un bono reconoce lo que ya pasó; mi propuesta es por el trabajo que hago todos los meses. ¿Cómo podríamos combinar el bono con un ajuste a partir de ${m1}?`
+          : 'Gracias, lo valoro. ¿Cómo podríamos atar ese bono a metas del semestre y revisar mi sueldo cuando las cumpla?',
+        avoid: 'Aceptar en el momento. Puedes pedir un día para pensarlo.' },
+      { id: 'gerencia', q: 'Eso lo decide gerencia.',
+        means: 'No es quien decide, o no quiere decidir solo.',
+        reply: `Da la impresión de que esto no depende solo de ${T('ti', 'usted')}. ¿Qué ${T('necesitarías', 'necesitaría')} para defenderlo ante gerencia? ¿Lo vemos juntos esta semana o la próxima?`,
+        avoid: 'Saltarte a tu jefe y escribir directo a gerencia.' },
+      { id: 'escrito', q: 'Pásamelo por escrito y lo vemos.',
+        means: 'Puede ser interés real o una forma de postergar.',
+        reply: `Claro. ¿Qué es lo más importante que debería incluir para que ${T('te', 'le')} sirva? Hoy mismo ${T('te', 'le')} lo envío. ¿Lo revisamos el ${d1} o el ${d2}?`,
+        avoid: 'Mandar un documento largo. Una página con tus logros y tu propuesta basta.' },
+      { id: 'ultimatum', q: '¿Me estás diciendo que te vas si no te subimos?',
+        means: 'Está probando si es un ultimátum.',
+        reply: `No. Quiero seguir creciendo aquí; por eso lo converso ${T('contigo', 'con usted')} antes que con nadie. ¿Qué haría falta para que mi sueldo refleje el trabajo que hago hoy?`,
+        avoid: 'Insinuar que te vas sin tener una oferta.' }
+    );
+    if (a.contrato === 'plazo') {
+      list.push({ id: 'renovacion', q: 'Renueva igual y luego lo vemos.',
+        means: 'Quiere cerrar la renovación sin cambiar condiciones.',
+        reply: 'Parece que la idea es cerrar la renovación rápido. ¿Sería un problema revisarlo antes de firmar, para que la renovación ya salga con el ajuste?',
+        avoid: 'Firmar y quedar en "luego". Después de firmar, no hay fecha.' });
+    }
+    if (['mineria', 'construccion'].includes(a.sector) || ['ing_minas', 'ing_civil', 'seguridad'].includes(a.puesto)) {
+      list.push({ id: 'rate', q: 'El sueldo lo fija el contrato con el cliente.',
+        means: 'El margen depende del contrato o del proyecto.',
+        reply: 'Suena a que el margen depende del contrato. ¿Cuándo se renegocia, y cómo podríamos hacer para que mi ajuste entre en esa propuesta?',
+        avoid: 'Discutir el contrato del cliente.' });
+    }
+    kit.objections = list;
+
+    // Frases para la conversación
+    const noQuestion = a.contrato === 'plazo' ? '¿Sería una locura revisar mi sueldo antes de la renovación?' : '¿Es mala idea dejar fijada hoy la fecha de revisión?';
+    kit.tools = [
+      { name: 'Etiqueta lo que siente o enfrenta', how: 'Empieza con "parece que", "suena a que" o "da la impresión de que", y después calla.',
+        ex: ['Parece que este año el presupuesto está muy ajustado.', `Da la impresión de que ${T('te', 'le')} preocupa cómo lo vea gerencia.`] },
+      { name: 'Repite sus últimas palabras', how: 'Repite una a tres palabras clave en tono de pregunta. Lo invita a explicar sin que discutas.',
+        ex: ['¿Ya está cerrado?', '¿Más adelante?'] },
+      { name: 'Pregunta qué o cómo, nunca por qué', how: '"¿Por qué?" suena a reclamo. "¿Qué?" y "¿cómo?" lo ponen a resolver el problema contigo.',
+        ex: [raise ? `¿Cómo podríamos hacer para llegar a ${money(n.anchor)}?` : '¿Cómo podríamos hacer para que este proyecto venga con una revisión de sueldo?', '¿Qué tendría que pasar para que gerencia lo apruebe?', `¿Qué es lo que más ${T('te', 'le')} preocupa de aprobar esto?`] },
+      { name: 'Haz preguntas fáciles de responder con un no', how: 'Decir "no" da seguridad y abre la conversación en vez de cerrarla.',
+        ex: [noQuestion] },
+      { name: 'Resume hasta que diga "eso es"', how: 'Antes de proponer, resume su posición. Cuando responda "eso es", siente que lo entendiste.',
+        ex: [`A ver si entendí: ${T('valoras', 'valora')} mi trabajo, el presupuesto de este año está cerrado y ${T('necesitas', 'necesita')} algo que ${T('puedas', 'pueda')} defender ante gerencia. ¿Es así?`] },
+      { name: 'Di que no sin decir no', how: 'Si la oferta no alcanza, pregunta en vez de rechazar. Con calma y sin ironía.',
+        ex: ['¿Cómo podría aceptar eso, considerando todo lo que cambió mi puesto este año?'] }
+    ];
+    kit.voice = 'Habla despacio y con calma, como locutor de radio de noche. En las afirmaciones, baja el tono al final.';
+    if (raise && n.ladder && n.ladder.length > 1) {
+      const L = n.ladder;
+      kit.ladder = [`Pides ${money(L[0])}. Es un número preciso a propósito: se percibe calculado, no inventado.`];
+      if (L.length >= 4) {
+        kit.ladder.push(`Antes de bajar, pregunta: "¿Cómo podríamos llegar a ${money(L[0])}?". Si insiste, ${money(L[1])}.`);
+        kit.ladder.push(`Si aún no alcanza, ${money(L[2])}.`);
+        kit.ladder.push(`Último: ${money(L[3])}, más algo que no es plata: una capacitación pagada, un día de trabajo remoto o una revisión en seis meses.`);
+      } else {
+        kit.ladder.push(`Último: ${money(L[L.length - 1])}, más algo que no es plata: una capacitación pagada, un día de trabajo remoto o una revisión en seis meses.`);
+      }
+      kit.ladderRule = 'Cada concesión es más chica que la anterior: así se nota que llegaste a tu límite. Nunca partas la diferencia.';
+    }
+
+    // Correo de cierre
+    const propuesta = raise
+      ? `Mi propuesta: ajuste a ${money(n.anchor)} mensuales.`
+      : 'Mi propuesta: liderar [el proyecto acordado] y revisar mi sueldo en seis meses.';
+    kit.email = [
+      'Asunto: Resumen de nuestra conversación',
+      '',
+      `${jefe ? 'Hola, ' + jefe : 'Hola'}:`,
+      '',
+      `Gracias por el tiempo de hoy. ${T('Te', 'Le')} escribo para dejar por escrito lo que conversamos:`,
+      '',
+      `- ${propuesta}`,
+      '- Lo que acordamos: [completa con el siguiente paso].',
+      '- Fecha de respuesta o de revisión: [completa con la fecha].',
+      '',
+      `Quedo pendiente de cualquier información adicional que ${T('necesites', 'necesite')}.`,
+      '',
+      'Saludos,',
+      '[Tu nombre]'
+    ].join('\n');
+
+    // Si te dicen que no
+    kit.ifNo = [
+      `Pregunta: "¿Qué tendría que pasar para llegar a ${raise ? money(n.anchor) : 'ese siguiente nivel'}?" Acuerden dos o tres metas, un plazo y una fecha de revisión.`,
+      'Pide que eso quede por escrito, aunque sea en un correo corto. "Más adelante" no es una fecha.',
+      'Cada tres o cuatro semanas, reporta tu avance en dos líneas. Siembra hoy y retoma en la fecha.',
+      'Negocia lo que no es sueldo: capacitación pagada, un título nuevo, horario flexible o un bono por objetivos.',
+      'Pregunta qué criterios usa la política salarial para pasar al siguiente nivel.'
+    ];
+    if (r.pct < 25) kit.ifNo.push(`Si en esa fecha no hay ajuste y sigues bajo la mediana, mira el mercado: tu pretensión afuera debería ir de ${money(n.pretFrom)} a ${money(n.pretTo)}.`);
+
+    kit.dont = [
+      'Hablar de deudas o gastos personales: el aumento se gana por aporte, no por necesidad.',
+      'Comparar tu sueldo con el de un compañero.',
+      'Amenazar con irte si no tienes una oferta real.',
+      'Dar un rango. Si dices "entre 4,500 y 5,000", te quedas con 4,500.',
+      'Preguntar "¿por qué no?": suena a reclamo. Cambia a "¿qué haría falta?".',
+      'Partir la diferencia: si te ofrecen menos, primero pregunta cómo llegar a tu cifra.'
+    ];
+
+    if (r.code === 'construye') {
+      kit.plan60 = [
+        'Semanas 1 y 2: anota tus resultados con números: tiempos, montos, clientes, errores evitados.',
+        'Semanas 3 y 4: pide feedback directo: "¿Qué tendría que lograr para crecer aquí?"',
+        'Semanas 5 y 6: toma un proyecto visible y ciérralo.',
+        'Semanas 7 y 8: pide la reunión con este kit y tus nuevos logros.'
+      ];
+    }
+
+    kit.employerCost = raise ? Math.round((n.anchor - Number(a.sueldo)) * CONFIG.employerFactor / 10) * 10 : null;
+    kit.sheet = [
+      'Mi maletín: resultados y propuesta',
+      `Puesto: ${role.label}, ${lowerFirst(level.label)}${tenure ? ', ' + lowerFirst(tenure.label) + ' en el puesto' : ''}.`,
+      'Resultados del último año:',
+      `- ${logro1}.`,
+      `- ${logro2}.`,
+      `Lo que ganó la empresa: ${impacto}.`,
+      `Responsabilidades nuevas: ${resp.charAt(0).toUpperCase() + resp.slice(1)}.`,
+      `Lo que me propongo lograr en los próximos seis meses: ${plan}.`,
+      `Referencia de mercado: mi sueldo está ${r.pos === 'bajo' ? 'por debajo de la mediana' : r.pos === 'rango' ? 'dentro del rango' : 'sobre la mediana'} para mi perfil.`,
+      raise ? `Propuesta: ${money(n.anchor)} mensuales, desde ${m1}.` : 'Propuesta: proyecto con metas y revisión de sueldo en seis meses.'
+    ].join('\n');
+
+    kit.pretension = `Si te llama otra empresa, tu pretensión debería ir de ${money(n.pretFrom)} a ${money(n.pretTo)}. Escríbela así: "${money(n.pretFrom)} a ${money(n.pretTo)} brutos mensuales, negociable según el paquete."`;
+    kit.days = [d1, d2];
+    kit.months = [m1, m2];
+    return kit;
+  }
+
+  function toText(kit, a) {
+    const L = [];
+    const n = kit.numbers;
+    L.push('PÍDELO BIEN: TU KIT PARA LA REUNIÓN', '');
+    if (kit.cuando) L.push('Cuándo usarlo: ' + kit.cuando, '');
+    if (kit.raise) {
+      L.push('TUS NÚMEROS', `Cifra para pedir: ${money(n.anchor)}`, `Objetivo: ${money(n.target)}`, `Piso: ${money(n.floor)}`, `Efecto anual del objetivo: ${money(n.annual)} más al año (régimen general)`, '');
+    } else {
+      L.push('QUÉ PEDIR EN VEZ DE SUELDO', ...kit.alternatives.map(x => '- ' + x), '');
+    }
+    if (kit.prep) L.push('ANTES DE LA REUNIÓN', kit.prep.timing, 'Mensaje: ' + kit.prep.ask, 'Qué decir: ' + kit.prep.script, kit.prep.checkin, kit.prep.log, '');
+    L.push('MENSAJE PARA PEDIR LA REUNIÓN', kit.whatsapp);
+    if (kit.whatsappFollow) L.push(kit.whatsappFollow);
+    L.push('', 'TU SPEECH');
+    const sp = kit.speech;
+    [sp.auditoria, sp.apertura, sp.prueba, sp.plan, sp.mercado, sp.pedido, sp.silencio, sp.cierre].filter(Boolean).forEach((x, i) => L.push(`${i + 1}. ${x}`));
+    L.push('');
+    if (kit.ladder) L.push('SI TE OFRECEN MENOS', ...kit.ladder.map(x => '- ' + x), kit.ladderRule, '');
+    if (kit.tools) {
+      L.push('FRASES PARA LA CONVERSACIÓN');
+      kit.tools.forEach(t => L.push(`${t.name}: ${t.how}`, ...t.ex.map(x => '   "' + x + '"')));
+      L.push(kit.voice, '');
+    }
+    L.push('LO QUE TE VAN A DECIR Y QUÉ RESPONDER');
+    kit.objections.forEach((o, i) => { L.push(`${i + 1}. "${o.q}"`, '   Qué significa: ' + o.means, '   Qué responder: ' + o.reply, '   Qué no hacer: ' + o.avoid); });
+    L.push('', 'CORREO DESPUÉS DE LA REUNIÓN', kit.email, '', 'SI TE DICEN QUE NO', ...kit.ifNo.map(x => '- ' + x), '', 'LO QUE NO DEBES DECIR', ...kit.dont.map(x => '- ' + x), '');
+    if (kit.plan60) L.push('PLAN DE 60 DÍAS', ...kit.plan60.map(x => '- ' + x), '');
+    L.push('TU MALETÍN', kit.sheet, '');
+    if (kit.employerCost) L.push(`Tu propuesta le costaría a la empresa cerca de ${money(kit.employerCost)} al año (régimen general).`, '');
+    L.push('SI TE LLAMA OTRA EMPRESA', kit.pretension, '');
+    L.push('Referencia de mercado, no asesoría legal ni promesa de aumento.');
+    return L.join('\n');
+  }
+
+  return { build, toText, dayPair, monthPair, money };
+})();
+/* ============================================================
+   INTERFAZ
+   ============================================================ */
+const STORE_KEY = 'pidelo-bien-v1';
+const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null });
+const S = Object.assign(FRESH(), { unlocked: false });
+const RT = { sample: null, downloads: null, isOwner: false, busy: false, ctl: null, landed: false, userActed: false, simText: '' };
+
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const soles = n => 'S/\u00A0' + Math.round(n).toLocaleString('en-US');
+const soles2 = n => 'S/\u00A0' + Number(n).toFixed(2);
+const lowerFirstUI = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* almacenamiento no disponible */ } }
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d && typeof d === 'object') Object.assign(S, d);
+  } catch (e) { /* ignorar */ }
+}
+function resetTest() {
+  const keepUnlock = S.unlocked;
+  Object.assign(S, FRESH(), { unlocked: keepUnlock });
+  RT.landed = false;
+  render();
+  window.scrollTo(0, 0);
+}
+
+const visibleSteps = () => STEPS.filter(s => !s.when || s.when(S.answers));
+const needsField = a => ['mineria', 'construccion', 'agro'].includes(a.sector) || ['ing_minas', 'ing_civil', 'seguridad'].includes(a.puesto);
+const salaryOk = () => S.consent && Number(S.answers.sueldo) >= 500 && Number(S.answers.sueldo) <= 150000;
+
+/* ---------- Render ---------- */
+function render() {
+  if (S.view === 'result' && !S.answers.sueldo && !Engine.route(S.answers)) S.view = 'test';
+  if ((S.view === 'interview' || S.view === 'kit') && !S.unlocked) S.view = 'result';
+  let html;
+  if (S.view === 'exit') html = viewExit();
+  else if (S.view === 'result') html = viewResult();
+  else if (S.view === 'interview') html = viewInterview();
+  else if (S.view === 'kit') html = viewKit();
+  else html = viewTest();
+  $('#app').innerHTML = html;
+  syncCapabilityUI();
+  save();
+}
+
+function viewTest() {
+  const steps = visibleSteps();
+  let idx = steps.findIndex(s => s.id === S.stepId);
+  if (idx < 0) { idx = 0; S.stepId = steps[0].id; }
+  const step = steps[idx];
+  const hero = idx === 0
+    ? `<section class="hero"><h1>¿Te sumaron funciones y el sueldo sigue igual?</h1><p class="lede">En 90 segundos sabes si estás bajo el mercado, si es buen momento para pedir y por cuánto.</p></section>`
+    : '';
+  const bars = steps.map((s, i) => `<span class="${i <= idx ? 'on' : ''}"></span>`).join('');
+  const body = step.type === 'salary' ? salaryBlock() : optionsBlock(step);
+  const back = idx > 0 ? '<button type="button" class="link" data-action="back">Atrás</button>' : '<span></span>';
+  const trust = idx === 0 ? '<p class="fine">Gratis y anónimo. No pedimos nombre, DNI ni empresa.</p>' : '';
+  return `${hero}<section class="q" aria-labelledby="q-title">
+    <div class="progress" aria-hidden="true">${bars}</div>
+    <p class="count">${idx + 1} de ${steps.length}</p>
+    <h2 id="q-title" tabindex="-1">${esc(step.title)}</h2>
+    ${body}
+    <div class="q-foot">${back}</div>
+    ${trust}
+  </section>`;
+}
+
+function optionsBlock(step) {
+  const cur = S.answers[step.id];
+  const extra = (step.id === 'region' && needsField(S.answers))
+    ? `<label class="check"><input type="checkbox" data-field="campo" ${S.answers.campo ? 'checked' : ''}><span>Trabajo en unidad minera, obra o campo</span></label>`
+    : '';
+  const cls = step.type === 'grid' ? 'opts grid' : 'opts';
+  const opts = step.options.map(o => `<button type="button" class="opt${cur === o.id ? ' is-on' : ''}" role="radio" aria-checked="${cur === o.id}" data-action="pick" data-step="${step.id}" data-value="${o.id}">${esc(o.label)}</button>`).join('');
+  return `${extra}<div class="${cls}" role="radiogroup" aria-labelledby="q-title">${opts}</div>`;
+}
+
+function salaryBlock() {
+  const v = S.answers.sueldo || '';
+  const vv = S.answers.variable || '';
+  return `<label class="consent"><input type="checkbox" data-field="consent" ${S.consent ? 'checked' : ''}>
+      <span>Acepto que se use mi sueldo para calcular mi resultado. Es un dato sensible y lo tratamos como tal. <button type="button" class="link inline" data-action="privacy">Cómo cuidamos tus datos</button></span></label>
+    <div class="money"><span class="cur" aria-hidden="true">S/</span><input id="sueldo" data-field="sueldo" inputmode="numeric" autocomplete="off" placeholder="3500" value="${esc(v)}" aria-label="Sueldo bruto mensual en soles"></div>
+    <p class="help">Antes de descuentos, sin gratificaciones ni bonos.</p>
+    <label class="small-label" for="variable">¿Recibes comisiones o bonos cada mes? Promedio, opcional</label>
+    <div class="money small"><span class="cur" aria-hidden="true">S/</span><input id="variable" data-field="variable" inputmode="numeric" autocomplete="off" placeholder="0" value="${esc(vv)}"></div>
+    <p class="warn" id="sueldo-warn" ${salaryWarning() ? '' : 'hidden'}>${esc(salaryWarning())}</p>
+    <button type="button" class="btn" data-action="salary-next" ${salaryOk() ? '' : 'disabled'}>Continuar</button>`;
+}
+function salaryWarning() {
+  const s = Number(S.answers.sueldo);
+  if (!s) return '';
+  if (s < CONFIG.rmv) return `Si trabajas jornada completa, el mínimo legal es ${soles(CONFIG.rmv)} desde el 1 de octubre de 2026.`;
+  return '';
+}
+
+/* ---------- Resultado ---------- */
+function gapSentence(g) {
+  const lo = g[0], hi = g[1];
+  if (lo > 2) return `Estás entre ${lo}% y ${hi}% bajo la mediana de tu perfil.`;
+  if (hi < -2) return `Estás entre ${-hi}% y ${-lo}% sobre la mediana de tu perfil.`;
+  return 'Estás cerca de la mediana de tu perfil.';
+}
+
+function viewResult() {
+  const a = S.answers;
+  const r = Engine.recommend(a, new Date());
+  if (r.route) { S.view = 'exit'; return viewExit(); }
+  const n = Engine.numbers(a, r);
+  const mini = Kit.build(a, r, n, { trato: 'tu' }, new Date());
+  const date = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
+  const landing = RT.landed ? '' : ' landing';
+  RT.landed = true;
+  const pos = Math.max(4, Math.min(96, r.pct));
+  const conf = 'Confianza baja: es una banda preliminar estimada para tu puesto, nivel, sector, región y tamaño de empresa'
+    + (r.band.otherRole ? '. Como elegiste "Otro puesto", tómala solo como referencia general.' : '.');
+  const plus = r.caso.strength || 'Todavía nada claro. Tus logros con números pueden cambiarlo.';
+  const obj = mini.objections[0];
+  const waWords = mini.whatsapp.split(' ');
+  const waVisible = esc(waWords.slice(0, 7).join(' '));
+  const waBlur = esc(waWords.slice(7, 20).join(' '));
+  const firstLine = esc(mini.speech.apertura.split(':').slice(-1)[0].trim());
+  const preview = `<ul class="preview">
+      <li>${mini.raise ? `Tu cifra para pedir: <span class="blur" aria-hidden="true">S/ 9,999</span>` : 'Qué pedir en vez de sueldo, ordenado para tu caso'}</li>
+      <li>Tu plan en tres tiempos: antes, durante y después de la reunión</li>
+      <li>Mensaje para pedir la reunión: “${waVisible} <span class="blur" aria-hidden="true">${waBlur}</span>”</li>
+      <li>${mini.objections.length} objeciones resueltas, entre ellas “${esc(mini.objections[3].q.split('.')[0])}”</li>
+      <li>Un simulador para practicar, incluso con un jefe que dice que no</li>
+    </ul>`;
+  const cta = S.unlocked
+    ? `<button type="button" class="btn" data-action="go-kit">Ver mi kit</button>`
+    : `<button type="button" class="btn" data-action="open-paywall">Desbloquear mi kit por ${soles2(CONFIG.price)}</button><p class="fine">Pago único. Tu cifra exacta, el speech, las objeciones y el simulador.</p>`;
+  return `<section class="result">
+    <div class="slip">
+      <div class="slip-head"><span>Tu resultado</span><span>${esc(date)}</span></div>
+      <div class="stamp ${r.color}${landing}" role="img" aria-label="Recomendación: ${esc(r.stamp)}">${esc(r.stamp)}</div>
+      <p class="verdict">${esc(r.sub)}</p>
+      <hr class="tear">
+      <h3>Tu posición</h3>
+      <div class="meter" role="img" aria-label="Tu sueldo está en el percentil ${r.pct} de tu perfil">
+        <div class="marker" style="left:${pos}%"><span>Tú</span></div>
+        <div class="track"><span class="zone z1"></span><span class="zone z2"></span><span class="zone z3"></span></div>
+        <div class="zl"><span>Bajo</span><span>En rango</span><span>Alto</span></div>
+      </div>
+      <p>${esc(gapSentence(r.gap))}</p>
+      <p class="fine">${esc(conf)}</p>
+      <hr class="tear">
+      <h3>El momento</h3>
+      <p><span class="label">${esc(r.momento.label)}.</span> ${esc(r.momento.text)}</p>
+      <hr class="tear">
+      <h3>Tu caso</h3>
+      <ul class="facts"><li class="plus"><span class="label">A favor:</span> ${esc(plus)}</li><li class="minus"><span class="label">En contra:</span> ${esc(r.caso.weakness)}</li></ul>
+    </div>
+    <section class="block">
+      <h3>Una objeción que vas a escuchar</h3>
+      <p class="quote">“${esc(obj.q)}”</p>
+      <p><span class="label">Qué significa:</span> ${esc(obj.means)}</p>
+      <p><span class="label">Qué responder:</span> ${esc(obj.reply)}</p>
+    </section>
+    <section class="locked">
+      <h3>Tu kit para la reunión</h3>
+      ${preview}
+      ${cta}
+    </section>
+    <div class="row-actions">
+      <button type="button" class="btn-ghost" data-action="share">Compartir mi resultado</button>
+      <button type="button" class="link" data-action="restart">Hacer el test de nuevo</button>
+    </div>
+  </section>`;
+}
+
+/* ---------- Salidas honestas ---------- */
+const EXITS = {
+  publico: {
+    title: 'Tu sueldo sale de una escala, no de una negociación',
+    paras: [
+      'En el sector público la remuneración la fijan normas y escalas, así que no se pide aumento uno a uno.',
+      'Lo que sí mueve tu ingreso: concursos de ascenso, cambios de plaza o de régimen, y capacitaciones que suman en tu carrera.',
+      'Esta herramienta está pensada para el sector privado. Si también trabajas en una empresa privada, haz el test con ese puesto.'
+    ]
+  },
+  civil: {
+    title: 'Tu jornal lo fija el convenio de construcción civil',
+    paras: [
+      'Los jornales de peón, oficial y operario se negocian cada año en el convenio colectivo del sector, no uno a uno.',
+      'Lo que sí puedes revisar: que te paguen la categoría que realmente cumples y todos los conceptos del convenio.',
+      'Si eres ingeniero, residente o personal administrativo de obra, tu caso sí aplica: vuelve y elige otro tipo de contrato.'
+    ]
+  },
+  rxh: {
+    title: 'Con recibos por honorarios no hay aumento: hay tarifa',
+    paras: [
+      'Si emites recibos, no pides un aumento: renegocias tu tarifa.',
+      'Para igualar un sueldo en planilla, tu tarifa mensual debería ser alrededor de 28% más alta, solo para compensar las gratificaciones y la CTS que no recibes.',
+      'Pronto agregamos un kit para renegociar tarifas. Y si trabajas con horario fijo y bajo las órdenes de un jefe, vale la pena consultar tu situación con un especialista laboral.'
+    ]
+  }
+};
+
+function viewExit() {
+  const route = Engine.route(S.answers);
+  const c = EXITS[route];
+  if (!c) { S.view = 'test'; return viewTest(); }
+  return `<section class="result">
+    <div class="slip">
+      <div class="slip-head"><span>Tu resultado</span><span>Sin kit para este caso</span></div>
+      <h2 class="exit-title">${esc(c.title)}</h2>
+      ${c.paras.map(p => `<p>${esc(p)}</p>`).join('')}
+    </div>
+    <button type="button" class="btn-ghost" data-action="fix-contract">Corregir mi tipo de contrato</button>
+    <div class="row-actions"><button type="button" class="link" data-action="restart">Hacer el test de nuevo</button></div>
+  </section>`;
+}
+
+/* ---------- Muro de pago ---------- */
+function paywallHTML() {
+  const hasPay = !!CONFIG.payUrl, hasWa = !!CONFIG.whatsapp;
+  const waText = encodeURIComponent('Hola, ya pagué el kit de Pídelo Bien. ¿Me envías mi código?');
+  return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+    <div class="sheet-head"><h2 id="pay-title" tabindex="-1">Tu kit para la reunión</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
+    <ul class="plain">
+      <li>Tu cifra exacta: cuánto pedir, cuánto esperar y tu piso.</li>
+      <li>Tu plan en tres tiempos: antes, durante y después de la reunión.</li>
+      <li>Tu speech y tu maletín de logros, armados con tus datos.</li>
+      <li>Las objeciones más comunes, con frases que responden sin ceder.</li>
+      <li>Un simulador para practicar con tu jefe, incluso cuando dice que no.</li>
+    </ul>
+    <p class="price">${soles2(CONFIG.price)}</p>
+    <p class="fine">Pago único.</p>
+    ${hasPay ? `<a class="btn" href="${esc(CONFIG.payUrl)}" target="_blank" rel="noopener">Pagar ${soles2(CONFIG.price)} con Yape o tarjeta</a>` : ''}
+    ${hasWa ? `<a class="btn-ghost" href="https://wa.me/${esc(CONFIG.whatsapp)}?text=${waText}" target="_blank" rel="noopener">Ya pagué: pedir mi código por WhatsApp</a>` : ''}
+    ${(!hasPay && !hasWa) ? '<p class="fine">Los pagos se habilitan en el lanzamiento. Si tienes un código de acceso, ingrésalo aquí.</p>' : ''}
+    <label class="small-label" for="code">Tengo un código</label>
+    <div class="code-row"><input id="code" autocomplete="off" autocapitalize="characters" placeholder="PB-XXXX"><button type="button" class="btn-sm" data-action="redeem">Desbloquear</button></div>
+    <p class="err" id="code-err" role="alert"></p>
+    <div class="owner" data-needs="owner" hidden>
+      <p class="fine">Solo tú ves esto, como dueño de la página.</p>
+      <button type="button" class="btn-ghost" data-action="owner-unlock">Ver el kit sin pagar</button>
+      ${(!hasPay || !hasWa) ? '<p class="fine">Antes de lanzar, configura tu link de pago y tu WhatsApp en CONFIG, al inicio del código.</p>' : ''}
+    </div>
+  </div></div>`;
+}
+
+function privacyHTML() {
+  return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="priv-title">
+    <div class="sheet-head"><h2 id="priv-title" tabindex="-1">Cómo cuidamos tus datos</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
+    <ul class="plain">
+      <li>No pedimos tu nombre, tu DNI ni el nombre de tu empresa.</li>
+      <li>En esta versión de prueba, tus respuestas se quedan en tu navegador y solo sirven para calcular tu resultado.</li>
+      <li>Si usas las funciones con IA del kit, tus respuestas se envían a Claude para redactar el texto.</li>
+      <li>Puedes borrar todo con "Hacer el test de nuevo".</li>
+    </ul>
+    <button type="button" class="btn" data-action="close-modal">Entendido</button>
+  </div></div>`;
+}
+
+let lastFocus = null;
+function openModal(html, focusId) {
+  lastFocus = document.activeElement;
+  const root = $('#modal-root');
+  root.innerHTML = html;
+  root.hidden = false;
+  document.body.classList.add('no-scroll');
+  syncCapabilityUI();
+  const f = document.getElementById(focusId);
+  if (f) f.focus();
+}
+function closeModal() {
+  const root = $('#modal-root');
+  root.hidden = true;
+  root.innerHTML = '';
+  document.body.classList.remove('no-scroll');
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+}
+
+// SHA-256 sin dependencias, por si el navegador no expone crypto.subtle
+function sha256Fallback(ascii) {
+  const rr = (v, a) => (v >>> a) | (v << (32 - a));
+  const bin = unescape(encodeURIComponent(ascii));
+  const bytes = [];
+  for (let i = 0; i < bin.length; i++) bytes.push(bin.charCodeAt(i));
+  const K = [], H = [];
+  let primeCounter = 0;
+  const isComposite = {};
+  for (let c = 2; primeCounter < 64; c++) {
+    if (!isComposite[c]) {
+      for (let i = 0; i < 313; i += c) isComposite[i] = c;
+      H[primeCounter] = (Math.pow(c, 0.5) * 4294967296) | 0;
+      K[primeCounter++] = (Math.pow(c, 1 / 3) * 4294967296) | 0;
+    }
+  }
+  const hash = H.slice(0, 8);
+  const bitLen = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  for (let i = 7; i >= 0; i--) bytes.push(i > 3 ? 0 : (bitLen >>> (i * 8)) & 0xff);
+  for (let j = 0; j < bytes.length; j += 64) {
+    const w = [];
+    for (let i = 0; i < 16; i++) w[i] = (bytes[j + i * 4] << 24) | (bytes[j + i * 4 + 1] << 16) | (bytes[j + i * 4 + 2] << 8) | bytes[j + i * 4 + 3];
+    for (let i = 16; i < 64; i++) {
+      const s0 = rr(w[i - 15], 7) ^ rr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rr(w[i - 2], 17) ^ rr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let [a, b, c, d, e, f, g, h] = hash;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+      const t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    hash[0] = (hash[0] + a) | 0; hash[1] = (hash[1] + b) | 0; hash[2] = (hash[2] + c) | 0; hash[3] = (hash[3] + d) | 0;
+    hash[4] = (hash[4] + e) | 0; hash[5] = (hash[5] + f) | 0; hash[6] = (hash[6] + g) | 0; hash[7] = (hash[7] + h) | 0;
+  }
+  return hash.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+async function sha256Hex(text) {
+  if (window.crypto && crypto.subtle && typeof crypto.subtle.digest === 'function' && typeof TextEncoder === 'function') {
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) { /* usar respaldo */ }
+  }
+  return sha256Fallback(text);
+}
+async function redeem() {
+  const inp = $('#code'), err = $('#code-err');
+  const code = (inp.value || '').toUpperCase().replace(/\s+/g, '');
+  if (!code) { err.textContent = 'Escribe tu código.'; return; }
+  try {
+    const h = await sha256Hex(code);
+    if (CONFIG.codeHashes.includes(h)) unlock();
+    else err.textContent = 'Ese código no es válido. Revisa que esté bien escrito.';
+  } catch (e) {
+    err.textContent = 'No se pudo validar el código en este navegador.';
+  }
+}
+function unlock() {
+  S.unlocked = true;
+  closeModal();
+  S.view = S.kit ? 'kit' : 'interview';
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Entrevista (etapa 2) ---------- */
+function draft() {
+  if (!S.kitDraft) S.kitDraft = Object.assign({ logro1: '', logro2: '', impacto: '', plan: '', responsabilidades: '', aprueba: 'jefe', estilo: 'cercano', trato: 'tu', oferta: 'no', jefe: '' }, S.kitIn || {});
+  return S.kitDraft;
+}
+function chipGroup(key, options, cur) {
+  return `<div class="chips" role="radiogroup">${options.map(o => `<button type="button" class="chip${cur === o.id ? ' is-on' : ''}" role="radio" aria-checked="${cur === o.id}" data-action="kchip" data-key="${key}" data-value="${o.id}">${esc(o.label)}</button>`).join('')}</div>`;
+}
+function viewInterview() {
+  const d = draft();
+  return `<section class="kit-head">
+      <h1 class="h1-sm">Armemos tu kit</h1>
+      <p class="lede">Con tus logros, el speech deja de ser genérico. Toma unos tres minutos.</p>
+    </section>
+    <div class="interview">
+      <label class="field"><span>Tu logro más importante del último año, con un número</span>
+        <textarea data-kf="logro1" placeholder="Ej.: reduje el cierre contable de 10 a 6 días">${esc(d.logro1)}</textarea></label>
+      <label class="field"><span>Un segundo logro</span>
+        <textarea data-kf="logro2" placeholder="Ej.: automaticé tres reportes que tomaban un día cada semana">${esc(d.logro2)}</textarea></label>
+      <label class="field"><span>¿Qué ganó la empresa con eso?</span><small>Opcional. Ej.: dejamos de pagar unos S/ 4,000 al mes en horas extra.</small>
+        <textarea data-kf="impacto">${esc(d.impacto)}</textarea></label>
+      <label class="field"><span>¿Qué quieres lograr en los próximos seis meses?</span><small>Opcional. Es tu plan: lo que la empresa gana si apuesta por ti.</small>
+        <textarea data-kf="plan" placeholder="Ej.: automatizar el cierre de tesorería y capacitar a los asistentes">${esc(d.plan)}</textarea></label>
+      <label class="field"><span>¿Qué responsabilidades nuevas asumiste?</span><small>Opcional. Ej.: superviso a dos asistentes.</small>
+        <textarea data-kf="responsabilidades">${esc(d.responsabilidades)}</textarea></label>
+      <div class="field"><span>¿Quién aprueba los aumentos en tu empresa?</span>${chipGroup('aprueba', APPROVERS, d.aprueba)}</div>
+      <div class="field"><span>¿Cómo es tu jefe en conversaciones difíciles?</span>${chipGroup('estilo', BOSS_STYLES, d.estilo)}</div>
+      <div class="field"><span>¿Le hablas de tú o de usted?</span>${chipGroup('trato', TRATO, d.trato)}</div>
+      <div class="field"><span>¿Tienes una oferta de otra empresa?</span>${chipGroup('oferta', OFFERS, d.oferta)}</div>
+      <label class="field"><span>¿Cómo le dices a tu jefe?</span><small>Opcional, solo para el saludo del mensaje.</small>
+        <input data-kf="jefe" autocomplete="off" placeholder="Ej.: Ana" value="${esc(d.jefe)}"></label>
+      <button type="button" class="btn" data-action="build-kit">Armar mi kit</button>
+      ${S.kit ? '<div class="row-actions"><button type="button" class="link" data-action="go-kit">Volver a mi kit sin cambios</button></div>' : ''}
+    </div>`;
+}
+function buildKit() {
+  const r = Engine.recommend(S.answers, new Date());
+  const n = Engine.numbers(S.answers, r);
+  S.kitIn = Object.assign({}, draft());
+  S.kit = Kit.build(S.answers, r, n, S.kitIn, new Date());
+  S.polished = false;
+  S.sim = null;
+  S.view = 'kit';
+  render();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Kit ---------- */
+const SPEECH_LABELS = [['auditoria', 'Adelántate a sus dudas'], ['apertura', 'Abre con tu aporte'], ['prueba', 'Muestra la prueba'], ['plan', 'Saca tu maletín'], ['mercado', 'Pon el dato de mercado'], ['pedido', 'Pide una cifra concreta'], ['silencio', 'Calla'], ['cierre', 'Cierra con una fecha']];
+
+function viewKit() {
+  const k = S.kit;
+  if (!k) { S.view = 'interview'; return viewInterview(); }
+  const n = k.numbers, b = n.band;
+  const out = [];
+  out.push(`<section class="kit-head">
+    <h1 class="h1-sm">Tu kit para la reunión</h1>
+    <p class="lede">${k.cuando ? 'Úsalo ' + esc(lowerFirstUI(k.cuando)) : 'Léelo completo una vez y practica el speech en voz alta antes de pedir la reunión.'}</p>
+    ${k.urgent ? `<p class="warn">${esc(k.urgent)}</p>` : ''}
+    <div class="kit-tools no-print">
+      <button type="button" class="btn-sm" data-action="polish" data-needs="sample" hidden>${S.polished ? 'Volver a personalizar con IA' : 'Personalizar con IA'}</button>
+      <button type="button" class="btn-sm" data-action="stop-ai" id="stop-ai" hidden>Detener</button>
+      <button type="button" class="btn-sm" data-action="download" data-needs="downloads" hidden>Descargar el kit</button>
+      <button type="button" class="btn-sm" data-action="copy" data-copy="all">Copiar todo</button>
+      <button type="button" class="btn-sm" data-action="edit-kit">Editar mis logros</button>
+    </div>
+    <p class="status" id="ai-status" role="status">${S.polished ? 'Kit personalizado con IA. Las cifras no cambian: las calcula el motor.' : ''}</p>
+  </section>`);
+
+  out.push(`<section class="block"><h2>Tu método en tres tiempos</h2>
+    <ol class="plain">
+      <li><span class="label">Antes:</span> acuerda metas con tu jefe y registra tus logros, de 8 a 12 semanas antes de pedir.</li>
+      <li><span class="label">En la reunión:</span> adelántate a sus dudas, muestra tu maletín, pide una cifra precisa y calla. Ante cada objeción, etiqueta y pregunta.</li>
+      <li><span class="label">Después:</span> deja todo por escrito. Si es un no, conviértelo en metas con fecha.</li>
+    </ol>
+  </section>`);
+  const bandTable = `<table class="band-table"><thead><tr><th>Parte baja</th><th>Mediana</th><th>Parte alta</th></tr></thead><tbody><tr><td>${soles(b.p25)}</td><td>${soles(b.p50)}</td><td>${soles(b.p75)}</td></tr></tbody></table>
+    <p class="fine">Banda preliminar para tu perfil, con confianza baja. En el lanzamiento se reemplaza por datos verificados.</p>`;
+  if (k.raise) {
+    out.push(`<section class="block"><h2>Tus números</h2>
+      <div class="nums">
+        <div class="num main"><span class="k">Lo que pides</span><span class="v">${soles(n.anchor)}</span></div>
+        <div class="num"><span class="k">Lo que esperas</span><span class="v">${soles(n.target)}</span></div>
+        <div class="num"><span class="k">Tu piso</span><span class="v">${soles(n.floor)}</span></div>
+      </div>
+      <p>Dices en voz alta la primera cifra. La segunda es un buen resultado. Por debajo de la tercera, en vez de aceptar, pide una fecha de revisión.</p>
+      <p>Si consigues lo que esperas, son ${soles(n.annual)} más al año con gratificaciones y CTS, en régimen general.</p>
+      ${k.employerCost ? `<p>Tu propuesta le costaría a la empresa cerca de ${soles(k.employerCost)} al año. Si tus resultados valen más que eso, dilo con números.</p>` : ''}
+      ${k.ladder ? `<p class="label">Si te ofrecen menos</p><ol class="plain">${k.ladder.map(x => `<li>${esc(x)}</li>`).join('')}</ol><p class="fine">${esc(k.ladderRule)}</p>` : ''}
+      ${bandTable}
+    </section>`);
+  } else {
+    out.push(`<section class="block"><h2>Qué pedir en vez de sueldo</h2>
+      <ul class="plain">${k.alternatives.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      ${bandTable}
+    </section>`);
+  }
+  if (k.prep) out.push(`<section class="block"><h2>Antes: la conversación de alto desempeño</h2>
+    <p>${esc(k.prep.timing)}</p>
+    <p class="label">Pide 15 minutos</p>
+    <div class="say">${esc(k.prep.ask)}</div>
+    <p class="label">Qué decir</p>
+    <div class="say">${esc(k.prep.script)}</div>
+    <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="prep">Copiar mensaje y guion</button></div>
+    <ul class="plain"><li>${esc(k.prep.checkin)}</li><li>${esc(k.prep.log)}</li></ul>
+    ${k.plan60 ? `<p class="label">Tu plan de 60 días</p><ul class="plain">${k.plan60.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+  </section>`);
+
+  out.push(`<section class="block"><h2>El mensaje para pedir la reunión</h2>
+    <div class="say">${esc(k.whatsapp)}${k.whatsappFollow ? '\n\n' + esc(k.whatsappFollow) : ''}</div>
+    <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="whatsapp">Copiar mensaje</button></div>
+    <p class="fine">${esc(k.whatsappNote)}</p>
+  </section>`);
+
+  out.push(`<section class="block"><h2>Tu speech</h2>
+    <ol class="speech">${SPEECH_LABELS.map(([key, label]) => `<li><span class="part">${label}</span>${esc(k.speech[key])}</li>`).join('')}</ol>
+    ${k.offerNote ? `<p class="fine">${esc(k.offerNote)}</p>` : ''}
+    <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="speech">Copiar speech</button></div>
+  </section>`);
+
+  out.push(`<section class="block"><h2>Tu maletín</h2>
+    <p>Llévalo impreso a la reunión: tus resultados, lo que ganó la empresa y tu plan. Convierte el pedido en una propuesta.</p>
+    <div class="say">${esc(k.sheet)}</div>
+    <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="sheet">Copiar maletín</button></div>
+  </section>`);
+  if (k.tools) out.push(`<section class="block"><h2>Tus frases para la conversación</h2>
+    <p>Sirven para responder sin ceder y para que tu jefe resuelva el problema contigo, no contra ti.</p>
+    ${k.tools.map(t => `<div class="obj"><p class="label">${esc(t.name)}</p><p>${esc(t.how)}</p><ul class="plain">${t.ex.map(x => `<li>“${esc(x)}”</li>`).join('')}</ul></div>`).join('')}
+    <p class="fine">${esc(k.voice)}</p>
+  </section>`);
+  out.push(`<section class="block"><h2>Lo que te van a decir y qué responder</h2>
+    ${k.objections.map(o => `<div class="obj"><p class="quote">“${esc(o.q)}”</p>
+      <p><span class="label">Qué significa:</span> ${esc(o.means)}</p>
+      <p><span class="label">Qué responder:</span> ${esc(o.reply)}</p>
+      <p><span class="label">Qué no hacer:</span> ${esc(o.avoid)}</p></div>`).join('')}
+  </section>`);
+
+  out.push(`<section class="block"><h2>Después de la reunión</h2>
+    <p>Ese mismo día, deja por escrito lo que se acordó. Un "lo vemos en marzo" se vuelve compromiso cuando está en un correo.</p>
+    <div class="say">${esc(k.email)}</div>
+    <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="email">Copiar correo</button></div>
+  </section>`);
+
+  out.push(`<section class="block"><h2>Si te dicen que no</h2><ul class="plain">${k.ifNo.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`);
+  out.push(`<section class="block"><h2>Lo que no debes decir</h2><ul class="plain">${k.dont.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`);
+
+  out.push(`<section class="block"><h2>Si te llama otra empresa</h2><p>${esc(k.pretension)}</p></section>`);
+  out.push(`<section class="block no-print" id="sim">${simHTML()}</section>`);
+  out.push(`<div class="row-actions no-print"><button type="button" class="link" data-action="back-result">Volver a mi resultado</button></div>`);
+  return out.join('');
+}
+
+function copyPayload(key) {
+  const k = S.kit;
+  if (key === 'share') return shareText();
+  if (!k) return '';
+  if (key === 'whatsapp') return k.whatsapp + (k.whatsappFollow ? '\n\n' + k.whatsappFollow : '');
+  if (key === 'speech') { const s = k.speech; return [s.auditoria, s.apertura, s.prueba, s.plan, s.mercado, s.pedido, s.cierre].filter(Boolean).join('\n\n'); }
+  if (key === 'prep' && k.prep) return k.prep.ask + '\n\n' + k.prep.script;
+  if (key === 'email') return k.email;
+  if (key === 'sheet') return k.sheet;
+  if (key === 'all') return Kit.toText(k, S.answers);
+  return '';
+}
+function fallbackCopy(t) {
+  const ta = document.createElement('textarea');
+  ta.value = t; ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  ta.remove();
+  return ok;
+}
+async function copyText(t, btn) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(t); ok = true; } catch (e) { ok = fallbackCopy(t); }
+  if (btn) {
+    const prev = btn.textContent;
+    btn.textContent = ok ? 'Copiado' : 'No se pudo copiar';
+    setTimeout(() => { btn.textContent = prev; }, 1600);
+  }
+}
+function shareText() {
+  const r = Engine.recommend(S.answers, new Date());
+  if (r.route || !r.gap) return 'Hice el test de Pídelo Bien para saber si me toca pedir aumento. ¿Y tú?';
+  return `Hice el test de Pídelo Bien: ${lowerFirstUI(gapSentence(r.gap)).replace('de tu perfil', 'de mi puesto')} ¿Y tú?`;
+}
+async function share(btn) {
+  const text = shareText();
+  if (navigator.share) {
+    try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  copyText(text, btn);
+}
+async function download() {
+  if (!RT.downloads || !S.kit) return;
+  try {
+    await RT.downloads.save({ filename: 'kit-pidelo-bien.txt', data: Kit.toText(S.kit, S.answers) });
+  } catch (e) {
+    const st = $('#ai-status');
+    if (e && e.code === 'declined') return;
+    if (st) st.textContent = 'No se pudo descargar aquí. Usa "Copiar todo".';
+    if (e && ['unavailable', 'not_granted', 'capability_disabled', 'capability_removed'].includes(e.code)) { RT.downloads = null; syncCapabilityUI(); }
+  }
+}
+
+/* ---------- Capacidades del visor ---------- */
+function syncCapabilityUI() {
+  document.querySelectorAll('[data-needs]').forEach(el => {
+    const need = el.dataset.needs;
+    let show = false;
+    if (need === 'sample') show = !!RT.sample && !RT.busy;
+    else if (need === 'downloads') show = !!RT.downloads;
+    else if (need === 'owner') show = RT.isOwner;
+    else if (need === 'no-sample') show = !RT.sample;
+    el.hidden = !show;
+  });
+}
+function initRuntime() {
+  const c = window.claude;
+  if (!c || typeof c.use !== 'function') return;
+  c.use('sample').then(s => { RT.sample = s || null; syncCapabilityUI(); if (S.view === 'kit' && !S.sim) refreshSim(); }).catch(() => {});
+  c.use('downloads').then(d => { RT.downloads = d || null; syncCapabilityUI(); }).catch(() => {});
+  c.use('user').then(u => {
+    if (!u) return;
+    u.isOwner().then(v => { RT.isOwner = !!v; syncCapabilityUI(); }).catch(() => {});
+  }).catch(() => {});
+}
+
+/* ---------- Eventos ---------- */
+function goStep(delta) {
+  const steps = visibleSteps();
+  const i = steps.findIndex(s => s.id === S.stepId);
+  const j = i + delta;
+  if (j < 0) return;
+  if (j >= steps.length) { S.view = 'result'; RT.landed = false; render(); window.scrollTo(0, 0); return; }
+  S.stepId = steps[j].id;
+  render();
+  const h = $('#q-title');
+  if (h && RT.userActed) h.focus({ preventScroll: true });
+  window.scrollTo(0, 0);
+}
+
+function onPick(stepId, value) {
+  S.answers[stepId] = value;
+  if (stepId === 'contrato' && EXIT_ROUTES.includes(value)) {
+    S.view = 'exit';
+    render();
+    window.scrollTo(0, 0);
+    return;
+  }
+  const opts = document.querySelectorAll(`[data-step="${stepId}"]`);
+  opts.forEach(o => { const on = o.dataset.value === value; o.classList.toggle('is-on', on); o.setAttribute('aria-checked', String(on)); });
+  setTimeout(() => goStep(1), 160);
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-action]');
+  if (!t) return;
+  const act = t.dataset.action;
+  if (act === 'overlay' && e.target !== t) return;
+  RT.userActed = true;
+  switch (act) {
+    case 'home': window.scrollTo(0, 0); break;
+    case 'pick': onPick(t.dataset.step, t.dataset.value); break;
+    case 'back': goStep(-1); break;
+    case 'salary-next': if (salaryOk()) goStep(1); break;
+    case 'privacy': openModal(privacyHTML(), 'priv-title'); break;
+    case 'open-paywall': openModal(paywallHTML(), 'pay-title'); break;
+    case 'overlay':
+    case 'close-modal': closeModal(); break;
+    case 'redeem': redeem(); break;
+    case 'owner-unlock': if (RT.isOwner) unlock(); break;
+    case 'restart': resetTest(); break;
+    case 'fix-contract': S.view = 'test'; S.stepId = 'contrato'; delete S.answers.contrato; render(); window.scrollTo(0, 0); break;
+    case 'share': share(t); break;
+    case 'go-kit': S.view = S.kit ? 'kit' : 'interview'; render(); window.scrollTo(0, 0); break;
+    case 'back-result': S.view = 'result'; render(); window.scrollTo(0, 0); break;
+    case 'edit-kit': S.kitDraft = Object.assign({}, S.kitIn || {}); S.view = 'interview'; render(); window.scrollTo(0, 0); break;
+    case 'kchip': {
+      const d = draft(); d[t.dataset.key] = t.dataset.value;
+      t.parentElement.querySelectorAll('.chip').forEach(c => { const on = c === t; c.classList.toggle('is-on', on); c.setAttribute('aria-checked', String(on)); });
+      save();
+      break;
+    }
+    case 'build-kit': buildKit(); break;
+    case 'copy': copyText(copyPayload(t.dataset.copy), t); break;
+    case 'download': download(); break;
+    case 'polish': polishKit(); break;
+    case 'stop-ai': if (RT.ctl) RT.ctl.abort(); break;
+    case 'sim-style': simSetStyle(t.dataset.value); break;
+    case 'sim-start': simStart(t.dataset.mode); break;
+    case 'sim-send': simSend(); break;
+    case 'sim-finish': simFinish(); break;
+    case 'sim-reset': S.sim = null; refreshSim(); break;
+    default: break;
+  }
+});
+
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.field === 'sueldo' || el.dataset.field === 'variable') {
+    const digits = el.value.replace(/[^\d]/g, '').slice(0, 6);
+    if (digits !== el.value) el.value = digits;
+    S.answers[el.dataset.field] = digits;
+    const btn = document.querySelector('[data-action="salary-next"]');
+    if (btn) btn.disabled = !salaryOk();
+    const w = $('#sueldo-warn');
+    if (w) { const msg = salaryWarning(); w.textContent = msg; w.hidden = !msg; }
+    save();
+  } else if (el.dataset.kf) {
+    draft()[el.dataset.kf] = el.value.slice(0, 400);
+    save();
+  }
+});
+
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.field === 'consent') {
+    S.consent = el.checked;
+    const btn = document.querySelector('[data-action="salary-next"]');
+    if (btn) btn.disabled = !salaryOk();
+    save();
+  } else if (el.dataset.field === 'campo') {
+    S.answers.campo = el.checked;
+    save();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#modal-root').hidden) closeModal();
+  if (e.key === 'Enter' && e.target && e.target.id === 'code') { e.preventDefault(); redeem(); }
+  if (e.key === 'Enter' && e.target && (e.target.id === 'sueldo' || e.target.id === 'variable') && salaryOk()) { e.preventDefault(); goStep(1); }
+});
+/* ============================================================
+   IA OPCIONAL Y SIMULADOR
+   La IA solo redacta. Las cifras y la recomendación salen del motor.
+   ============================================================ */
+function aiErrorCopy(e) {
+  const code = e && e.code;
+  if (code === 'cancelled') return 'Detenido. Tu kit sigue igual.';
+  if (code === 'rate_limited') return 'Demasiadas solicitudes por ahora. Intenta de nuevo en un rato.';
+  if (code === 'not_granted' || code === 'sampling_disabled' || code === 'not_declared' || code === 'capability_disabled' || code === 'capability_removed')
+    return 'La IA no está disponible en esta vista. Tu kit funciona igual sin ella.';
+  if (code === 'session_expired') return 'Tu sesión expiró. Vuelve a iniciar sesión para usar la IA.';
+  if (code === 'invalid_json') return 'La respuesta llegó incompleta. Intenta de nuevo.';
+  return 'No se pudo completar. Intenta de nuevo.';
+}
+function aiPermanentFailure(e) {
+  return e && ['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(e.code);
+}
+
+function profileLines() {
+  const a = S.answers;
+  const lab = (arr, id) => (byId(arr, id) || {}).label || 'sin dato';
+  return [
+    `Puesto: ${lab(ROLES, a.puesto)}, nivel ${lab(LEVELS, a.nivel).toLowerCase()}.`,
+    `Sector: ${lab(SECTORS, a.sector)}. Región: ${lab(REGIONS, a.region)}${a.campo ? ', trabaja en unidad, obra o campo' : ''}. Empresa de ${lab(SIZES, a.tamano).toLowerCase()} personas.`,
+    `Contrato: ${lab(CONTRACTS, a.contrato).toLowerCase()}${a.contrato === 'plazo' ? ', vence ' + lab(EXPIRY, a.vence).toLowerCase() : ''}.`,
+    `Tiempo en el puesto: ${lab(TENURE, a.antiguedad).toLowerCase()}. Último aumento: ${lab(LASTRAISE, a.aumento).toLowerCase()}. Funciones nuevas: ${lab(FUNCTIONS, a.funciones).toLowerCase()}. Empresa: ${lab(COMPANY, a.empresa).toLowerCase()}.`
+  ].join('\n');
+}
+
+/* ---------- Personalizar el kit ---------- */
+function polishPrompt() {
+  const k = S.kit, kin = S.kitIn || {}, n = k.numbers;
+  const usted = kin.trato === 'usted';
+  const style = (byId(BOSS_STYLES, kin.estilo) || {}).desc || 'sin dato';
+  const approver = (byId(APPROVERS, kin.aprueba) || {}).label || 'sin dato';
+  const r = Engine.recommend(S.answers, new Date());
+  const cifras = k.raise
+    ? `Cifra a pedir: ${Kit.money(n.anchor)}. Objetivo: ${Kit.money(n.target)}. Piso: ${Kit.money(n.floor)}. En el pedido se dice solo la cifra a pedir.`
+    : 'No se pide aumento de base: se pide un proyecto con metas, una capacitación o un bono, y una revisión del sueldo en seis meses.';
+  const objs = k.objections.map(o => `- id "${o.id}": "${o.q}" Respuesta actual: ${o.reply}`).join('\n');
+  return `Eres un coach de negociación salarial en Perú. Reescribe partes de este kit para que suenen naturales, concretas y personales, en español peruano neutro, con frases cortas que se puedan decir en voz alta.
+
+Perfil del colaborador:
+${profileLines()}
+Recomendación del motor: ${r.stamp}. Posición frente al mercado: ${r.pos === 'bajo' ? 'por debajo de la mediana' : r.pos === 'rango' ? 'dentro del rango' : 'sobre la mediana'}.
+Logro 1: ${kin.logro1 || 'no indicado'}
+Logro 2: ${kin.logro2 || 'no indicado'}
+Lo que ganó la empresa: ${kin.impacto || 'no indicado'}
+Plan para los próximos seis meses: ${kin.plan || 'no indicado'}
+Responsabilidades nuevas: ${kin.responsabilidades || 'no indicadas'}
+Quién aprueba los aumentos: ${approver}. Estilo del jefe: ${style}.
+
+Reglas obligatorias:
+- ${cifras} No cambies ninguna cifra ni inventes otras.
+- Dirígete al jefe ${usted ? 'de usted' : 'de tú'} en todos los textos.
+- El WhatsApp solo pide una reunión de 20 minutos y ofrece dos opciones: el ${k.days[0]} en la mañana o el ${k.days[1]} en la tarde. No negocia por chat ni menciona cifras.
+- Una sola cifra, nunca un rango. Nada de deudas, comparaciones con compañeros, ultimátums ni disculpas.
+- Si un logro no fue indicado, deja un espacio entre corchetes para que la persona lo complete.
+- El speech completo debe poder decirse en 60 a 90 segundos. Sigue esta lógica: entusiasmo por la empresa y aporte, resultados con números, un plan de lo que viene, dato de mercado, una cifra concreta y cierre con fecha.
+- El pedido se presenta como propuesta de valor para la empresa, no como necesidad personal.
+- El speech abre adelantándose a las dudas del jefe ("quizá pienses que…") antes de hablar del aporte.
+- En las objeciones, empieza con una etiqueta ("parece que…", "suena a que…") y sigue con una pregunta de "qué" o "cómo". Nunca uses "¿por qué?". Mantén la doble alternativa de fechas cuando ya esté.
+
+Reescribe la respuesta de estas objeciones, manteniendo cada id:
+${objs}
+
+Texto actual de referencia:
+WhatsApp: ${k.whatsapp}
+Speech: ${k.speech.auditoria || ''} ${k.speech.apertura} ${k.speech.prueba} ${k.speech.plan || ''} ${k.speech.mercado} ${k.speech.pedido} ${k.speech.cierre}
+Correo: ${k.email}
+
+Responde solo con JSON con esta forma exacta:
+{"whatsapp": "texto", "speech": {"auditoria": "texto", "apertura": "texto", "prueba": "texto", "plan": "texto", "mercado": "texto", "pedido": "texto", "cierre": "texto"}, "objeciones": [{"id": "presupuesto", "responder": "texto"}], "correo": "texto con saltos de línea"}`;
+}
+
+function applyPolish(d) {
+  if (!d || typeof d !== 'object' || !d.speech || typeof d.speech !== 'object') return false;
+  const k = S.kit;
+  const str = v => typeof v === 'string' && v.trim().length > 0 && v.length < 2000;
+  let changed = 0;
+  if (str(d.whatsapp)) { k.whatsapp = d.whatsapp.trim(); changed++; }
+  ['auditoria', 'apertura', 'prueba', 'plan', 'mercado', 'pedido', 'cierre'].forEach(key => { if (str(d.speech[key])) { k.speech[key] = d.speech[key].trim(); changed++; } });
+  if (Array.isArray(d.objeciones)) {
+    d.objeciones.forEach(o => {
+      if (!o || !str(o.responder)) return;
+      const t = k.objections.find(x => x.id === o.id);
+      if (t) { t.reply = o.responder.trim(); changed++; }
+    });
+  }
+  if (str(d.correo)) { k.email = d.correo.trim(); changed++; }
+  return changed >= 3;
+}
+
+async function polishKit() {
+  if (!RT.sample || RT.busy || !S.kit) return;
+  const st = $('#ai-status');
+  RT.busy = true;
+  RT.ctl = new AbortController();
+  syncCapabilityUI();
+  const stop = $('#stop-ai'); if (stop) stop.hidden = false;
+  if (st) st.textContent = 'Personalizando tu kit. Puede tardar hasta un minuto.';
+  try {
+    const data = await RT.sample.json(polishPrompt(), { signal: RT.ctl.signal, modelTier: 'default', cache: false });
+    if (applyPolish(data)) {
+      S.polished = true;
+      RT.busy = false; RT.ctl = null;
+      render();
+      return;
+    }
+    if (st) st.textContent = 'La respuesta no tuvo el formato esperado. Tu kit sigue igual; intenta de nuevo.';
+  } catch (e) {
+    if (st) st.textContent = aiErrorCopy(e);
+    if (aiPermanentFailure(e)) RT.sample = null;
+  } finally {
+    if (RT.busy) { RT.busy = false; RT.ctl = null; }
+    const s2 = $('#stop-ai'); if (s2) s2.hidden = true;
+    syncCapabilityUI();
+  }
+}
+
+/* ---------- Simulador ---------- */
+const SCRIPT = {
+  analitico: [
+    { line: 'Interesante. ¿En qué datos te basas para pedir eso?', model: k => `${k.speech.prueba} ${k.speech.mercado}` },
+    { line: 'Entiendo, pero este año el presupuesto de personal ya está cerrado.', obj: 'presupuesto' },
+    { line: 'Además, tu sueldo está dentro de la banda que manejamos para tu puesto.', obj: 'banda' },
+    { line: 'Podría ver un bono por resultados a fin de año, pero el sueldo base se queda igual.', obj: 'bono' }
+  ],
+  cercano: [
+    { line: 'Sabes que te valoramos mucho y que eres clave en el equipo.', model: k => `Gracias, me alegra escucharlo. Justamente porque quiero seguir aportando, me gustaría que mi sueldo lo refleje. ${k.speech.pedido}` },
+    { line: 'El tema es que ahora la situación no está para aumentos; gerencia está ajustando.', obj: 'presupuesto' },
+    { line: '¿Por qué no lo vemos en la evaluación? Ahí todo es más ordenado.', obj: 'evaluacion' },
+    { line: 'Mira, te puedo dar un bono ahora, pero el sueldo es más difícil de mover.', obj: 'bono' }
+  ],
+  directo: [
+    { line: 'Ok. ¿Cuánto quieres y por qué?', model: k => k.raise ? `Propongo un ajuste a ${Kit.money(k.numbers.anchor)} mensuales, por dos razones. ${k.speech.prueba}` : `${k.speech.pedido} ${k.speech.prueba}` },
+    { line: 'No hay presupuesto. Así de simple.', obj: 'presupuesto' },
+    { line: 'Todos en tu puesto ganan lo mismo. Si te subo a ti, tengo que subir a todos.', obj: 'banda' },
+    { line: '¿Me estás diciendo que te vas si no te subimos?', obj: 'ultimatum' }
+  ],
+  evasivo: [
+    { line: 'Ya, ya, entiendo. Justo ahorita estamos con mil cosas.', obj: 'momento', model: k => `Entiendo. Por eso prefiero dejar una fecha: ¿lo vemos con calma el ${k.days[0]} o el ${k.days[1]}?` },
+    { line: 'Pásamelo por escrito y lo vemos con calma.', obj: 'escrito' },
+    { line: 'Eso igual lo decide gerencia, no depende de mí.', obj: 'gerencia' },
+    { line: 'Mejor lo vemos más adelante, ¿te parece?', model: k => `Claro. Para no dejarlo en el aire, ¿fijamos una fecha? ¿El ${k.days[0]} de la próxima semana o el ${k.days[1]}?` }
+  ],
+  duro: [
+    { line: 'No. Este año no hay aumentos.', obj: 'presupuesto' },
+    { line: 'Te entiendo, pero la respuesta sigue siendo no.', model: k => `Lo entiendo. Entonces ayúdame a ver qué tendría que pasar para llegar ahí: ¿qué metas tendría que cumplir y en qué plazo? Si las cumplo, ¿lo revisamos en ${k.reviewMonth}?` },
+    { line: 'Todavía no estás en ese nivel.', obj: 'nivel' },
+    { line: '¿Algo más?', model: k => `Sí: ¿podemos dejar por escrito las metas y la fecha de revisión que acabamos de hablar? Hoy mismo ${k.trato === 'usted' ? 'le' : 'te'} envío un correo con el resumen.` }
+  ]
+};
+const RE_DATE = /(lunes|martes|mi[eé]rcoles|jueves|viernes|semana|mes|enero|febrero|marzo|abril|mayo|junio|julio|agosto|se[pt]tiembre|octubre|noviembre|diciembre|fecha|cu[aá]ndo|revis|pr[oó]xim)/i;
+const RE_BAD = /(deuda|pr[eé]stamo|mis gastos|necesito la plata|compa[nñ]er|gana m[aá]s que yo|me voy|renuncio|perd[oó]n|disculp)/i;
+const RE_VALUE = /(logr|result|reduj|aument|ahorr|proyecto|cliente|equipo|responsab|%|lider|supervis|cerr|implement|automatic|venta|meta)/i;
+const RE_ASK = /(propon|ajuste|aumento|revis|sueldo|remuneraci|s\/|\d)/i;
+const RE_LABEL = /(parece que|suena a que|da la impresi[oó]n|pareciera que|me imagino que|entiendo que)/i;
+const RE_CALIB = /¿\s*(c[oó]mo|qu[eé]|cu[aá]ndo|cu[aá]l)\b/i;
+const RE_WHY = /¿\s*por\s*qu[eé]/i;
+const RE_AUDIT = /(quiz[aá]|seguramente|antes de empezar|s[eé] que|pienses|piense|puede parecer)/i;
+
+function checksFor(text, opening) {
+  const t = String(text || '');
+  const list = opening
+    ? [
+        { ok: RE_VALUE.test(t), good: 'Abriste con tu aporte', bad: 'Abre con lo que aportas, no con lo que necesitas' },
+        { ok: /\d/.test(t), good: 'Usaste una cifra o un dato', bad: 'Falta una cifra: tu propuesta o un resultado con número' },
+        { ok: RE_ASK.test(t), good: 'Hiciste un pedido claro', bad: 'Haz el pedido de forma explícita' },
+        { ok: !RE_BAD.test(t), good: 'Evitaste deudas, comparaciones y amenazas', bad: 'Evita deudas, comparaciones con compañeros, amenazas o disculpas' },
+        { ok: RE_AUDIT.test(t), good: 'Te adelantaste a sus dudas', bad: 'Prueba adelantarte a sus dudas: "quizá pienses que no es el mejor momento…"' }
+      ]
+    : [
+        { ok: t.trim().length > 30 && !/^(ok|ya|bueno|entiendo|est[aá] bien|de acuerdo|claro)[\s.,!]*$/i.test(t.trim()), good: 'No cediste de inmediato', bad: 'No cedas a la primera: responde con un argumento' },
+        { ok: RE_LABEL.test(t) || RE_CALIB.test(t), good: 'Etiquetaste o preguntaste "qué" o "cómo"', bad: 'Prueba etiquetar ("parece que…") o preguntar "¿cómo podríamos…?"' },
+        { ok: RE_DATE.test(t), good: 'Llevaste la conversación a una fecha o un siguiente paso', bad: 'Cierra con una fecha o un siguiente paso concreto' },
+        { ok: !RE_BAD.test(t) && !RE_WHY.test(t), good: 'Evitaste deudas, comparaciones, amenazas y el "¿por qué?"', bad: 'Evita deudas, comparaciones, amenazas, disculpas y el "¿por qué?"' }
+      ];
+  return list;
+}
+
+function bossRules() {
+  const a = S.answers, k = S.kit, kin = S.kitIn || {};
+  const style = (byId(BOSS_STYLES, S.sim.style) || BOSS_STYLES[1]).desc;
+  const ask = k.raise ? `va a pedir un ajuste a ${Kit.money(k.numbers.anchor)} mensuales (hoy gana ${Kit.money(Number(a.sueldo))})` : 'va a pedir crecer: un proyecto, capacitación y una revisión de su sueldo en seis meses';
+  return `Vas a interpretar al jefe en un ensayo de negociación salarial en una empresa peruana. Estilo del jefe: ${style}.
+Perfil del colaborador:
+${profileLines()}
+El colaborador ${ask}.
+Reglas: responde solo como el jefe, en español peruano natural y cotidiano, en 1 a 3 oraciones y tratando al colaborador de tú. Si tu estilo es duro, di que no al menos tres veces antes de considerar algo. Si el colaborador nombra tus preocupaciones ("parece que…") o te pregunta "¿cómo…?" o "¿qué…?", te ablandas un poco y das información; si te presiona o te pregunta "¿por qué?", te pones a la defensiva. Pon objeciones realistas de una en una, según tu estilo: presupuesto, esperar la evaluación, banda salarial, un bono en vez de aumento, que lo decide gerencia. No aceptes de inmediato: cede poco a poco solo si el colaborador argumenta con resultados, sostiene una cifra concreta y propone una fecha. Nunca salgas del personaje, nunca des consejos y no uses comillas.${kin.aprueba && kin.aprueba !== 'jefe' ? ' Recuerda que la aprobación final la tiene ' + ((byId(APPROVERS, kin.aprueba) || {}).label || '').toLowerCase() + '.' : ''}`;
+}
+
+function simTurnsForAI() {
+  const turns = [];
+  let first = true;
+  S.sim.turns.forEach(t => {
+    if (t.role === 'me') {
+      turns.push({ role: 'user', content: first ? `${bossRules()}\n\nEl colaborador abre la reunión y dice:\n${t.text}` : t.text });
+      first = false;
+    } else if (t.role === 'boss') {
+      turns.push({ role: 'assistant', content: t.text });
+    }
+  });
+  return turns;
+}
+
+function simHTML() {
+  const sim = S.sim;
+  const intro = `<h2>Practica antes de la reunión</h2>`;
+  if (!sim) {
+    const cur = (S.kitIn && S.kitIn.estilo) || 'cercano';
+    return `${intro}
+      <p>Tu jefe responde según su estilo. Tú abres la reunión, haces tu pedido y manejas sus objeciones.</p>
+      <div class="field"><span>Estilo de tu jefe</span><div class="chips">${BOSS_STYLES.map(o => `<button type="button" class="chip${cur === o.id ? ' is-on' : ''}" data-action="sim-style" data-value="${o.id}" aria-pressed="${cur === o.id}">${esc(o.label)}</button>`).join('')}</div></div>
+      <button type="button" class="btn" data-action="sim-start" data-mode="ia" data-needs="sample" hidden>Empezar la práctica con IA</button>
+      <button type="button" class="btn-ghost" data-action="sim-start" data-mode="guiada">Empezar la práctica guiada</button>
+      <p class="fine" data-needs="sample" hidden>Con IA, tu jefe responde libremente. La práctica guiada usa objeciones fijas y te muestra una respuesta modelo después de cada turno.</p>`;
+  }
+  const label = sim.mode === 'ia' ? 'Práctica con IA' : 'Práctica guiada';
+  const bubbles = sim.turns.map(t => {
+    if (t.role === 'me') return `<div class="bubble me"><span class="who">Tú</span>${esc(t.text)}</div>`;
+    if (t.role === 'boss') return `<div class="bubble boss"><span class="who">Tu jefe</span>${esc(t.text)}</div>`;
+    const checks = (t.checks || []).map(c => `<p class="${c.ok ? 'ok' : 'no'}">${esc(c.ok ? c.good : c.bad)}</p>`).join('');
+    const model = t.model ? `<p><span class="label">Una respuesta modelo:</span> ${esc(t.model)}</p>` : '';
+    return `<div class="coach">${t.text ? `<p>${esc(t.text)}</p>` : ''}${checks}${model}</div>`;
+  }).join('');
+  const pending = sim.pending ? `<div class="bubble boss" id="sim-pending"><span class="who">Tu jefe</span>${esc(RT.simText || 'Escribiendo…')}</div>` : '';
+  const myTurns = sim.turns.filter(t => t.role === 'me').length;
+  let foot = '';
+  if (sim.done) {
+    foot = feedbackHTML(sim.feedback) + `<button type="button" class="btn-ghost" data-action="sim-reset">Practicar de nuevo</button>`;
+  } else {
+    foot = `<div class="composer">
+        <label class="small-label" for="sim-input">${myTurns === 0 ? 'Abre la reunión y haz tu pedido, como lo dirías en voz alta' : 'Tu respuesta'}</label>
+        <textarea id="sim-input" ${sim.pending ? 'disabled' : ''}></textarea>
+        <button type="button" class="btn" data-action="sim-send" ${sim.pending ? 'disabled' : ''}>Responder</button>
+        ${sim.mode === 'ia' && myTurns >= 2 ? `<button type="button" class="btn-ghost" data-action="sim-finish" ${sim.pending ? 'disabled' : ''}>Terminar y ver mi evaluación</button>` : ''}
+        ${sim.pending ? '<button type="button" class="link" data-action="stop-ai">Detener</button>' : ''}
+      </div>
+      <p class="status" id="sim-status" role="status">${esc(sim.status || '')}</p>`;
+  }
+  return `${intro}<p class="fine">${label}. Estilo: ${esc((byId(BOSS_STYLES, sim.style) || {}).label || '')}.</p><div class="chat">${bubbles}${pending}</div>${foot}`;
+}
+
+function feedbackHTML(f) {
+  if (!f) return '';
+  return `<div class="say feedback">
+      <p class="score">${esc(f.puntaje)}<span class="fine"> de 10</span></p>
+      ${f.bien && f.bien.length ? `<p class="label">Lo que hiciste bien</p><ul class="plain">${f.bien.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      ${f.mejorar && f.mejorar.length ? `<p class="label">Para la próxima</p><ul class="plain">${f.mejorar.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      ${f.frase ? `<p><span class="label">Prueba decir:</span> ${esc(f.frase)}</p>` : ''}
+    </div>`;
+}
+
+function refreshSim() {
+  const box = $('#sim');
+  if (!box) return;
+  box.innerHTML = simHTML();
+  syncCapabilityUI();
+}
+
+function simSetStyle(id) {
+  if (!S.kitIn) S.kitIn = {};
+  S.kitIn.estilo = id;
+  save();
+  refreshSim();
+}
+
+function simStart(mode) {
+  const useAI = mode === 'ia' && !!RT.sample;
+  const style = (S.kitIn && S.kitIn.estilo) || 'cercano';
+  S.sim = { mode: useAI ? 'ia' : 'guiada', style, turns: [], bossIdx: 0, done: false, pending: false, feedback: null, status: '' };
+  S.sim.turns.push({ role: 'coach', text: 'Empieza tú: abre la reunión con tu aporte y haz tu pedido.' });
+  save();
+  refreshSim();
+  const inp = $('#sim-input'); if (inp) inp.focus();
+}
+
+async function simSend() {
+  const sim = S.sim;
+  const inp = $('#sim-input');
+  if (!sim || sim.pending || !inp) return;
+  const text = inp.value.trim().slice(0, 1200);
+  if (!text) return;
+  const opening = sim.turns.filter(t => t.role === 'me').length === 0;
+  sim.turns.push({ role: 'me', text });
+  if (sim.mode === 'guiada') {
+    const script = SCRIPT[sim.style] || SCRIPT.cercano;
+    const checks = checksFor(text, opening);
+    let model = null;
+    if (!opening) {
+      const prev = script[sim.bossIdx - 1];
+      const o = prev && prev.obj ? S.kit.objections.find(x => x.id === prev.obj) : null;
+      model = o ? o.reply : (prev && prev.model ? prev.model(S.kit) : null);
+    }
+    sim.turns.push({ role: 'coach', text: '', checks, model });
+    sim.allChecks = (sim.allChecks || []).concat(checks);
+    if (sim.bossIdx < script.length) {
+      sim.turns.push({ role: 'boss', text: script[sim.bossIdx].line });
+      sim.bossIdx++;
+    } else {
+      sim.done = true;
+      sim.feedback = guidedFeedback(sim.allChecks);
+    }
+    save();
+    refreshSim();
+    const ni = $('#sim-input'); if (ni) ni.focus();
+    return;
+  }
+  // Modo IA
+  sim.pending = true; sim.status = '';
+  RT.simText = '';
+  RT.ctl = new AbortController();
+  save(); refreshSim();
+  try {
+    const res = await RT.sample(simTurnsForAI(), {
+      cache: false, modelTier: 'quick', signal: RT.ctl.signal,
+      onText: ({ text: t }) => { RT.simText = t; const p = $('#sim-pending'); if (p) p.innerHTML = '<span class="who">Tu jefe</span>' + esc(t); }
+    });
+    sim.turns.push({ role: 'boss', text: res.text.trim() });
+  } catch (e) {
+    if (e && e.text) sim.turns.push({ role: 'boss', text: e.text.trim() });
+    sim.status = aiErrorCopy(e);
+    if (aiPermanentFailure(e)) { RT.sample = null; sim.mode = 'guiada'; sim.status += ' Seguimos en práctica guiada.'; }
+  } finally {
+    sim.pending = false; RT.ctl = null; RT.simText = '';
+    save(); refreshSim();
+    const ni = $('#sim-input'); if (ni) ni.focus();
+  }
+}
+
+function guidedFeedback(checks) {
+  const total = checks.length || 1;
+  const okCount = checks.filter(c => c.ok).length;
+  const uniq = arr => Array.from(new Set(arr));
+  return {
+    puntaje: Math.round(okCount / total * 10),
+    bien: uniq(checks.filter(c => c.ok).map(c => c.good)).slice(0, 3),
+    mejorar: uniq(checks.filter(c => !c.ok).map(c => c.bad)).slice(0, 3),
+    frase: S.kit.speech.cierre
+  };
+}
+
+async function simFinish() {
+  const sim = S.sim;
+  if (!sim || sim.pending) return;
+  if (sim.mode !== 'ia' || !RT.sample) { sim.done = true; sim.feedback = guidedFeedback(sim.allChecks || []); save(); refreshSim(); return; }
+  sim.pending = true; sim.status = 'Preparando tu evaluación…';
+  RT.ctl = new AbortController();
+  save(); refreshSim();
+  const transcript = sim.turns.filter(t => t.role !== 'coach').map(t => (t.role === 'me' ? 'Colaborador: ' : 'Jefe: ') + t.text).join('\n');
+  const k = S.kit;
+  const target = k.raise ? `una cifra concreta (${Kit.money(k.numbers.anchor)})` : 'un proyecto con metas y una revisión de sueldo en seis meses';
+  const prompt = `Evalúa el desempeño del colaborador (no del jefe) en este ensayo de negociación salarial en Perú.
+Criterios: se adelantó a las dudas del jefe al abrir; abrió con su aporte; usó resultados con números; pidió ${target}; ante las objeciones usó etiquetas ("parece que…") y preguntas de "qué" o "cómo" en vez de "¿por qué?"; no partió la diferencia ni cedió de inmediato; cerró con una fecha o un siguiente paso; evitó hablar de deudas, compararse con compañeros, amenazar o disculparse.
+Transcripción:
+${transcript}
+
+Responde solo con JSON con esta forma: {"puntaje": 0, "bien": ["frase corta"], "mejorar": ["frase corta"], "frase": "una frase que el colaborador podría usar la próxima vez"}. "puntaje" es un entero de 0 a 10; máximo 3 elementos por lista; habla al colaborador de tú.`;
+  try {
+    const f = await RT.sample.json(prompt, { cache: false, modelTier: 'default', signal: RT.ctl.signal });
+    const okArr = v => Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 3) : [];
+    sim.feedback = { puntaje: Math.max(0, Math.min(10, Math.round(Number(f && f.puntaje) || 0))), bien: okArr(f && f.bien), mejorar: okArr(f && f.mejorar), frase: f && typeof f.frase === 'string' ? f.frase : '' };
+    sim.done = true; sim.status = '';
+  } catch (e) {
+    sim.status = aiErrorCopy(e);
+    if (aiPermanentFailure(e)) RT.sample = null;
+  } finally {
+    sim.pending = false; RT.ctl = null;
+    save(); refreshSim();
+  }
+}
+
+/* ---------- Arranque ---------- */
+load();
+if (S.sim && S.sim.pending) S.sim.pending = false;
+render();
+initRuntime();
+</script>
+</body>
+</html>
