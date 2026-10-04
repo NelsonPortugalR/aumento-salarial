@@ -98,6 +98,18 @@ ok(tipico.caso.strengths.some(s => /precios en Lima/.test(s)), 'falta el argumen
 ok(!!Engine.salaryCheck(withA({ sueldo: '60000' })), 'no avisa de un sueldo que parece anual');
 ok(!Engine.salaryCheck(base), 'avisa sin motivo');
 
+// 13) Capa de respuestas propias y registro anónimo
+const before = Engine.band(base).p50;
+MARKET.own = { cells: { [Engine.ownKey(base)]: { f: 1.1, n: 60 } } };
+const after = Engine.band(base);
+ok(Math.abs(after.p50 / before - 1.1) < 0.02, `la capa propia no se aplica: ${before} -> ${after.p50}`);
+ok(after.confidence === 'alta' && after.nOwn === 60, 'la capa propia no sube la confianza');
+ok(Engine.band(withA({ region: 'arequipa' })).nOwn === 0, 'la capa propia se aplica fuera de su celda');
+MARKET.own = { cells: {} };
+const rec = Engine.responseRecord(withA({ nombre: 'Ana', razon_social: 'X SAC', dni: '12345678' }), Engine.recommend(base, now), now);
+ok(!('nombre' in rec) && !('razon_social' in rec) && !('dni' in rec) && rec.empresa === 'estable', 'el registro filtra datos personales');
+ok(rec.mes === '2026-10' && rec.sueldo === 3000 && rec.puesto === 'contabilidad', 'registro incompleto');
+
 console.log(`engine.test: ${checks - failures}/${checks} verificaciones OK`);
 console.log(`ejemplo: contabilidad, analista, industria, Lima, 101-500, 3-5 años -> P25 ${b.p25}, mediana ${b.p50}, P75 ${b.p75} (${b.confidence})`);
 if (failures) process.exit(1);

@@ -1,6 +1,6 @@
 /* ============================================================
-   BANDAS DE MERCADO — generado por data/pipeline/02_model.py
-   No editar a mano: corre `npm run data` para regenerar.
+   BANDAS DE MERCADO — generado por data/pipeline/export.py
+   No editar a mano: corre `npm run data:model` para regenerar.
    ============================================================ */
 const MARKET = {
  "version": "2026-10-04",
@@ -16,6 +16,9 @@ const MARKET = {
    "buk": 2000,
    "buk_n": 2,
    "w_enaho": 0.6,
+   "guia": null,
+   "guia_n": 0,
+   "antes_guia": null,
    "metodo": "ENAHO y Buk"
   },
   "analista": {
@@ -27,21 +30,27 @@ const MARKET = {
    "buk": 3375,
    "buk_n": 2,
    "w_enaho": 0.5,
+   "guia": null,
+   "guia_n": 0,
+   "antes_guia": null,
    "metodo": "ENAHO y Buk"
   },
   "senior": {
-   "p50": 5067,
+   "p50": 5246,
    "lo": 0.753,
    "hi": 1.377,
    "enaho": null,
    "enaho_n": 2431,
-   "buk": 6161,
+   "buk": 5905,
    "buk_n": 6,
    "w_enaho": null,
-   "metodo": "punto medio entre analista y jefe de área"
+   "guia": 7764,
+   "guia_n": 21,
+   "antes_guia": null,
+   "metodo": "punto medio entre analista y jefe de área (con el jefe calibrado por la guía privada)"
   },
   "supervisor": {
-   "p50": 4756,
+   "p50": 4925,
    "lo": 0.738,
    "hi": 1.393,
    "enaho": 3156,
@@ -49,10 +58,13 @@ const MARKET = {
    "buk": 7169,
    "buk_n": 12,
    "w_enaho": 0.5,
-   "metodo": "punto medio entre supervisores (ENAHO) y jefaturas (Buk)"
+   "guia": null,
+   "guia_n": 0,
+   "antes_guia": null,
+   "metodo": "punto medio entre supervisores (ENAHO) y jefaturas (Buk) (con el jefe calibrado por la guía privada)"
   },
   "jefe": {
-   "p50": 7169,
+   "p50": 7687,
    "lo": 0.738,
    "hi": 1.393,
    "enaho": 3156,
@@ -60,10 +72,13 @@ const MARKET = {
    "buk": 7169,
    "buk_n": 12,
    "w_enaho": 0.0,
-   "metodo": "Buk"
+   "guia": 8751,
+   "guia_n": 138,
+   "antes_guia": 7169,
+   "metodo": "Buk + guía privada (35%)"
   },
   "gerente": {
-   "p50": 11368,
+   "p50": 12298,
    "lo": 0.645,
    "hi": 1.488,
    "enaho": 7266,
@@ -71,7 +86,10 @@ const MARKET = {
    "buk": 12714,
    "buk_n": 6,
    "w_enaho": 0.2,
-   "metodo": "ENAHO y Buk"
+   "guia": 14232,
+   "guia_n": 262,
+   "antes_guia": 11368,
+   "metodo": "ENAHO y Buk + guía privada (35%)"
   }
  },
  "roles": {
@@ -518,19 +536,22 @@ const MARKET = {
    "s3": 1.0,
    "s1": 0.88,
    "s2": 0.98,
-   "s4": 1.081
+   "s4": 1.081,
+   "s5": 1.148
   },
   "profesional": {
    "s3": 1.0,
    "s1": 0.704,
    "s2": 0.851,
-   "s4": 1.0
+   "s4": 1.083,
+   "s5": 1.251
   },
   "direccion": {
    "s3": 1.0,
    "s1": 0.794,
    "s2": 0.875,
-   "s4": 1.043
+   "s4": 1.197,
+   "s5": 1.524
   }
  },
  "experience": {
@@ -552,7 +573,8 @@ const MARKET = {
  "sources": {
   "enaho_n": 10022,
   "years": "2022-2025",
-  "buk_cargos": 28
+  "buk_cargos": 28,
+  "guia_cargos": 421
  },
  "context": {
   "aumentos_2026": {
@@ -639,5 +661,10 @@ const MARKET = {
    "fuente": "D.S. 301-2025-EF (UIT 2026); Ley del Impuesto a la Renta, art. 53; SBS (aporte 10%, prima 1.37%, comisión sobre flujo 1.47% a 1.69%)",
    "url": "https://elperuano.pe/noticia/285208-mef-establece-en-s-5-500-la-unidad-impositiva-tributaria-para-2026"
   }
+ },
+ "own": {
+  "version": "2026-10-04",
+  "n_total": 0,
+  "cells": {}
  }
 };

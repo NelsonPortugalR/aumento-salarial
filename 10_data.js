@@ -7,6 +7,8 @@ const CONFIG = {
   price: 29.90,
   payUrl: '',        // Link de pago (Culqi, Mercado Pago u otro). Vacío = sin botón de pago.
   whatsapp: '',      // WhatsApp para pedir el código, formato 51XXXXXXXXX. Vacío = sin botón.
+  collectUrl: '',    // Endpoint que recibe el registro anónimo de cada test (POST JSON). Vacío = no se envía nada.
+  consentVersion: '2026-10',
   rmv: 1230,         // RMV desde el 1 de octubre de 2026 (D.S. 015-2026-TR)
   annualFactor: 15.35, // 12 sueldos + 2 gratificaciones + bonificación extraordinaria + CTS (régimen general)
   annualFactorSmall: 13.59, // pequeña empresa REMYPE: 12 + media grati dos veces + bonificación + media CTS
@@ -108,7 +110,8 @@ const SIZES = [
   { id: 's1', label: 'De 1 a 10' },
   { id: 's2', label: 'De 11 a 100' },
   { id: 's3', label: 'De 101 a 500' },
-  { id: 's4', label: 'Más de 500' }
+  { id: 's4', label: 'De 501 a 2,000' },
+  { id: 's5', label: 'Más de 2,000' }
 ];
 
 const CONTRACTS = [

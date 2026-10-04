@@ -6,8 +6,8 @@ Prototipo funcional de un test salarial freemium: test de 12 a 13 preguntas, res
 
 - `pidelo-bien.html` se arma con `build.sh` (`npm run build`) desde archivos separados:
   - `01_head.html` estilos y tokens (claro y oscuro), `02_body.html` estructura.
-  - `10_data.js` configuración (`CONFIG`), catálogos del test (6 niveles, 21 puestos, 13 sectores, 25 regiones) y pasos.
-  - `15_bands.js` **generado** por `data/pipeline/02_model.py`: anclas, multiplicadores, dispersión, n por celda y contexto 2026 (`MARKET`). No se edita a mano.
+  - `10_data.js` configuración (`CONFIG`), catálogos del test (6 niveles, 21 puestos, 13 sectores, 25 regiones, 5 tamaños) y pasos.
+  - `15_bands.js` **generado** por `data/pipeline/export.py`: anclas, multiplicadores, dispersión, n por celda y contexto 2026 (`MARKET`). No se edita a mano.
   - `20_engine.js` motor determinístico: banda, percentil (banda asimétrica), confianza según datos, caso, momento, recomendación, cifras (ancla, objetivo, piso, escalera, pretensión) y bruto↔neto 2026.
   - `30_kit.js` kit con plantillas (funciona sin IA). `40_ui.js` interfaz. `50_ai.js` IA opcional y simulador.
 - Pruebas: `npm test` corre `engine.test.js` (invariantes del motor sobre miles de perfiles) y `flow.test.js` (flujo completo en jsdom).
@@ -29,19 +29,19 @@ El motor decide (recomendación y cifras) con reglas fijas y auditables. La IA s
 
 ## Datos salariales: fuentes y reglas
 
-Las bandas actuales salen de `data/pipeline/` (`npm run data` descarga y recalcula todo; `npm run data:model` solo recalcula). Método, supuestos, validación y límites: `data/METODOLOGIA.md`. Números de la última corrida: `data/RESULTADOS.md`. Los microdatos (`data/raw/`) no se versionan.
+Las bandas actuales salen de `data/pipeline/` (`npm run data` descarga y recalcula todo; `npm run data:model` solo recalcula). La actualización es mensual, con PR para revisión humana: calendario y comandos en `data/ACTUALIZACION.md`. Las respuestas del test retroalimentan el modelo como una capa acotada por celda (`04_responses.py`). Método, supuestos, validación y límites: `data/METODOLOGIA.md`. Números de la última corrida: `data/RESULTADOS.md`. Los microdatos (`data/raw/`) no se versionan.
 
 | Fuente | Qué aporta | Regla de uso |
 | --- | --- | --- |
 | Guía Salarial Buk Perú 2026 | Sueldos reales de planilla de 71,143 personas en 1,149 empresas; 207 cargos; P25, P50 y P75 por tamaño de empresa y mediana por industria | Fuente principal para calibrar. Descarga gratuita con formulario; dejar el PDF en `data/raw/` y extraer tablas a `data/bands.json`. No reproducir sus tablas tal cual en el producto. |
-| Guía Salarial Michael Page Perú 2027 | Rangos mínimo y máximo de sueldo fijo bruto mensual por posición, industria y tamaño (por facturación); fuerte en jefaturas y gerencias | Requiere cuenta. Su herramienta indica que los datos son para uso dentro de ella: usar solo como control interno de cargos senior, no mostrar ni redistribuir sin permiso. |
-| Avisos con sueldo publicado (Computrabajo, Bumeran, LinkedIn) | Rangos ofrecidos actuales | No hacer scraping de LinkedIn (sus condiciones lo prohíben). Revisar condiciones de cada portal antes de automatizar. Por defecto: muestreo manual con un formulario o CSV (fecha, portal, url, puesto normalizado, nivel, ciudad, sector, tamaño, sueldo mínimo y máximo, tipo de contrato). Marcar como "ofrecido" y darle menos peso que lo pagado. |
+| Guía salarial de reclutamiento (privada) | Rangos mínimo, medio y máximo por cargo y facturación; fuerte en jefaturas y gerencias | Uso autorizado por el dueño. Original en `data/private/` (no se versiona); al repo solo van agregados por puesto, nivel y tamaño. Pesa 35% en las anclas de jefe y gerente (senior y coordinador lo heredan) y define el tramo "Más de 2,000". No mostrar sus cifras cargo por cargo. |
+| Avisos con sueldo publicado (Computrabajo, Bumeran, LinkedIn) | Rangos ofrecidos actuales | No hacer scraping de LinkedIn (sus condiciones lo prohíben). Registro manual en `data/benchmarks/avisos/` con la plantilla; `05_postings.py` calcula el índice ofrecido / modelo. Es monitor, no entra a la banda. |
 | Microdatos INEI (ENAHO, EPEN) y MTPE Ponte en Carrera | Base pública por ocupación y región; tramos junior | Línea base para niveles de entrada. |
 | Respuestas del propio test | Puesto, nivel, sueldo, ciudad, sector y tamaño, con consentimiento | Gana peso desde unas 30 respuestas por celda. Ninguna celda con menos de 5 respuestas propias se publica sola. |
 
 Modelo: jerárquico con encogimiento (la celda se apoya en la de arriba cuando tiene pocos datos). Guardar por celda: fuente, fecha, número de observaciones y confianza (alta con 50 o más en 12 meses, media con 15 a 49, baja con menos).
 
-Validación de la versión actual frente a 28 medianas publicadas de Buk: diferencia absoluta mediana de 9.6%. Sigue abajo en ventas senior (business developer, −26% a −28%) y en jefaturas de RR.HH. y marketing (−24% a −29%): son los primeros cargos a recalibrar cuando haya más datos de planilla.
+Validación de la versión actual frente a 28 medianas publicadas de Buk: diferencia absoluta mediana de 8.8%, sin sesgo hacia abajo en jefaturas. Siguen bajas las jefaturas de marketing (−24%) y cargos especiales (arquitecto de software, gerente de mina).
 
 ## Método del kit
 

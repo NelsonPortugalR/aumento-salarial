@@ -2,7 +2,7 @@
    INTERFAZ
    ============================================================ */
 const STORE_KEY = 'pidelo-bien-v2';
-const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null });
+const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null, recordSent: false });
 const S = Object.assign(FRESH(), { unlocked: false });
 const RT = { sample: null, downloads: null, isOwner: false, busy: false, ctl: null, landed: false, userActed: false, simText: '' };
 
@@ -137,6 +137,7 @@ function viewResult() {
   const a = S.answers;
   const r = Engine.recommend(a, new Date());
   if (r.route) { S.view = 'exit'; return viewExit(); }
+  sendRecord(a, r);
   const n = Engine.numbers(a, r);
   const mini = Kit.build(a, r, n, { trato: 'tu' }, new Date());
   const date = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -210,6 +211,17 @@ function confidenceSentence(b) {
   const n = Number(b.nRole || 0).toLocaleString('en-US');
   if (b.otherRole) return `${lvl}: como elegiste "Otro puesto", usamos el promedio de tu nivel, sector, región y tamaño de empresa. Tómalo como referencia general.`;
   return `${lvl}: banda calculada con ${n} personas de tu área en la encuesta de hogares del INEI (2022-2025) y guías salariales 2026, actualizada a octubre de 2026.`;
+}
+
+// Una vez por test, y solo con consentimiento y endpoint configurado
+function sendRecord(a, r) {
+  if (S.recordSent || !S.consent || !CONFIG.collectUrl) return;
+  S.recordSent = true;
+  const rid = Math.random().toString(36).slice(2, 12);   // aleatorio: solo evita contar dos veces el mismo test
+  const rec = Object.assign(Engine.responseRecord(Object.assign({ _rid: rid }, a), r), { consentimiento: CONFIG.consentVersion });
+  try {
+    fetch(CONFIG.collectUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec), keepalive: true }).catch(() => {});
+  } catch (e) { /* sin red: no pasa nada */ }
 }
 
 /* ---------- Salidas honestas ---------- */
@@ -305,7 +317,7 @@ function methodHTML() {
     <ul class="plain">
       <li><span class="label">Base:</span> ${Number(src.enaho_n || 0).toLocaleString('en-US')} asalariados formales del sector privado de la Encuesta Nacional de Hogares del INEI (${esc(src.years || '')}), con el sueldo bruto mensual que declararon, incluidas comisiones y bonos.</li>
       <li><span class="label">Tu perfil:</span> estimamos cuánto cambia el sueldo según tu área, nivel, sector, región, tamaño de empresa y años en el puesto. Cuando un grupo tiene pocos datos, se apoya en su grupo vecino.</li>
-      <li><span class="label">Jefaturas y gerencias:</span> casi no aparecen en una encuesta de hogares, así que las calibramos con ${src.buk_cargos || 0} cargos publicados de la Guía Salarial Buk Perú 2026, basada en planillas.</li>
+      <li><span class="label">Jefaturas y gerencias:</span> casi no aparecen en una encuesta de hogares, así que las calibramos con ${src.buk_cargos || 0} cargos publicados de la Guía Salarial Buk Perú 2026, basada en planillas, y con una guía salarial de reclutamiento de empresas medianas y grandes.</li>
       <li><span class="label">Fecha:</span> llevamos todo a octubre de 2026 con el crecimiento de los sueldos formales.</li>
       <li><span class="label">Límites:</span> es una referencia de mercado, no la política salarial de tu empresa. La confianza baja cuando hay pocos datos para tu combinación.</li>
     </ul>

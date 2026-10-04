@@ -241,6 +241,8 @@ const CONFIG = {
   price: 29.90,
   payUrl: '',        // Link de pago (Culqi, Mercado Pago u otro). Vacío = sin botón de pago.
   whatsapp: '',      // WhatsApp para pedir el código, formato 51XXXXXXXXX. Vacío = sin botón.
+  collectUrl: '',    // Endpoint que recibe el registro anónimo de cada test (POST JSON). Vacío = no se envía nada.
+  consentVersion: '2026-10',
   rmv: 1230,         // RMV desde el 1 de octubre de 2026 (D.S. 015-2026-TR)
   annualFactor: 15.35, // 12 sueldos + 2 gratificaciones + bonificación extraordinaria + CTS (régimen general)
   annualFactorSmall: 13.59, // pequeña empresa REMYPE: 12 + media grati dos veces + bonificación + media CTS
@@ -342,7 +344,8 @@ const SIZES = [
   { id: 's1', label: 'De 1 a 10' },
   { id: 's2', label: 'De 11 a 100' },
   { id: 's3', label: 'De 101 a 500' },
-  { id: 's4', label: 'Más de 500' }
+  { id: 's4', label: 'De 501 a 2,000' },
+  { id: 's5', label: 'Más de 2,000' }
 ];
 
 const CONTRACTS = [
@@ -442,8 +445,8 @@ const EXIT_ROUTES = ['publico', 'civil', 'rxh'];
 
 const byId = (arr, id) => arr.find(x => x.id === id);
 /* ============================================================
-   BANDAS DE MERCADO — generado por data/pipeline/02_model.py
-   No editar a mano: corre `npm run data` para regenerar.
+   BANDAS DE MERCADO — generado por data/pipeline/export.py
+   No editar a mano: corre `npm run data:model` para regenerar.
    ============================================================ */
 const MARKET = {
  "version": "2026-10-04",
@@ -459,6 +462,9 @@ const MARKET = {
    "buk": 2000,
    "buk_n": 2,
    "w_enaho": 0.6,
+   "guia": null,
+   "guia_n": 0,
+   "antes_guia": null,
    "metodo": "ENAHO y Buk"
   },
   "analista": {
@@ -470,21 +476,27 @@ const MARKET = {
    "buk": 3375,
    "buk_n": 2,
    "w_enaho": 0.5,
+   "guia": null,
+   "guia_n": 0,
+   "antes_guia": null,
    "metodo": "ENAHO y Buk"
   },
   "senior": {
-   "p50": 5067,
+   "p50": 5246,
    "lo": 0.753,
    "hi": 1.377,
    "enaho": null,
    "enaho_n": 2431,
-   "buk": 6161,
+   "buk": 5905,
    "buk_n": 6,
    "w_enaho": null,
-   "metodo": "punto medio entre analista y jefe de área"
+   "guia": 7764,
+   "guia_n": 21,
+   "antes_guia": null,
+   "metodo": "punto medio entre analista y jefe de área (con el jefe calibrado por la guía privada)"
   },
   "supervisor": {
-   "p50": 4756,
+   "p50": 4925,
    "lo": 0.738,
    "hi": 1.393,
    "enaho": 3156,
@@ -492,10 +504,13 @@ const MARKET = {
    "buk": 7169,
    "buk_n": 12,
    "w_enaho": 0.5,
-   "metodo": "punto medio entre supervisores (ENAHO) y jefaturas (Buk)"
+   "guia": null,
+   "guia_n": 0,
+   "antes_guia": null,
+   "metodo": "punto medio entre supervisores (ENAHO) y jefaturas (Buk) (con el jefe calibrado por la guía privada)"
   },
   "jefe": {
-   "p50": 7169,
+   "p50": 7687,
    "lo": 0.738,
    "hi": 1.393,
    "enaho": 3156,
@@ -503,10 +518,13 @@ const MARKET = {
    "buk": 7169,
    "buk_n": 12,
    "w_enaho": 0.0,
-   "metodo": "Buk"
+   "guia": 8751,
+   "guia_n": 138,
+   "antes_guia": 7169,
+   "metodo": "Buk + guía privada (35%)"
   },
   "gerente": {
-   "p50": 11368,
+   "p50": 12298,
    "lo": 0.645,
    "hi": 1.488,
    "enaho": 7266,
@@ -514,7 +532,10 @@ const MARKET = {
    "buk": 12714,
    "buk_n": 6,
    "w_enaho": 0.2,
-   "metodo": "ENAHO y Buk"
+   "guia": 14232,
+   "guia_n": 262,
+   "antes_guia": 11368,
+   "metodo": "ENAHO y Buk + guía privada (35%)"
   }
  },
  "roles": {
@@ -961,19 +982,22 @@ const MARKET = {
    "s3": 1.0,
    "s1": 0.88,
    "s2": 0.98,
-   "s4": 1.081
+   "s4": 1.081,
+   "s5": 1.148
   },
   "profesional": {
    "s3": 1.0,
    "s1": 0.704,
    "s2": 0.851,
-   "s4": 1.0
+   "s4": 1.083,
+   "s5": 1.251
   },
   "direccion": {
    "s3": 1.0,
    "s1": 0.794,
    "s2": 0.875,
-   "s4": 1.043
+   "s4": 1.197,
+   "s5": 1.524
   }
  },
  "experience": {
@@ -995,7 +1019,8 @@ const MARKET = {
  "sources": {
   "enaho_n": 10022,
   "years": "2022-2025",
-  "buk_cargos": 28
+  "buk_cargos": 28,
+  "guia_cargos": 421
  },
  "context": {
   "aumentos_2026": {
@@ -1082,6 +1107,11 @@ const MARKET = {
    "fuente": "D.S. 301-2025-EF (UIT 2026); Ley del Impuesto a la Renta, art. 53; SBS (aporte 10%, prima 1.37%, comisión sobre flujo 1.47% a 1.69%)",
    "url": "https://elperuano.pe/noticia/285208-mef-establece-en-s-5-500-la-unidad-impositiva-tributaria-para-2026"
   }
+ },
+ "own": {
+  "version": "2026-10-04",
+  "n_total": 0,
+  "cells": {}
  }
 };
 /* ============================================================
@@ -1127,8 +1157,17 @@ const Engine = (() => {
     };
   }
 
+  // Capa de respuestas propias del test (data/pipeline/04_responses.py): ajuste acotado por celda
+  const ownKey = a => `${a.puesto}|${levelOf(a)}|${a.region === 'lima' ? 'lima' : 'prov'}`;
+  function ownCell(a) {
+    const own = MARKET.own && MARKET.own.cells;
+    return (own && own[ownKey(a)]) || null;
+  }
+
   // Confianza según cuántos datos respaldan el puesto, la región y el nivel
   function confidence(a) {
+    const own = ownCell(a);
+    if (own && own.n >= 50) return 'alta';
     const lvl = levelOf(a);
     const role = a.puesto !== 'otro' ? MARKET.roles[a.puesto] : null;
     const region = MARKET.regions[a.region];
@@ -1140,7 +1179,8 @@ const Engine = (() => {
   function band(a) {
     const f = factors(a);
     const L = MARKET.levels[f.lvl];
-    let p50 = L.p50 * f.role * f.sector * f.region * f.size * f.exp * f.field;
+    const own = ownCell(a);
+    let p50 = L.p50 * f.role * f.sector * f.region * f.size * f.exp * f.field * (own ? own.f : 1);
     let p25 = p50 * L.lo, p75 = p50 * L.hi;
     // Nadie a tiempo completo en planilla gana menos que la RMV
     p25 = Math.max(p25, CONFIG.rmv);
@@ -1153,7 +1193,7 @@ const Engine = (() => {
     return {
       p25: round50(p25), p50: round50(p50), p75: round50(p75),
       confidence: confidence(a),
-      nRole: role.n, nRegion: region.n,
+      nRole: role.n, nRegion: region.n, nOwn: own ? own.n : 0,
       method: L.metodo,
       otherRole: !MARKET.roles[a.puesto] || a.puesto === 'otro'
     };
@@ -1381,7 +1421,18 @@ const Engine = (() => {
     return null;
   }
 
-  return { band, factors, confidence, percentile, gapRange, position, caseScore, moment, recommend, numbers, route, round50, round100, precise, annualFactor, netFromGross, grossFromNet, incomeTaxAnnual, salaryCheck, inflationSince, total };
+  // Registro anónimo de un test para retroalimentar el modelo: sin nombre, DNI, empresa ni fecha exacta
+  const RECORD_FIELDS = ['puesto', 'nivel', 'sector', 'region', 'tamano', 'campo', 'contrato', 'vence', 'experiencia', 'antiguedad', 'aumento', 'funciones', 'empresa'];
+  function responseRecord(a, r, now = new Date()) {
+    const rec = { schema: 1, id: a._rid || null, mes: now.toISOString().slice(0, 7), modelo: MARKET.version };
+    RECORD_FIELDS.forEach(k => { if (a[k] != null && a[k] !== '') rec[k] = a[k]; });
+    rec.sueldo = Number(a.sueldo) || 0;
+    rec.variable = Number(a.variable) || 0;
+    if (r && !r.route) { rec.p50 = r.band.p50; rec.pct = r.pct; rec.code = r.code; }
+    return rec;
+  }
+
+  return { band, factors, ownKey, responseRecord, confidence, percentile, gapRange, position, caseScore, moment, recommend, numbers, route, round50, round100, precise, annualFactor, netFromGross, grossFromNet, incomeTaxAnnual, salaryCheck, inflationSince, total };
 })();
 /* ============================================================
    KIT — plantillas determinísticas (funcionan sin IA)
@@ -1725,7 +1776,7 @@ const Kit = (() => {
    INTERFAZ
    ============================================================ */
 const STORE_KEY = 'pidelo-bien-v2';
-const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null });
+const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null, recordSent: false });
 const S = Object.assign(FRESH(), { unlocked: false });
 const RT = { sample: null, downloads: null, isOwner: false, busy: false, ctl: null, landed: false, userActed: false, simText: '' };
 
@@ -1860,6 +1911,7 @@ function viewResult() {
   const a = S.answers;
   const r = Engine.recommend(a, new Date());
   if (r.route) { S.view = 'exit'; return viewExit(); }
+  sendRecord(a, r);
   const n = Engine.numbers(a, r);
   const mini = Kit.build(a, r, n, { trato: 'tu' }, new Date());
   const date = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -1933,6 +1985,17 @@ function confidenceSentence(b) {
   const n = Number(b.nRole || 0).toLocaleString('en-US');
   if (b.otherRole) return `${lvl}: como elegiste "Otro puesto", usamos el promedio de tu nivel, sector, región y tamaño de empresa. Tómalo como referencia general.`;
   return `${lvl}: banda calculada con ${n} personas de tu área en la encuesta de hogares del INEI (2022-2025) y guías salariales 2026, actualizada a octubre de 2026.`;
+}
+
+// Una vez por test, y solo con consentimiento y endpoint configurado
+function sendRecord(a, r) {
+  if (S.recordSent || !S.consent || !CONFIG.collectUrl) return;
+  S.recordSent = true;
+  const rid = Math.random().toString(36).slice(2, 12);   // aleatorio: solo evita contar dos veces el mismo test
+  const rec = Object.assign(Engine.responseRecord(Object.assign({ _rid: rid }, a), r), { consentimiento: CONFIG.consentVersion });
+  try {
+    fetch(CONFIG.collectUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec), keepalive: true }).catch(() => {});
+  } catch (e) { /* sin red: no pasa nada */ }
 }
 
 /* ---------- Salidas honestas ---------- */
@@ -2028,7 +2091,7 @@ function methodHTML() {
     <ul class="plain">
       <li><span class="label">Base:</span> ${Number(src.enaho_n || 0).toLocaleString('en-US')} asalariados formales del sector privado de la Encuesta Nacional de Hogares del INEI (${esc(src.years || '')}), con el sueldo bruto mensual que declararon, incluidas comisiones y bonos.</li>
       <li><span class="label">Tu perfil:</span> estimamos cuánto cambia el sueldo según tu área, nivel, sector, región, tamaño de empresa y años en el puesto. Cuando un grupo tiene pocos datos, se apoya en su grupo vecino.</li>
-      <li><span class="label">Jefaturas y gerencias:</span> casi no aparecen en una encuesta de hogares, así que las calibramos con ${src.buk_cargos || 0} cargos publicados de la Guía Salarial Buk Perú 2026, basada en planillas.</li>
+      <li><span class="label">Jefaturas y gerencias:</span> casi no aparecen en una encuesta de hogares, así que las calibramos con ${src.buk_cargos || 0} cargos publicados de la Guía Salarial Buk Perú 2026, basada en planillas, y con una guía salarial de reclutamiento de empresas medianas y grandes.</li>
       <li><span class="label">Fecha:</span> llevamos todo a octubre de 2026 con el crecimiento de los sueldos formales.</li>
       <li><span class="label">Límites:</span> es una referencia de mercado, no la política salarial de tu empresa. La confianza baja cuando hay pocos datos para tu combinación.</li>
     </ul>

@@ -192,3 +192,18 @@ def wquantile(values, weights, q):
     cw = np.cumsum(w) - 0.5 * w
     cw /= w.sum()
     return np.interp(q, cw, v)
+
+
+def predict_p50(bands, rec):
+    """Mediana base del modelo para un perfil (misma fórmula que Engine.band, sin la capa propia)."""
+    lvl = rec.get('nivel') if rec.get('nivel') in bands['levels'] else 'analista'
+    grp = bands['level_group'][lvl]
+    role = bands['roles'].get(rec.get('puesto'), bands['roles']['otro'])
+    sector = bands['sectors'].get(rec.get('sector'), bands['sectors']['otro'])
+    region = bands['regions'].get(rec.get('region'), bands['regions']['otra'])
+    v = bands['levels'][lvl]['p50'] * role['mult'] ** bands['role_damping'][lvl] * sector['mult']
+    v *= region['mult'][grp] * bands['sizes'][grp].get(rec.get('tamano'), 1.0)
+    v *= bands['experience'].get(rec.get('experiencia'), 1.0)
+    if str(rec.get('campo')).lower() in ('true', '1'):
+        v *= bands['field_mult']
+    return v

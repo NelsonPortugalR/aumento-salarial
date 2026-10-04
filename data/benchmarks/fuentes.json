@@ -1,0 +1,15 @@
+{
+ "_nota": "Registro de fuentes: cada cuánto se revisan y cuándo se actualizaron. Lo lee data/pipeline/06_freshness.py.",
+ "fuentes": [
+  {"id": "enaho", "nombre": "ENAHO (INEI), módulos 04 y 05", "cada_dias": 365, "ultima": "2026-04-28", "como": "Sale hacia mayo. Agregar el código del año en 00_download.sh y 01_enaho_extract.py; RMV del año en common.py; correr npm run data."},
+  {"id": "buk", "nombre": "Guía Salarial Buk (cifras publicadas)", "cada_dias": 365, "ultima": "2026-08-19", "como": "Sale hacia agosto. Agregar filas a benchmarks/buk_2026_prensa.csv (o la guía completa si se descarga)."},
+  {"id": "guia_privada", "nombre": "Guía salarial de reclutamiento (privada)", "cada_dias": 365, "ultima": "2026-10-04", "como": "Nueva edición: reemplazar data/private/guia_salarial_privada.xlsx y correr python3 data/pipeline/03_guides.py."},
+  {"id": "inflacion", "nombre": "IPC de Lima (INEI)", "cada_dias": 35, "ultima": "2026-09-01", "como": "El INEI publica el día 1 de cada mes. Editar inflacion_lima en benchmarks/contexto_2026.json."},
+  {"id": "aumentos", "nombre": "Aumentos proyectados (EY u otra encuesta)", "cada_dias": 365, "ultima": "2026-08-11", "como": "Editar aumentos_2026 en contexto_2026.json."},
+  {"id": "tributos", "nombre": "UIT, tramos de quinta, AFP y ONP", "cada_dias": 92, "ultima": "2026-10-04", "como": "UIT en diciembre; prima y tope de AFP cada trimestre (SBS). Editar tributos_2026 en contexto_2026.json."},
+  {"id": "rmv", "nombre": "Remuneración mínima vital", "cada_dias": 180, "ultima": "2026-10-01", "como": "Segundo tramo a S/ 1,300 en el primer semestre de 2027: cambiar CONFIG.rmv en 10_data.js y RMV en 04_responses.py."},
+  {"id": "computrabajo", "nombre": "Computrabajo (validación manual)", "cada_dias": 92, "ultima": "2026-10-04", "como": "Revisar a mano las páginas de benchmarks/computrabajo_2026-10.csv y guardar un CSV nuevo."},
+  {"id": "avisos", "nombre": "Avisos con sueldo (LinkedIn, Computrabajo, Bumeran), registro manual", "cada_dias": 35, "ultima": null, "como": "50 a 100 avisos al mes en benchmarks/avisos/avisos_AAAA-MM.csv, con la plantilla."},
+  {"id": "respuestas", "nombre": "Respuestas propias del test", "cada_dias": 35, "ultima": null, "como": "Exportar del backend a data/private/respuestas/ y correr python3 data/pipeline/04_responses.py."}
+ ]
+}

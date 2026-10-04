@@ -24,6 +24,7 @@ import statsmodels.formula.api as smf
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import ROOT, load_sample, wquantile, ROLE_CODES  # noqa: E402
+from export import export_js  # noqa: E402
 
 REPO = ROOT.parent
 OUT_JSON = ROOT / 'bands.json'
@@ -31,6 +32,8 @@ OUT_JS = REPO / '15_bands.js'
 BUK = ROOT / 'benchmarks' / 'buk_2026_prensa.csv'
 CT = ROOT / 'benchmarks' / 'computrabajo_2026-10.csv'
 CONTEXT = ROOT / 'benchmarks' / 'contexto_2026.json'
+GUIDE = ROOT / 'benchmarks' / 'guia_privada_agregada.csv'
+GUIDE_GRAD = ROOT / 'benchmarks' / 'guia_privada_gradiente.json'
 
 # ---------- Supuestos explícitos ----------
 TARGET = '2026-10'               # mes al que se llevan todas las cifras
@@ -48,6 +51,14 @@ ROLE_DAMPING = {'asistente': 1.0, 'analista': 1.0, 'senior': 1.0, 'supervisor': 
 LEVEL_GROUP = {'asistente': 'apoyo', 'analista': 'profesional', 'senior': 'profesional',
                'supervisor': 'direccion', 'jefe': 'direccion', 'gerente': 'direccion'}
 LEVEL_ORDER = ['asistente', 'analista', 'senior', 'supervisor', 'jefe', 'gerente']
+# Guía privada de reclutamiento (con autorización). Su "medio" es el precio de contratación en
+# empresas que contratan con headhunter: se lleva a mediana de ocupantes dividiendo por 1.2
+# (≈ percentil 65 con la dispersión de la ENAHO) y pesa 35% en los niveles donde la ENAHO es débil.
+GUIDE_WEIGHT = {'jefe': 0.35, 'gerente': 0.35}
+GUIDE_TO_INCUMBENT = 1 / 1.2
+# El mismo cargo en empresas de distinta facturación da el gradiente de tamaño en la parte alta.
+GUIDE_SIZE_WEIGHT = {'apoyo': 0.0, 'profesional': 0.25, 'direccion': 0.5}   # peso frente a la ENAHO en 500+
+CORP_WEIGHT = {'apoyo': 0.25, 'profesional': 0.6, 'direccion': 1.0}        # cuánto del salto "corporación" aplica
 TIER_GROUP = {'apoyo': 'apoyo', 'tecnico': 'apoyo', 'profesional': 'profesional', 'jefe': 'direccion', 'gerente': 'direccion'}
 
 ROLE_PARENT = {
@@ -163,6 +174,20 @@ def main():
         # Monotonía: una empresa más grande no paga menos (las diferencias en contra están dentro del error)
         sizes[g]['s2'] = min(max(sizes[g]['s2'], sizes[g]['s1']), 1.0)
         sizes[g]['s4'] = max(sizes[g]['s4'], 1.0)
+    sizes_enaho = {g: dict(v) for g, v in sizes.items()}
+
+    # Gradiente de tamaño de la guía privada: mismo cargo, distinta facturación
+    guide = pd.read_csv(GUIDE) if GUIDE.exists() else None
+    guide_grad = json.loads(GUIDE_GRAD.read_text()) if GUIDE_GRAD.exists() else None
+    if guide_grad is not None:
+        r_gm, r_cg = guide_grad['grande_vs_mediana'], guide_grad['corp_vs_grande']
+        for g in sizes:
+            w = GUIDE_SIZE_WEIGHT[g]
+            sizes[g]['s4'] = float(np.exp((1 - w) * np.log(sizes[g]['s4']) + w * np.log(r_gm)))
+            sizes[g]['s5'] = float(sizes[g]['s4'] * r_cg ** CORP_WEIGHT[g])
+    else:
+        for g in sizes:
+            sizes[g]['s5'] = sizes[g]['s4']
 
     # ---------- Experiencia en el puesto ----------
     ec = coefs(m, 'exp', 'e3')
@@ -234,6 +259,34 @@ def main():
         val = float(np.exp(w * np.log(e) + (1 - w) * np.log(b))) if b else e
         anchors[lvl] = {'p50': val, 'enaho': e, 'enaho_n': n, 'buk': b, 'buk_n': int(buk_n.get(lvl, 0)), 'w_enaho': w,
                         'metodo': 'ENAHO y Buk' if 0 < w < 1 else ('Buk' if w == 0 else 'ENAHO')}
+
+    # ---------- Guía privada: anclas implícitas y mezcla en niveles altos ----------
+    guide_anchor, guide_n = {}, {}
+    if guide is not None:
+        gr = []
+        for _, r in guide.iterrows():
+            lvl = r['level']
+            if lvl not in LEVEL_GROUP:
+                continue
+            g = LEVEL_GROUP[lvl]
+            rm = roles.get(r['role'], roles['otro'])['mult'] ** ROLE_DAMPING[lvl]
+            # medio_norm ya viene sin efecto de sector ni de experiencia (03_guides.py)
+            ref = r['medio_norm'] * GUIDE_TO_INCUMBENT / (rm * sizes[g][r['size']])
+            gr.append((lvl, ref, int(r['n_cargos'])))
+        gdf = pd.DataFrame(gr, columns=['level', 'ref', 'n'])
+        for lvl, sub in gdf.groupby('level'):
+            guide_anchor[lvl] = float(wquantile(sub['ref'], sub['n'], 0.5))
+            guide_n[lvl] = int(sub['n'].sum())
+    def blend_guide(lvl):
+        w = GUIDE_WEIGHT.get(lvl)
+        if w and lvl in guide_anchor:
+            a = anchors[lvl]
+            a['antes_guia'] = a['p50']
+            a['p50'] = float(np.exp((1 - w) * np.log(a['p50']) + w * np.log(guide_anchor[lvl])))
+            a['metodo'] += f' + guía privada ({int(w * 100)}%)'
+    # Primero jefe y gerente; los niveles intermedios se calculan desde el jefe ya calibrado
+    blend_guide('jefe')
+    blend_guide('gerente')
     # Coordinador o supervisor: punto medio (escala logarítmica) entre los supervisores y jefes
     # administrativos de la ENAHO y las jefaturas de área de Buk.
     e_sup, n_sup = enaho_anchor['jefe']
@@ -244,7 +297,14 @@ def main():
     anchors['senior'] = {'p50': float(np.sqrt(anchors['analista']['p50'] * anchors['jefe']['p50'])), 'enaho': None,
                          'enaho_n': anchors['analista']['enaho_n'], 'buk': buk_anchor.get('senior'), 'buk_n': int(buk_n.get('senior', 0)),
                          'w_enaho': None, 'metodo': 'punto medio entre analista y jefe de área'}
+    # Senior y coordinador heredan la guía a través del jefe calibrado (no se mezcla dos veces)
+    for lvl in ('senior', 'supervisor'):
+        if 'jefe' in guide_anchor:
+            anchors[lvl]['metodo'] += ' (con el jefe calibrado por la guía privada)'
     anchors = {k: anchors[k] for k in LEVEL_ORDER}
+    for lvl in anchors:
+        anchors[lvl]['guia'] = guide_anchor.get(lvl)
+        anchors[lvl]['guia_n'] = guide_n.get(lvl, 0)
 
     spread_lvl = {lvl: (spread_gerente if lvl == 'gerente' else spread[LEVEL_GROUP[lvl]]) for lvl in anchors}
 
@@ -299,17 +359,22 @@ def main():
                       'filter': 'asalariados del sector privado con seguro de salud pagado por el empleador, 30 a 84 horas semanales, ocupaciones de oficina, técnicas, profesionales, de jefatura y gerencia (CNO 2015, grupos 1 a 4)'},
             'buk': {'name': 'Guía Salarial Buk Perú 2026 (cifras publicadas en prensa y en el blog de Buk)', 'n_cargos': int(len(buk))},
             'computrabajo': {'name': 'Computrabajo, páginas públicas de salarios (consulta del 4 de octubre de 2026)', 'uso': 'solo validación'},
+            'guia_privada': {'name': 'Guía salarial de reclutamiento (privada, con autorización; solo agregados)', 'n_cargos': int(guide['n_cargos'].sum()) if guide is not None else 0,
+                             'gradiente_tamano': guide_grad},
         },
         'assumptions': {
             'growth_2026': GROWTH_2026, 'aging_from_2025': r3(aging), 'buk_aging': BUK_AGING,
             'buk_total_to_s3': BUK_TOTAL_TO_S3, 'field_mult': FIELD_MULT, 'enaho_weight': ENAHO_WEIGHT,
-            'role_damping': ROLE_DAMPING,
+            'role_damping': ROLE_DAMPING, 'guide_weight': GUIDE_WEIGHT, 'guide_to_incumbent': r3(GUIDE_TO_INCUMBENT),
+            'guide_size_weight': GUIDE_SIZE_WEIGHT, 'corp_weight': CORP_WEIGHT,
         },
         'model': {'r2': r3(m.rsquared), 'n': int(m.nobs), 'tau_role': r3(tau_role), 'tau_region': r3(tau_reg), 'tau_sector': r3(tau_sec),
                   'year_index': {k: r3(v) for k, v in year_index.items()}, 'female_gap': r3(np.exp(b_female))},
         'levels': {k: {'p50': round(v['p50']), 'lo': r3(spread_lvl[k]['lo']), 'hi': r3(spread_lvl[k]['hi']),
                        'enaho': round(v['enaho']) if v['enaho'] else None, 'enaho_n': v['enaho_n'],
                        'buk': round(v['buk']) if v['buk'] else None, 'buk_n': v['buk_n'], 'w_enaho': v['w_enaho'],
+                       'guia': round(v['guia']) if v.get('guia') else None, 'guia_n': v.get('guia_n', 0),
+                       'antes_guia': round(v['antes_guia']) if v.get('antes_guia') else None,
                        'metodo': v['metodo']}
                    for k, v in anchors.items()},
         'roles': {k: {'mult': r3(v['mult']), 'n': v['n'], 'raw': r3(np.exp(v['raw'] - role_center)), 'w_own': r3(v['w_own'])} for k, v in roles.items()},
@@ -317,6 +382,7 @@ def main():
         'sectors': {k: {'mult': r3(v['mult']), 'n': v['n'], 'raw': r3(np.exp(v['raw'] - sec_center))} for k, v in sectors.items()},
         'regions': {k: {'mult': {g: r3(x) for g, x in v['mult'].items()}, 'n': v['n'], 'raw': r3(np.exp(v['raw']))} for k, v in regions.items()},
         'sizes': {g: {k: r3(x) for k, x in v.items()} for g, v in sizes.items()},
+        'sizes_enaho': {g: {k: r3(x) for k, x in v.items()} for g, v in sizes_enaho.items()},
         'experience': {k: r3(v) for k, v in experience.items()},
         'level_group': LEVEL_GROUP,
         'field_mult': FIELD_MULT,
@@ -325,17 +391,7 @@ def main():
     OUT_JSON.write_text(json.dumps(bands, ensure_ascii=False, indent=2) + '\n')
     write_report(bands, validation)
 
-    js_payload = {k: bands[k] for k in ['version', 'target_month', 'reference', 'levels', 'roles', 'role_damping', 'sectors', 'regions', 'sizes', 'experience', 'level_group', 'field_mult']}
-    js_payload['sources'] = {'enaho_n': n_total, 'years': '2022-2025', 'buk_cargos': int(len(buk))}
-    ctx = json.loads(CONTEXT.read_text())
-    ctx.pop('_nota', None)
-    js_payload['context'] = ctx
-    OUT_JS.write_text(
-        '/* ============================================================\n'
-        '   BANDAS DE MERCADO — generado por data/pipeline/02_model.py\n'
-        '   No editar a mano: corre `npm run data` para regenerar.\n'
-        '   ============================================================ */\n'
-        f'const MARKET = {json.dumps(js_payload, ensure_ascii=False, indent=1)};\n')
+    export_js()
 
     # ---------- Resumen en consola ----------
     pd.set_option('display.width', 200)
@@ -374,12 +430,13 @@ def write_report(bands, validation):
     L.append('')
     L.append('## Anclas por nivel (celda de referencia)')
     L.append('')
-    L.append('| Nivel | Mediana | P25 | P75 | ENAHO | Buk | Método |')
-    L.append('| --- | ---: | ---: | ---: | ---: | ---: | --- |')
+    L.append('| Nivel | Mediana | P25 | P75 | ENAHO | Buk | Guía privada (÷1.2) | Antes de la guía | Método |')
+    L.append('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |')
+    f = lambda x: format(round(x), ',') if x else '—'
     for k, v in bands['levels'].items():
         p50 = v['p50']
         L.append(f"| {LABELS['levels'][k]} | {p50:,} | {round(p50 * v['lo']):,} | {round(p50 * v['hi']):,} | "
-                 f"{(format(v['enaho'], ',') if v['enaho'] else '—')} | {(format(v['buk'], ',') if v['buk'] else '—')} | {v['metodo']} |")
+                 f"{f(v['enaho'])} | {f(v['buk'])} | {f(v.get('guia'))} | {f(v.get('antes_guia'))} | {v['metodo']} |")
     L.append('')
     L.append('## Multiplicadores por puesto (promedio = 1)')
     L.append('')
@@ -407,10 +464,15 @@ def write_report(bands, validation):
     L.append('')
     L.append('## Tamaño de empresa (101 a 500 = 1)')
     L.append('')
-    L.append('| Grupo | 1 a 10 | 11 a 100 | 101 a 500 | Más de 500 |')
-    L.append('| --- | ---: | ---: | ---: | ---: |')
+    L.append('| Grupo | 1 a 10 | 11 a 100 | 101 a 500 | 501 a 2,000 | Más de 2,000 | 500+ solo ENAHO |')
+    L.append('| --- | ---: | ---: | ---: | ---: | ---: | ---: |')
     for g, v in bands['sizes'].items():
-        L.append(f"| {g} | {v['s1']:.3f} | {v['s2']:.3f} | {v['s3']:.3f} | {v['s4']:.3f} |")
+        L.append(f"| {g} | {v['s1']:.3f} | {v['s2']:.3f} | {v['s3']:.3f} | {v['s4']:.3f} | {v['s5']:.3f} | {bands['sizes_enaho'][g]['s4']:.3f} |")
+    gg = bands['sources']['guia_privada'].get('gradiente_tamano')
+    if gg:
+        L.append('')
+        L.append(f"Gradiente de la guía privada (mismo cargo): empresa grande / mediana = {gg['grande_vs_mediana']:.2f} ({gg['n1']} pares); "
+                 f"corporación / grande = {gg['corp_vs_grande']:.2f} ({gg['n2']} pares).")
     L.append('')
     L.append('## Años en el puesto (3 a 5 = 1)')
     L.append('')

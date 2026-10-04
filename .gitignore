@@ -4,3 +4,5 @@ __pycache__/
 # Microdatos y páginas descargadas: se regeneran con `npm run data`
 data/raw/
 data/work/
+# Fuentes privadas con autorización: solo se versionan agregados
+data/private/

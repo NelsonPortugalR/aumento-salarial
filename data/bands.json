@@ -15,6 +15,16 @@
     "computrabajo": {
       "name": "Computrabajo, páginas públicas de salarios (consulta del 4 de octubre de 2026)",
       "uso": "solo validación"
+    },
+    "guia_privada": {
+      "name": "Guía salarial de reclutamiento (privada, con autorización; solo agregados)",
+      "n_cargos": 421,
+      "gradiente_tamano": {
+        "grande_vs_mediana": 1.374,
+        "n1": 118,
+        "corp_vs_grande": 1.273,
+        "n2": 135
+      }
     }
   },
   "assumptions": {
@@ -36,6 +46,21 @@
       "supervisor": 0.75,
       "jefe": 0.5,
       "gerente": 0.3
+    },
+    "guide_weight": {
+      "jefe": 0.35,
+      "gerente": 0.35
+    },
+    "guide_to_incumbent": 0.833,
+    "guide_size_weight": {
+      "apoyo": 0.0,
+      "profesional": 0.25,
+      "direccion": 0.5
+    },
+    "corp_weight": {
+      "apoyo": 0.25,
+      "profesional": 0.6,
+      "direccion": 1.0
     }
   },
   "model": {
@@ -62,6 +87,9 @@
       "buk": 2000,
       "buk_n": 2,
       "w_enaho": 0.6,
+      "guia": null,
+      "guia_n": 0,
+      "antes_guia": null,
       "metodo": "ENAHO y Buk"
     },
     "analista": {
@@ -73,21 +101,27 @@
       "buk": 3375,
       "buk_n": 2,
       "w_enaho": 0.5,
+      "guia": null,
+      "guia_n": 0,
+      "antes_guia": null,
       "metodo": "ENAHO y Buk"
     },
     "senior": {
-      "p50": 5067,
+      "p50": 5246,
       "lo": 0.753,
       "hi": 1.377,
       "enaho": null,
       "enaho_n": 2431,
-      "buk": 6161,
+      "buk": 5905,
       "buk_n": 6,
       "w_enaho": null,
-      "metodo": "punto medio entre analista y jefe de área"
+      "guia": 7764,
+      "guia_n": 21,
+      "antes_guia": null,
+      "metodo": "punto medio entre analista y jefe de área (con el jefe calibrado por la guía privada)"
     },
     "supervisor": {
-      "p50": 4756,
+      "p50": 4925,
       "lo": 0.738,
       "hi": 1.393,
       "enaho": 3156,
@@ -95,10 +129,13 @@
       "buk": 7169,
       "buk_n": 12,
       "w_enaho": 0.5,
-      "metodo": "punto medio entre supervisores (ENAHO) y jefaturas (Buk)"
+      "guia": null,
+      "guia_n": 0,
+      "antes_guia": null,
+      "metodo": "punto medio entre supervisores (ENAHO) y jefaturas (Buk) (con el jefe calibrado por la guía privada)"
     },
     "jefe": {
-      "p50": 7169,
+      "p50": 7687,
       "lo": 0.738,
       "hi": 1.393,
       "enaho": 3156,
@@ -106,10 +143,13 @@
       "buk": 7169,
       "buk_n": 12,
       "w_enaho": 0.0,
-      "metodo": "Buk"
+      "guia": 8751,
+      "guia_n": 138,
+      "antes_guia": 7169,
+      "metodo": "Buk + guía privada (35%)"
     },
     "gerente": {
-      "p50": 11368,
+      "p50": 12298,
       "lo": 0.645,
       "hi": 1.488,
       "enaho": 7266,
@@ -117,7 +157,10 @@
       "buk": 12714,
       "buk_n": 6,
       "w_enaho": 0.2,
-      "metodo": "ENAHO y Buk"
+      "guia": 14232,
+      "guia_n": 262,
+      "antes_guia": 11368,
+      "metodo": "ENAHO y Buk + guía privada (35%)"
     }
   },
   "roles": {
@@ -564,6 +607,29 @@
       "s3": 1.0,
       "s1": 0.88,
       "s2": 0.98,
+      "s4": 1.081,
+      "s5": 1.148
+    },
+    "profesional": {
+      "s3": 1.0,
+      "s1": 0.704,
+      "s2": 0.851,
+      "s4": 1.083,
+      "s5": 1.251
+    },
+    "direccion": {
+      "s3": 1.0,
+      "s1": 0.794,
+      "s2": 0.875,
+      "s4": 1.197,
+      "s5": 1.524
+    }
+  },
+  "sizes_enaho": {
+    "apoyo": {
+      "s3": 1.0,
+      "s1": 0.88,
+      "s2": 0.98,
       "s4": 1.081
     },
     "profesional": {
@@ -600,36 +666,36 @@
       "fuente": "Buk 2026",
       "cargo": "Gerente de Administración y Finanzas (CFO)",
       "publicado": 13500,
-      "modelo": 12577,
-      "dif_pct": -6.8
+      "modelo": 13606,
+      "dif_pct": 0.8
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Gerente de Planeamiento y Presupuesto",
       "publicado": 12030,
-      "modelo": 12577,
-      "dif_pct": 4.5
+      "modelo": 13606,
+      "dif_pct": 13.1
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Planeamiento y Presupuesto",
       "publicado": 8980,
-      "modelo": 8132,
-      "dif_pct": -9.4
+      "modelo": 8720,
+      "dif_pct": -2.9
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Control de Gestión",
       "publicado": 8550,
-      "modelo": 8132,
-      "dif_pct": -4.9
+      "modelo": 8720,
+      "dif_pct": 2.0
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Contabilidad",
       "publicado": 7490,
-      "modelo": 7513,
-      "dif_pct": 0.3
+      "modelo": 8056,
+      "dif_pct": 7.6
     },
     {
       "fuente": "Buk 2026",
@@ -663,134 +729,134 @@
       "fuente": "Buk 2026",
       "cargo": "Gerente de TIC (CTO)",
       "publicado": 15210,
-      "modelo": 12855,
-      "dif_pct": -15.5
+      "modelo": 13906,
+      "dif_pct": -8.6
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Arquitecto de Software",
       "publicado": 10850,
-      "modelo": 6580,
-      "dif_pct": -39.4
+      "modelo": 6814,
+      "dif_pct": -37.2
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de TIC",
       "publicado": 8000,
-      "modelo": 8434,
-      "dif_pct": 5.4
+      "modelo": 9043,
+      "dif_pct": 13.0
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Líder de Desarrollo de Software",
       "publicado": 8300,
-      "modelo": 8434,
-      "dif_pct": 1.6
+      "modelo": 9043,
+      "dif_pct": 9.0
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Inteligencia de Negocios (BI)",
       "publicado": 8000,
-      "modelo": 7976,
-      "dif_pct": -0.3
+      "modelo": 8553,
+      "dif_pct": 6.9
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Especialista en Gestión Ágil de Proyectos",
       "publicado": 7290,
-      "modelo": 6580,
-      "dif_pct": -9.7
+      "modelo": 6814,
+      "dif_pct": -6.5
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Infraestructura Tecnológica",
       "publicado": 7190,
-      "modelo": 8236,
-      "dif_pct": 14.5
+      "modelo": 8832,
+      "dif_pct": 22.8
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Líder de Aseguramiento de Calidad (QA)",
       "publicado": 6740,
-      "modelo": 6580,
-      "dif_pct": -2.4
+      "modelo": 6814,
+      "dif_pct": 1.1
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Sistemas de Información",
       "publicado": 6620,
-      "modelo": 8434,
-      "dif_pct": 27.4
+      "modelo": 9043,
+      "dif_pct": 36.6
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Consultor ERP",
       "publicado": 6420,
-      "modelo": 6580,
-      "dif_pct": 2.5
+      "modelo": 6814,
+      "dif_pct": 6.1
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefatura de TI (empresa mediana)",
       "publicado": 6870,
-      "modelo": 7759,
-      "dif_pct": 12.9
+      "modelo": 8320,
+      "dif_pct": 21.1
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefatura de TI (industria tecnológica)",
       "publicado": 9030,
-      "modelo": 7206,
-      "dif_pct": -20.2
+      "modelo": 7727,
+      "dif_pct": -14.4
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Business Developer (empresa grande)",
       "publicado": 6310,
-      "modelo": 4765,
-      "dif_pct": -24.5
+      "modelo": 5342,
+      "dif_pct": -15.3
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Business Developer (industria financiera)",
       "publicado": 7110,
-      "modelo": 5117,
-      "dif_pct": -28.0
+      "modelo": 5299,
+      "dif_pct": -25.5
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Gerente de RR.HH. (CHRO)",
       "publicado": 14110,
-      "modelo": 12129,
-      "dif_pct": -14.0
+      "modelo": 13121,
+      "dif_pct": -7.0
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Desarrollo Organizacional",
       "publicado": 10020,
-      "modelo": 7655,
-      "dif_pct": -23.6
+      "modelo": 8208,
+      "dif_pct": -18.1
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Jefe de Marca",
       "publicado": 10260,
-      "modelo": 7245,
-      "dif_pct": -29.4
+      "modelo": 7769,
+      "dif_pct": -24.3
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Gerente General",
       "publicado": 12980,
-      "modelo": 12334,
-      "dif_pct": -5.0
+      "modelo": 13343,
+      "dif_pct": 2.8
     },
     {
       "fuente": "Buk 2026",
       "cargo": "Gerente de Mina",
       "publicado": 20710,
-      "modelo": 12345,
-      "dif_pct": -40.4
+      "modelo": 13355,
+      "dif_pct": -35.5
     },
     {
       "fuente": "Computrabajo (avisos, oct-2026)",
@@ -873,15 +939,15 @@
       "fuente": "Computrabajo (avisos, oct-2026)",
       "cargo": "Jefe de logística",
       "publicado": 3078,
-      "modelo": 5657,
-      "dif_pct": 83.8
+      "modelo": 6066,
+      "dif_pct": 97.1
     },
     {
       "fuente": "Computrabajo (avisos, oct-2026)",
       "cargo": "Supervisor de seguridad",
       "publicado": 2762,
-      "modelo": 3900,
-      "dif_pct": 41.2
+      "modelo": 4038,
+      "dif_pct": 46.2
     }
   ]
 }

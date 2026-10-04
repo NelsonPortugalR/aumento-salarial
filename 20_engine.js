@@ -41,8 +41,17 @@ const Engine = (() => {
     };
   }
 
+  // Capa de respuestas propias del test (data/pipeline/04_responses.py): ajuste acotado por celda
+  const ownKey = a => `${a.puesto}|${levelOf(a)}|${a.region === 'lima' ? 'lima' : 'prov'}`;
+  function ownCell(a) {
+    const own = MARKET.own && MARKET.own.cells;
+    return (own && own[ownKey(a)]) || null;
+  }
+
   // Confianza según cuántos datos respaldan el puesto, la región y el nivel
   function confidence(a) {
+    const own = ownCell(a);
+    if (own && own.n >= 50) return 'alta';
     const lvl = levelOf(a);
     const role = a.puesto !== 'otro' ? MARKET.roles[a.puesto] : null;
     const region = MARKET.regions[a.region];
@@ -54,7 +63,8 @@ const Engine = (() => {
   function band(a) {
     const f = factors(a);
     const L = MARKET.levels[f.lvl];
-    let p50 = L.p50 * f.role * f.sector * f.region * f.size * f.exp * f.field;
+    const own = ownCell(a);
+    let p50 = L.p50 * f.role * f.sector * f.region * f.size * f.exp * f.field * (own ? own.f : 1);
     let p25 = p50 * L.lo, p75 = p50 * L.hi;
     // Nadie a tiempo completo en planilla gana menos que la RMV
     p25 = Math.max(p25, CONFIG.rmv);
@@ -67,7 +77,7 @@ const Engine = (() => {
     return {
       p25: round50(p25), p50: round50(p50), p75: round50(p75),
       confidence: confidence(a),
-      nRole: role.n, nRegion: region.n,
+      nRole: role.n, nRegion: region.n, nOwn: own ? own.n : 0,
       method: L.metodo,
       otherRole: !MARKET.roles[a.puesto] || a.puesto === 'otro'
     };
@@ -295,5 +305,16 @@ const Engine = (() => {
     return null;
   }
 
-  return { band, factors, confidence, percentile, gapRange, position, caseScore, moment, recommend, numbers, route, round50, round100, precise, annualFactor, netFromGross, grossFromNet, incomeTaxAnnual, salaryCheck, inflationSince, total };
+  // Registro anónimo de un test para retroalimentar el modelo: sin nombre, DNI, empresa ni fecha exacta
+  const RECORD_FIELDS = ['puesto', 'nivel', 'sector', 'region', 'tamano', 'campo', 'contrato', 'vence', 'experiencia', 'antiguedad', 'aumento', 'funciones', 'empresa'];
+  function responseRecord(a, r, now = new Date()) {
+    const rec = { schema: 1, id: a._rid || null, mes: now.toISOString().slice(0, 7), modelo: MARKET.version };
+    RECORD_FIELDS.forEach(k => { if (a[k] != null && a[k] !== '') rec[k] = a[k]; });
+    rec.sueldo = Number(a.sueldo) || 0;
+    rec.variable = Number(a.variable) || 0;
+    if (r && !r.route) { rec.p50 = r.band.p50; rec.pct = r.pct; rec.code = r.code; }
+    return rec;
+  }
+
+  return { band, factors, ownKey, responseRecord, confidence, percentile, gapRange, position, caseScore, moment, recommend, numbers, route, round50, round100, precise, annualFactor, netFromGross, grossFromNet, incomeTaxAnnual, salaryCheck, inflationSince, total };
 })();

@@ -4,9 +4,12 @@
   "description": "Pídelo Bien: test salarial y kit para negociar sueldo en Perú",
   "scripts": {
     "build": "bash build.sh",
-    "data": "bash data/pipeline/00_download.sh && python3 data/pipeline/01_enaho_extract.py && python3 data/pipeline/02_model.py && bash build.sh",
-    "data:model": "python3 data/pipeline/02_model.py && bash build.sh",
-    "test": "bash build.sh && node engine.test.js && node flow.test.js"
+    "data": "bash data/pipeline/00_download.sh && python3 data/pipeline/01_enaho_extract.py && npm run data:model",
+    "data:model": "python3 data/pipeline/02_model.py && python3 data/pipeline/04_responses.py && python3 data/pipeline/05_postings.py && python3 data/pipeline/export.py && bash build.sh",
+    "test": "bash build.sh && node engine.test.js && node flow.test.js",
+    "data:guia": "python3 data/pipeline/03_guides.py && npm run data:model",
+    "data:check": "python3 data/pipeline/06_freshness.py",
+    "test:data": "python3 data/pipeline/test_responses.py"
   },
   "repository": {
     "type": "git",
