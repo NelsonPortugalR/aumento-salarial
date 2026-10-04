@@ -6,3 +6,4 @@ data/raw/
 data/work/
 # Fuentes privadas con autorización: solo se versionan agregados
 data/private/
+dist/
