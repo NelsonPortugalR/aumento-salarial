@@ -2,7 +2,7 @@
    INTERFAZ
    ============================================================ */
 const STORE_KEY = 'pidelo-bien-v2';
-const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null, recordSent: false });
+const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, contribute: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null, recordSent: false });
 const S = Object.assign(FRESH(), { unlocked: false });
 const RT = { sample: null, downloads: null, isOwner: false, busy: false, ctl: null, landed: false, userActed: false, simText: '' };
 
@@ -31,7 +31,7 @@ function resetTest() {
 
 const visibleSteps = () => STEPS.filter(s => !s.when || s.when(S.answers));
 const needsField = a => ['mineria', 'construccion', 'agro'].includes(a.sector) || ['ing_minas', 'ing_civil', 'seguridad', 'mantenimiento'].includes(a.puesto);
-const salaryOk = () => S.consent && Number(S.answers.sueldo) >= 500 && Number(S.answers.sueldo) <= 150000;
+const salaryOk = () => Number(S.answers.sueldo) >= 500 && Number(S.answers.sueldo) <= 150000;
 
 /* ---------- Render ---------- */
 function render() {
@@ -92,16 +92,15 @@ function optionsBlock(step) {
 function salaryBlock() {
   const v = S.answers.sueldo || '';
   const vv = S.answers.variable || '';
-  return `<label class="consent"><input type="checkbox" data-field="consent" ${S.consent ? 'checked' : ''}>
-      <span>Acepto que se use mi sueldo para calcular mi resultado. Es un dato sensible y lo tratamos como tal. <button type="button" class="link inline" data-action="privacy">Cómo cuidamos tus datos</button></span></label>
-    <div class="money"><span class="cur" aria-hidden="true">S/</span><input id="sueldo" data-field="sueldo" inputmode="numeric" autocomplete="off" placeholder="3500" value="${esc(v)}" aria-label="Sueldo bruto mensual en soles"></div>
+  return `<div class="money"><span class="cur" aria-hidden="true">S/</span><input id="sueldo" data-field="sueldo" inputmode="numeric" autocomplete="off" placeholder="3500" value="${esc(v)}" aria-label="Sueldo bruto mensual en soles"></div>
     <p class="help">Antes de descuentos, sin gratificaciones ni bonos.</p>
     ${netCalcBlock()}
     <label class="small-label" for="variable">¿Recibes comisiones o bonos cada mes? Promedio, opcional</label>
     <div class="money small"><span class="cur" aria-hidden="true">S/</span><input id="variable" data-field="variable" inputmode="numeric" autocomplete="off" placeholder="0" value="${esc(vv)}"></div>
     <p class="fine">Lo sumamos a tu sueldo para compararte: el mercado también incluye comisiones y bonos mensuales.</p>
     <p class="warn" id="sueldo-warn" ${salaryWarning() ? '' : 'hidden'}>${esc(salaryWarning())}</p>
-    <button type="button" class="btn" data-action="salary-next" ${salaryOk() ? '' : 'disabled'}>Continuar</button>`;
+    <button type="button" class="btn" data-action="salary-next" ${salaryOk() ? '' : 'disabled'}>Continuar</button>
+    <p class="fine">Tu sueldo se usa solo para calcular tu resultado, en tu navegador. No pedimos nombre, DNI ni empresa. <button type="button" class="link inline" data-action="privacy">Cómo cuidamos tus datos</button></p>`;
 }
 function salaryWarning() {
   const s = Number(S.answers.sueldo);
@@ -137,7 +136,6 @@ function viewResult() {
   const a = S.answers;
   const r = Engine.recommend(a, new Date());
   if (r.route) { S.view = 'exit'; return viewExit(); }
-  sendRecord(a, r);
   const n = Engine.numbers(a, r);
   const mini = Kit.build(a, r, n, { trato: 'tu' }, new Date());
   const date = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -188,6 +186,9 @@ function viewResult() {
       <ul class="facts"><li class="plus"><span class="label">A favor:</span> ${esc(plus)}</li><li class="minus"><span class="label">En contra:</span> ${esc(r.caso.weakness)}</li></ul>
       ${asked}
     </div>
+    ${CONFIG.collectUrl ? (S.recordSent
+      ? '<p class="fine">Gracias: tu dato anónimo ya ayuda a afinar las bandas.</p>'
+      : '<div class="contribute"><p class="fine">¿Aportas tu sueldo, de forma anónima, para afinar las bandas de tu puesto? Se guarda sin nombre, DNI ni empresa.</p><button type="button" class="btn-sm" data-action="contribute">Sí, aportar mi dato</button></div>') : ''}
     <section class="block">
       <h3>Una objeción que vas a escuchar</h3>
       <p class="quote">“${esc(obj.q)}”</p>
@@ -213,9 +214,9 @@ function confidenceSentence(b) {
   return `${lvl}: banda calculada con ${n} personas de tu área en la encuesta de hogares del INEI (2022-2025) y guías salariales 2026, actualizada a octubre de 2026.`;
 }
 
-// Una vez por test, y solo con consentimiento y endpoint configurado
+// Aporte anónimo: solo con un toque explícito de la persona (consentimiento expreso, Ley 29733)
 function sendRecord(a, r) {
-  if (S.recordSent || !S.consent || !CONFIG.collectUrl) return;
+  if (S.recordSent || !S.contribute || !CONFIG.collectUrl) return;
   S.recordSent = true;
   const rid = Math.random().toString(36).slice(2, 12);   // aleatorio: solo evita contar dos veces el mismo test
   const rec = Object.assign(Engine.responseRecord(Object.assign({ _rid: rid }, a), r), { consentimiento: CONFIG.consentVersion });
@@ -301,7 +302,8 @@ function privacyHTML() {
     <div class="sheet-head"><h2 id="priv-title" tabindex="-1">Cómo cuidamos tus datos</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
     <ul class="plain">
       <li>No pedimos tu nombre, tu DNI ni el nombre de tu empresa.</li>
-      <li>En esta versión de prueba, tus respuestas se quedan en tu navegador y solo sirven para calcular tu resultado.</li>
+      <li>Tu sueldo y tus respuestas se usan en tu navegador para calcular tu resultado. No se envían a ningún lado.</li>
+      <li>Solo si tocas "Aportar mi dato", guardamos tus respuestas de forma anónima para afinar las bandas salariales.</li>
       <li>Si usas las funciones con IA del kit, tus respuestas se envían a Claude para redactar el texto.</li>
       <li>Puedes borrar todo con "Hacer el test de nuevo".</li>
     </ul>
@@ -416,7 +418,7 @@ function unlock() {
 
 /* ---------- Entrevista (etapa 2) ---------- */
 function draft() {
-  if (!S.kitDraft) S.kitDraft = Object.assign({ logro1: '', logro2: '', impacto: '', plan: '', responsabilidades: '', aprueba: 'jefe', estilo: 'cercano', trato: 'tu', oferta: 'no', jefe: '' }, S.kitIn || {});
+  if (!S.kitDraft) S.kitDraft = Object.assign({ logro1: '', valor1: '', logro2: '', valor2: '', impacto: '', plan: '', responsabilidades: '', aprueba: 'jefe', estilo: 'cercano', trato: 'tu', oferta: 'no', jefe: '' }, S.kitIn || {});
   return S.kitDraft;
 }
 function chipGroup(key, options, cur) {
@@ -429,10 +431,14 @@ function viewInterview() {
       <p class="lede">Con tus logros, el speech deja de ser genérico. Toma unos tres minutos.</p>
     </section>
     <div class="interview">
-      <label class="field"><span>Tu logro más importante del último año, con un número</span>
-        <textarea data-kf="logro1" placeholder="Ej.: reduje el cierre contable de 10 a 6 días">${esc(d.logro1)}</textarea></label>
+      <label class="field"><span>Tu logro más importante del año</span><small>Qué problema había, qué hiciste y qué resultado logró, con número.</small>
+        <textarea data-kf="logro1" placeholder="Ej.: el cierre contable tomaba 10 días; automaticé las conciliaciones y ahora toma 6">${esc(d.logro1)}</textarea></label>
+      <label class="field"><span>¿Cuánto vale en soles, aproximadamente?</span><small>Opcional. Ahorro, ventas o costos evitados al año.</small>
+        <input data-kf="valor1" autocomplete="off" placeholder="Ej.: S/ 48,000 al año en horas extra" value="${esc(d.valor1 || '')}"></label>
       <label class="field"><span>Un segundo logro</span>
-        <textarea data-kf="logro2" placeholder="Ej.: automaticé tres reportes que tomaban un día cada semana">${esc(d.logro2)}</textarea></label>
+        <textarea data-kf="logro2" placeholder="Ej.: los reportes semanales tomaban un día; los automaticé y ahora salen en una hora">${esc(d.logro2)}</textarea></label>
+      <label class="field"><span>¿Y cuánto vale el segundo?</span><small>Opcional.</small>
+        <input data-kf="valor2" autocomplete="off" placeholder="Ej.: S/ 12,000 al año" value="${esc(d.valor2 || '')}"></label>
       <label class="field"><span>¿Qué ganó la empresa con eso?</span><small>Opcional. Ej.: dejamos de pagar unos S/ 4,000 al mes en horas extra.</small>
         <textarea data-kf="impacto">${esc(d.impacto)}</textarea></label>
       <label class="field"><span>¿Qué quieres lograr en los próximos seis meses?</span><small>Opcional. Es tu plan: lo que la empresa gana si apuesta por ti.</small>
@@ -483,9 +489,12 @@ function viewKit() {
     <p class="status" id="ai-status" role="status">${S.polished ? 'Kit personalizado con IA. Las cifras no cambian: las calcula el motor.' : ''}</p>
   </section>`);
 
+  if (k.timeline) out.push(`<section class="block"><h2>Tu cronograma</h2>
+    <ol class="plain timeline">${k.timeline.map(t => `<li><span class="label">${esc(t.fecha)}:</span> ${esc(t.paso)}</li>`).join('')}</ol>
+  </section>`);
   out.push(`<section class="block"><h2>Tu método en tres tiempos</h2>
     <ol class="plain">
-      <li><span class="label">Antes:</span> acuerda metas con tu jefe y registra tus logros, de 8 a 12 semanas antes de pedir.</li>
+      <li><span class="label">Antes:</span> ${['construye', 'trato', 'metas', 'esperar'].includes(k.code) ? 'acuerda metas con tu jefe y registra tus logros con números; pides cuando las cumplas.' : 'arma tu maletín de logros, averigua cómo se decide el aumento y practica en voz alta.'}</li>
       <li><span class="label">En la reunión:</span> adelántate a sus dudas, muestra tu maletín, pide una cifra precisa y calla. Ante cada objeción, etiqueta y pregunta.</li>
       <li><span class="label">Después:</span> deja todo por escrito. Si es un no, conviértelo en metas con fecha.</li>
     </ol>
@@ -505,6 +514,7 @@ function viewKit() {
       ${k.raiseContext ? `<p>${esc(k.raiseContext)}</p>` : ''}
       ${k.employerCost ? `<p>Tu propuesta le costaría a la empresa cerca de ${soles(k.employerCost)} al año. Si tus resultados valen más que eso, dilo con números.</p>` : ''}
       ${k.ladder ? `<p class="label">Si te ofrecen menos</p><ol class="plain">${k.ladder.map(x => `<li>${esc(x)}</li>`).join('')}</ol><p class="fine">${esc(k.ladderRule)}</p>` : ''}
+      ${k.package ? `<p class="label">Amplía el paquete</p><ul class="plain">${k.package.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${bandTable}
     </section>`);
   } else {
@@ -521,7 +531,8 @@ function viewKit() {
     <div class="say">${esc(k.prep.script)}</div>
     <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="prep">Copiar mensaje y guion</button></div>
     <ul class="plain"><li>${esc(k.prep.checkin)}</li><li>${esc(k.prep.log)}</li></ul>
-    ${k.plan60 ? `<p class="label">Tu plan de 60 días</p><ul class="plain">${k.plan60.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    <p class="label">Averigua antes de pedir</p>
+    <ul class="plain">${k.prep.research.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
   </section>`);
 
   out.push(`<section class="block"><h2>El mensaje para pedir la reunión</h2>
@@ -560,10 +571,11 @@ function viewKit() {
     <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="email">Copiar correo</button></div>
   </section>`);
 
+  if (k.ifYes) out.push(`<section class="block"><h2>Si te dicen que sí</h2><ul class="plain">${k.ifYes.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`);
   out.push(`<section class="block"><h2>Si te dicen que no</h2><ul class="plain">${k.ifNo.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`);
   out.push(`<section class="block"><h2>Lo que no debes decir</h2><ul class="plain">${k.dont.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`);
 
-  out.push(`<section class="block"><h2>Si te llama otra empresa</h2><p>${esc(k.pretension)}</p></section>`);
+  out.push(`<section class="block"><h2>Tu plan B</h2><p>Tu empleabilidad no depende de una sola reunión.</p><ul class="plain">${(k.planB || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul><p class="label">Si te llama otra empresa</p><p>${esc(k.pretension)}</p></section>`);
   out.push(`<section class="block no-print" id="sim">${simHTML()}</section>`);
   out.push(`<div class="row-actions no-print"><button type="button" class="link" data-action="back-result">Volver a mi resultado</button></div>`);
   return out.join('');
@@ -688,6 +700,7 @@ document.addEventListener('click', e => {
     case 'salary-next': if (salaryOk()) goStep(1); break;
     case 'privacy': openModal(privacyHTML(), 'priv-title'); break;
     case 'method': openModal(methodHTML(), 'method-title'); break;
+    case 'contribute': S.contribute = true; sendRecord(S.answers, Engine.recommend(S.answers, new Date())); render(); break;
     case 'more-regions': S.moreRegions = true; render(); break;
     case 'net-open': S.netCalc = { net: '', system: 'afp' }; render(); { const n = $('#neto'); if (n) n.focus(); } break;
     case 'net-system': if (S.netCalc) { S.netCalc.system = t.dataset.value; render(); } break;
@@ -756,12 +769,7 @@ document.addEventListener('input', e => {
 
 document.addEventListener('change', e => {
   const el = e.target;
-  if (el.dataset.field === 'consent') {
-    S.consent = el.checked;
-    const btn = document.querySelector('[data-action="salary-next"]');
-    if (btn) btn.disabled = !salaryOk();
-    save();
-  } else if (el.dataset.field === 'campo') {
+  if (el.dataset.field === 'campo') {
     S.answers.campo = el.checked;
     save();
   }

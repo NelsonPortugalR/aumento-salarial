@@ -158,6 +158,7 @@ const RE_ASK = /(propon|ajuste|aumento|revis|sueldo|remuneraci|s\/|\d)/i;
 const RE_LABEL = /(parece que|suena a que|da la impresi[oó]n|pareciera que|me imagino que|entiendo que)/i;
 const RE_CALIB = /¿\s*(c[oó]mo|qu[eé]|cu[aá]ndo|cu[aá]l)\b/i;
 const RE_WHY = /¿\s*por\s*qu[eé]/i;
+const RE_HEDGE = /\b(creo|siento|pienso|s[oó]lo|un poquito|ser[ií]a justo|podr[ií]a ser)\b/i;
 const RE_AUDIT = /(quiz[aá]|seguramente|antes de empezar|s[eé] que|pienses|piense|puede parecer)/i;
 
 function checksFor(text, opening) {
@@ -168,6 +169,7 @@ function checksFor(text, opening) {
         { ok: /\d/.test(t), good: 'Usaste una cifra o un dato', bad: 'Falta una cifra: tu propuesta o un resultado con número' },
         { ok: RE_ASK.test(t), good: 'Hiciste un pedido claro', bad: 'Haz el pedido de forma explícita' },
         { ok: !RE_BAD.test(t), good: 'Evitaste deudas, comparaciones y amenazas', bad: 'Evita deudas, comparaciones con compañeros, amenazas o disculpas' },
+        { ok: !RE_HEDGE.test(t), good: 'Hablaste con seguridad', bad: 'Quita "creo", "siento", "solo" o "sería justo": afirma con "propongo" y "mis resultados muestran"' },
         { ok: RE_AUDIT.test(t), good: 'Te adelantaste a sus dudas', bad: 'Prueba adelantarte a sus dudas: "quizá pienses que no es el mejor momento…"' }
       ]
     : [
@@ -352,7 +354,7 @@ async function simFinish() {
   const k = S.kit;
   const target = k.raise ? `una cifra concreta (${Kit.money(k.numbers.anchor)})` : 'un proyecto con metas y una revisión de sueldo en seis meses';
   const prompt = `Evalúa el desempeño del colaborador (no del jefe) en este ensayo de negociación salarial en Perú.
-Criterios: se adelantó a las dudas del jefe al abrir; abrió con su aporte; usó resultados con números; pidió ${target}; ante las objeciones usó etiquetas ("parece que…") y preguntas de "qué" o "cómo" en vez de "¿por qué?"; no partió la diferencia ni cedió de inmediato; cerró con una fecha o un siguiente paso; evitó hablar de deudas, compararse con compañeros, amenazar o disculparse.
+Criterios: se adelantó a las dudas del jefe al abrir; habló con seguridad, sin muletillas como "creo", "siento" o "solo"; abrió con su aporte; usó resultados con números; pidió ${target}; ante las objeciones usó etiquetas ("parece que…") y preguntas de "qué" o "cómo" en vez de "¿por qué?"; no partió la diferencia ni cedió de inmediato; cerró con una fecha o un siguiente paso; evitó hablar de deudas, compararse con compañeros, amenazar o disculparse.
 Transcripción:
 ${transcript}
 

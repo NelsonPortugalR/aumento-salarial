@@ -666,5 +666,6 @@ const MARKET = {
   "version": "2026-10-04",
   "n_total": 0,
   "cells": {}
- }
+ },
+ "offers": {}
 };

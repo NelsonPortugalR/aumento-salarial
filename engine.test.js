@@ -110,6 +110,23 @@ const rec = Engine.responseRecord(withA({ nombre: 'Ana', razon_social: 'X SAC', 
 ok(!('nombre' in rec) && !('razon_social' in rec) && !('dni' in rec) && rec.empresa === 'estable', 'el registro filtra datos personales');
 ok(rec.mes === '2026-10' && rec.sueldo === 3000 && rec.puesto === 'contabilidad', 'registro incompleto');
 
+// 14) Orientación a pedir: toda recomendación dice cómo pedir; solo "esperar" pospone y con mes
+const codes = {};
+for (const aumento of ['a6', 'a12', 'a24', 'a99', 'nunca', 'no']) for (const empresa of ['crece', 'estable', 'recorta']) for (const logros of ['varios', 'alguno', 'no']) for (const sueldo of [2000, 3500, 6000]) for (const antiguedad of ['t0', 't1', 't3']) {
+  const a = withA({ aumento, empresa, logros, sueldo: String(sueldo), antiguedad });
+  const r = Engine.recommend(a, now);
+  codes[r.code] = (codes[r.code] || 0) + 1;
+  ok(!['no_pidas', 'alcance', 'otra_cosa'].includes(r.code), 'código antiguo de no pedir');
+  if (r.code === 'esperar') ok(/^Pide en [a-z]+$/.test(r.stamp), `esperar sin mes: ${r.stamp}`);
+  const kit = Kit.build(a, r, Engine.numbers(a, r), { trato: 'tu' }, now);
+  ok(kit.timeline && kit.timeline.length >= 4 && kit.ifYes && kit.planB, 'kit sin cronograma, sí o plan B');
+  ok(!/\bcreo\b/.test(kit.speech.auditoria + kit.speech.pedido), 'el speech usa muletillas');
+}
+const total = Object.values(codes).reduce((x, y) => x + y, 0);
+ok((codes.esperar || 0) / total < 0.6, `demasiados "esperar": ${JSON.stringify(codes)}`);
+const fuerte = Engine.recommend(withA({ sueldo: '2400', logros: 'varios' }), now);
+ok(fuerte.caso.level !== 'debil', 'logros medibles no suman al caso');
+
 console.log(`engine.test: ${checks - failures}/${checks} verificaciones OK`);
 console.log(`ejemplo: contabilidad, analista, industria, Lima, 101-500, 3-5 años -> P25 ${b.p25}, mediana ${b.p50}, P75 ${b.p75} (${b.confidence})`);
 if (failures) process.exit(1);

@@ -128,6 +128,10 @@ const Engine = (() => {
     else if (a.antiguedad === 't2') { score += 0.5; }
     else if (a.antiguedad === 't0') { score -= 2; weaknesses.push('Llevas menos de tres meses en el puesto.'); }
     if (a.experiencia === 'e5' || a.experiencia === 'e10') score += 0.5;
+    // Resultados medibles: lo que más pesa en la reunión (maletín de logros)
+    if (a.logros === 'varios') { score += 1.5; strengths.unshift('Tienes resultados de este año con números: es lo que más pesa en la reunión.'); }
+    else if (a.logros === 'alguno') { score += 0.5; }
+    else if (a.logros === 'no') { score -= 0.5; weaknesses.unshift('Todavía no tienes tus resultados medidos: sin números, el pedido suena a deseo y no a propuesta.'); }
     if (a.contrato === 'plazo' && (a.vence === 'v1' || a.vence === 'v3')) strengths.push('Tu contrato vence pronto: la conversación igual va a ocurrir.');
     if (a.empresa === 'crece') strengths.push('Tu empresa está creciendo.');
     if (pos === 'alto') weaknesses.push('Ya estás sobre la mediana: un aumento de base será difícil.');
@@ -143,30 +147,35 @@ const Engine = (() => {
   function moment(a, now) {
     const m = now.getMonth() + 1;
     const closed = [], open = [];
-    if (a.antiguedad === 't0') closed.push({ t: 'Estás en tus primeros meses: primero consolida tu puesto.', cuando: 'Cuando termines tu periodo de prueba y tengas resultados que mostrar.' });
-    if (a.aumento === 'a6') closed.push({ t: 'Tu último ajuste fue hace menos de seis meses.', cuando: 'Cuando se cumpla un año de tu último ajuste.' });
-    if (a.aumento === 'no') closed.push({ t: 'Te dijeron que no hace poco.', cuando: 'En tres a seis meses, con un caso más fuerte.' });
-    if (a.contrato === 'plazo' && a.empresa === 'recorta') closed.push({ t: 'Tu contrato es a plazo fijo y tu empresa está recortando: pedir ahora puede poner en riesgo tu renovación.', cuando: 'Después de renovar, cuando la empresa se estabilice. Mientras, junta logros con números.' });
-    if (a.empresa === 'recorta') closed.push({ t: 'Tu empresa está recortando: un pedido ahora tiene pocas probabilidades.', cuando: 'Cuando la empresa se estabilice. Mientras, junta logros con números.' });
+    if (a.antiguedad === 't0') closed.push({ t: 'Estás en tus primeros meses: primero consolida tu puesto.', cuando: 'Cuando termines tu periodo de prueba y tengas resultados que mostrar.', meses: 3 });
+    if (a.aumento === 'a6') closed.push({ t: 'Tu último ajuste fue hace menos de seis meses.', cuando: 'Cuando se cumpla un año de tu último ajuste.', meses: 5 });
+    if (a.aumento === 'no') closed.push({ t: 'Te dijeron que no hace poco.', cuando: 'En unos cuatro meses, con metas cumplidas y por escrito.', meses: 4 });
+    if (a.contrato === 'plazo' && a.empresa === 'recorta') closed.push({ t: 'Tu contrato es a plazo fijo y tu empresa está recortando: pedir ahora puede poner en riesgo tu renovación.', cuando: 'Después de renovar. Mientras, junta logros con números.', meses: 3 });
+    if (a.empresa === 'recorta') closed.push({ t: 'Tu empresa está recortando: un pedido de sueldo ahora tiene pocas probabilidades.', cuando: 'Cuando la empresa se estabilice. Mientras, junta logros con números.', meses: 3 });
     if (a.contrato === 'plazo' && (a.vence === 'v1' || a.vence === 'v3')) open.push('Tu contrato vence pronto: la renovación es una conversación que igual va a ocurrir.');
     if (m >= 9 && m <= 11) open.push('Es temporada de presupuestos: lo que se pide ahora puede entrar al del próximo año.');
     if (m >= 1 && m <= 3) open.push('Es temporada de evaluaciones y ajustes anuales.');
     if (a.empresa === 'crece') open.push('Tu empresa está creciendo.');
-    if (closed.length) return { state: 'cerrado', label: 'Momento cerrado', text: closed[0].t, cuando: closed[0].cuando };
+    if (closed.length) {
+      const d = new Date(now.getFullYear(), now.getMonth() + closed[0].meses, 1);
+      return { state: 'cerrado', label: 'Todavía no es el momento', text: closed[0].t, cuando: closed[0].cuando, mes: MONTHS_ES[d.getMonth()] };
+    }
     if (open.length) return { state: 'abierto', label: 'Buen momento', text: open.slice(0, 2).join(' ') };
     return { state: 'neutro', label: 'Momento neutro', text: 'No hay nada en contra, pero tampoco un empuje claro: elige bien la fecha.' };
   }
 
+  const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+  // Toda recomendación dice cómo pedir; solo "esperar" pospone, y con fecha
   const VERDICTS = {
     pide_ahora:  { color: 'go',   stamp: 'Pide ahora', sub: 'Estás bajo el mercado, tu caso es sólido y el momento ayuda.' },
     pide_pronto: { color: 'go',   stamp: 'Pide en unas semanas', sub: 'Estás bajo el mercado y tienes caso. Prepara la conversación y elige bien la fecha.' },
-    construye:   { color: 'wait', stamp: 'Prepárate 60 días', sub: 'Estás bajo el mercado, pero tu caso todavía es débil. Junta logros con números y pide en dos meses.' },
-    merito:      { color: 'go',   stamp: 'Pide por mérito', sub: 'Estás dentro del rango de tu perfil. Un aumento es posible si lo sustentas con resultados.' },
-    alcance:     { color: 'wait', stamp: 'Pide crecer, no plata', sub: 'Estás en rango y tu caso es débil. Hoy rinde más pedir un proyecto, un título o una capacitación.' },
-    otra_cosa:   { color: 'wait', stamp: 'Negocia otra cosa', sub: 'Ya estás sobre la mediana. Un aumento de base será difícil; un bono, horario o capacitación, no tanto.' },
-    no_pidas:    { color: 'stop', stamp: 'No pidas por ahora', sub: 'Estás sobre la mediana y tu caso es débil. Pedir ahora te gasta una carta que conviene guardar.' },
-    esperar:     { color: 'wait', stamp: 'Todavía no', sub: '' },
-    mercado:     { color: 'wait', stamp: 'Mira afuera', sub: 'Estás muy por debajo del mercado y adentro la puerta está cerrada. Tu mejor aumento puede ser otra oferta.' }
+    construye:   { color: 'go',   stamp: 'Pide en 8 semanas', sub: 'Estás bajo el mercado. Te falta evidencia, no razón: esta semana acuerdas metas con tu jefe y en ocho semanas pides con resultados en la mano.' },
+    merito:      { color: 'go',   stamp: 'Pide por mérito', sub: 'Estás dentro del rango de tu perfil. Tu aumento se gana con resultados: llévalos con números y pide una cifra concreta.' },
+    trato:       { color: 'go',   stamp: 'Pide un trato', sub: 'Estás en rango y todavía te falta evidencia. Pide hoy las metas que te llevarían a un aumento, con cifra y fecha de revisión por escrito.' },
+    paquete:     { color: 'go',   stamp: 'Pide más que sueldo', sub: 'Ya estás sobre la mediana. Pide un ajuste moderado y amplía el paquete: bono por resultados, capacitación o horario.' },
+    metas:       { color: 'wait', stamp: 'Pide metas primero', sub: 'Estás sobre la mediana y tu caso aún es débil. Pide hoy las metas y la fecha de tu próximo ajuste: el aumento llega con los resultados.' },
+    esperar:     { color: 'wait', stamp: 'Pide en', sub: '' },
+    mercado:     { color: 'wait', stamp: 'Negocia con el mercado', sub: 'Estás muy por debajo del mercado y adentro la puerta está cerrada. Tu mejor aumento puede ser una oferta de otra empresa.' }
   };
 
   function recommend(a, now = new Date()) {
@@ -184,13 +193,13 @@ const Engine = (() => {
     if (r.pct < 20 && (a.aumento === 'no' || a.empresa === 'recorta')) code = 'mercado';
     else if (r.momento.state === 'cerrado') code = 'esperar';
     else if (r.pos === 'bajo') code = r.caso.level === 'debil' ? 'construye' : (r.momento.state === 'abierto' ? 'pide_ahora' : 'pide_pronto');
-    else if (r.pos === 'rango') code = r.caso.level === 'debil' ? 'alcance' : 'merito';
-    else code = r.caso.level === 'debil' ? 'no_pidas' : 'otra_cosa';
+    else if (r.pos === 'rango') code = r.caso.level === 'debil' ? 'trato' : 'merito';
+    else code = r.caso.level === 'debil' ? 'metas' : 'paquete';
     const v = VERDICTS[code];
     r.code = code;
     r.color = v.color;
-    r.stamp = v.stamp;
-    r.sub = code === 'esperar' ? r.momento.text + ' Usa este tiempo para preparar tu caso.' : v.sub;
+    r.stamp = code === 'esperar' ? `Pide en ${r.momento.mes}` : v.stamp;
+    r.sub = code === 'esperar' ? r.momento.text + ' Desde hoy siembras: acuerda metas con tu jefe y junta resultados con números para llegar con caso.' : v.sub;
     r.cuando = r.momento.cuando || null;
     return r;
   }
@@ -222,7 +231,7 @@ const Engine = (() => {
       anchor: null, target: null, floor: null, annual: null,
       pretFrom, pretTo: round100(Math.max(b.p75, s * 1.25, pretFrom * 1.08))
     };
-    const asksRaise = ['pide_ahora', 'pide_pronto', 'construye', 'merito', 'esperar', 'mercado'].includes(r.code) && r.pos !== 'alto';
+    const asksRaise = ['pide_ahora', 'pide_pronto', 'construye', 'merito', 'trato', 'paquete', 'esperar', 'mercado'].includes(r.code);
     if (!asksRaise) return out;
     const cap = s * (1 + CONFIG.capNoPromotion);
     let target, anchor, floor;
@@ -231,10 +240,15 @@ const Engine = (() => {
       target = Math.min(s + (Math.min(b.p50, t * 1.15) - t), s * 1.15);
       anchor = Math.min(Math.max(target * 1.05, target), cap);
       floor = Math.max(s * 1.05, s + (target - s) * 0.5);
-    } else {
+    } else if (r.pos === 'rango') {
       target = s * 1.08;
       anchor = s * 1.12;
       floor = s * 1.04;
+    } else {
+      // Sobre la mediana: ajuste moderado, cerca de lo que suben las empresas este año
+      target = s * 1.05;
+      anchor = s * 1.08;
+      floor = s * 1.03;
     }
     target = round50(target); floor = round50(floor);
     anchor = precise(anchor, cap);
@@ -306,7 +320,7 @@ const Engine = (() => {
   }
 
   // Registro anónimo de un test para retroalimentar el modelo: sin nombre, DNI, empresa ni fecha exacta
-  const RECORD_FIELDS = ['puesto', 'nivel', 'sector', 'region', 'tamano', 'campo', 'contrato', 'vence', 'experiencia', 'antiguedad', 'aumento', 'funciones', 'empresa'];
+  const RECORD_FIELDS = ['puesto', 'nivel', 'sector', 'region', 'tamano', 'campo', 'contrato', 'vence', 'experiencia', 'antiguedad', 'aumento', 'funciones', 'logros', 'empresa'];
   function responseRecord(a, r, now = new Date()) {
     const rec = { schema: 1, id: a._rid || null, mes: now.toISOString().slice(0, 7), modelo: MARKET.version };
     RECORD_FIELDS.forEach(k => { if (a[k] != null && a[k] !== '') rec[k] = a[k]; });

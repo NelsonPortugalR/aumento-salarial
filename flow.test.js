@@ -48,12 +48,12 @@ async function run(name, steps, opts = {}) {
     const btn = () => d.querySelector('[data-action="salary-next"]');
     type('#sueldo', 'S/ 2,300x'); // sanitize -> 2300
     if (d.querySelector('#sueldo').value !== '2300') throw new Error('sanitize failed: ' + d.querySelector('#sueldo').value);
-    if (!btn().disabled) throw new Error('should be disabled without consent');
-    check('[data-field="consent"]');
+    if (d.querySelector('[data-field="consent"]')) throw new Error('consent checkbox should be gone');
     if (btn().disabled) throw new Error('should be enabled');
     click('[data-action="salary-next"]'); await wait(50);
     await pick('aumento', 'a99');
     await pick('funciones', 'personas');
+    await pick('logros', 'varios');
     await pick('empresa', 'estable');
     await wait(50);
     const stamp = d.querySelector('.stamp');
@@ -128,8 +128,8 @@ async function run(name, steps, opts = {}) {
   await run('owner-ai', async ({ d, click, pick, type, check, wait }) => {
     await pick('puesto', 'datos'); await pick('nivel', 'senior'); await pick('sector', 'banca'); await pick('region', 'lima'); await pick('tamano', 's4');
     await pick('contrato', 'indefinido'); await pick('experiencia', 'e5'); await pick('antiguedad', 't2');
-    type('#sueldo', '5200'); check('[data-field="consent"]'); click('[data-action="salary-next"]'); await wait(30);
-    await pick('aumento', 'a24'); await pick('funciones', 'mas'); await pick('empresa', 'crece'); await wait(40);
+    type('#sueldo', '5200'); click('[data-action="salary-next"]'); await wait(30);
+    await pick('aumento', 'a24'); await pick('funciones', 'mas'); await pick('logros', 'alguno'); await pick('empresa', 'crece'); await wait(40);
     console.log('RESULT2 stamp:', d.querySelector('.stamp').textContent);
     click('[data-action="open-paywall"]'); await wait(30);
     const owner = d.querySelector('.owner');

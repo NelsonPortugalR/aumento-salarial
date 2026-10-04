@@ -23,6 +23,8 @@ def export_js():
     payload['context'] = ctx
     own = ROOT / 'benchmarks' / 'ajustes_propios.json'
     payload['own'] = json.loads(own.read_text()) if own.exists() else {'cells': {}, 'n_total': 0}
+    offers = ROOT / 'benchmarks' / 'avisos_indice.json'
+    payload['offers'] = json.loads(offers.read_text()) if offers.exists() else {}
     (REPO / '15_bands.js').write_text(
         '/* ============================================================\n'
         '   BANDAS DE MERCADO — generado por data/pipeline/export.py\n'

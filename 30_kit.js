@@ -26,7 +26,43 @@ const Kit = (() => {
     return [MONTHS[(m + 2) % 12], MONTHS[(m + 3) % 12]];
   }
 
-  const RAISE_CODES = ['pide_ahora', 'pide_pronto', 'construye', 'merito', 'esperar', 'mercado'];
+  const RAISE_CODES = ['pide_ahora', 'pide_pronto', 'construye', 'merito', 'trato', 'paquete', 'esperar', 'mercado'];
+  const BUILD_CODES = ['construye', 'trato', 'metas', 'esperar'];   // primero metas y evidencia, luego la reunión
+  const SHORT_DAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const addDays = (d, n) => { const x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; };
+  const workday = d => { const x = new Date(d.getTime()); while (x.getDay() === 0 || x.getDay() === 6) x.setDate(x.getDate() + 1); return x; };
+  const fmt = d => `${SHORT_DAYS[d.getDay()]} ${d.getDate()} de ${MONTHS[d.getMonth()]}`;
+
+  // Cronograma con fechas reales: primero la evidencia, luego la reunión y siempre el cierre por escrito
+  function timeline(code, now, tight) {
+    if (tight) {
+      return [
+        [workday(now), 'Arma tu maletín: logro, impacto y valor en soles.'],
+        [workday(addDays(now, 1)), 'Pide la reunión con el mensaje del kit. Tiene que ocurrir antes de firmar la renovación.'],
+        [workday(addDays(now, 4)), 'Reunión: speech, cifra y silencio.'],
+        [workday(addDays(now, 4)), 'El mismo día, envía el correo de cierre.']
+      ];
+    }
+    if (BUILD_CODES.includes(code)) {
+      return [
+        [workday(addDays(now, 2)), 'Conversación de alto desempeño: acuerda dos o tres metas medibles con tu jefe.'],
+        [workday(addDays(now, 3)), 'Empieza tu registro semanal de logros: qué problema había, qué hiciste y qué resultado logró.'],
+        [workday(addDays(now, 25)), 'Primer reporte de avance en dos líneas, con números.'],
+        [workday(addDays(now, 46)), 'Segundo reporte de avance.'],
+        [workday(addDays(now, 52)), 'Cierra tu maletín y revisa tus cifras con el kit.'],
+        [workday(addDays(now, 56)), 'Pide la reunión de sueldo con el mensaje del kit.']
+      ];
+    }
+    return [
+      [workday(now), 'Arma tu maletín: cinco a ocho logros con su impacto y su valor en soles.'],
+      [workday(addDays(now, 2)), 'Revisa tu banda y tus tres cifras. Practica el speech en voz alta, mejor con alguien de confianza.'],
+      [workday(addDays(now, 3)), 'Pide la reunión con el mensaje del kit, con una semana de anticipación.'],
+      [workday(addDays(now, 9)), 'Un día antes, envía tu resumen de una página.'],
+      [workday(addDays(now, 10)), 'Reunión: speech, cifra concreta y silencio.'],
+      [workday(addDays(now, 10)), 'El mismo día, envía el correo de cierre con lo acordado.'],
+      [workday(addDays(now, 40)), 'Si quedó pendiente, retoma en la fecha acordada.']
+    ];
+  }
 
   function build(a, r, n, k, now = new Date()) {
     const T = (tu, usted) => (k.trato === 'usted' ? usted : tu);
@@ -42,26 +78,32 @@ const Kit = (() => {
       : a.funciones === 'mas' ? 'asumí responsabilidades que antes no tenía' : 'aporto más de lo que se esperaba cuando se fijó mi sueldo');
     const logro1 = clean(k.logro1) || '[tu logro principal, con un número]';
     const logro2 = clean(k.logro2) || '[un segundo logro, también con un número]';
-    const alt = r.code === 'otra_cosa' ? 'un bono por resultados' : 'una capacitación o certificación pagada por la empresa';
+    const alt = r.code === 'paquete' ? 'un bono por resultados' : 'una capacitación o certificación pagada por la empresa';
     const plan = clean(k.plan) || '[lo que quieres lograr en los próximos seis meses]';
     const impacto = clean(k.impacto) || '[qué ganó la empresa: ahorro, ventas, tiempo o errores evitados]';
     const reviewMonth = MONTHS[(now.getMonth() + 3) % 12];
     const tight = a.contrato === 'plazo' && (a.vence === 'v1' || a.vence === 'v3');
     const kit = { generatedAt: now.toISOString(), raise: !!raise, code: r.code, trato: k.trato === 'usted' ? 'usted' : 'tu', reviewMonth };
+    kit.timeline = timeline(r.code, now, tight).map(([d, t]) => ({ fecha: fmt(d), paso: t }));
 
     // Antes de la reunión: metas acordadas, registro de logros y avances
     kit.prep = {
       timing: tight
         ? 'Tu contrato vence pronto: haz esta conversación esta misma semana, en versión corta, y pide la reunión de sueldo antes de la renovación.'
-        : (r.code === 'pide_ahora'
-          ? 'Si puedes esperar de 4 a 8 semanas, haz primero esta conversación y llegarás con metas acordadas. Si no, ve directo a la reunión.'
-          : 'Empieza con esta conversación de 8 a 12 semanas antes de pedir. Ahí se gana el aumento: llegas a la reunión con metas acordadas y cumplidas.'),
+        : (BUILD_CODES.includes(r.code)
+          ? 'Empieza esta semana. Ahí se gana el aumento: llegas a la reunión con metas acordadas y cumplidas, y tu jefe ya sabe que vas a pedir.'
+          : 'Ya tienes caso para pedir. Esta conversación es opcional: úsala si quieres llegar con metas acordadas, o ve directo a la reunión.'),
       ask: `${jefe ? 'Hola, ' + jefe + '.' : 'Hola.'} ¿${T('Tienes', 'Tiene')} 15 minutos esta semana para conversar sobre mi desarrollo? ¿El ${d1} o el ${d2}?`,
       script: tight
         ? `Quiero crecer aquí y aportar más. ¿Qué es lo que más ${T('valoras', 'valora')} de mi trabajo y qué tendría que reforzar para ser de alto desempeño? Mi contrato se renueva pronto y me gustaría que la renovación refleje lo que aporto. ¿Podemos conversarlo antes de firmar?`
         : `Quiero crecer aquí y aportar más. ¿Qué tendría que lograr en los próximos tres meses para que ${T('me consideres', 'me considere')} de alto desempeño? Me gustaría que lo definamos con dos o tres metas concretas. Y si las cumplo, me gustaría conversar sobre mi crecimiento y mi remuneración en ${reviewMonth}. ¿${T('Te', 'Le')} parece?`,
       checkin: `Cada tres o cuatro semanas, un mensaje corto: "Así voy con lo que acordamos: [tu avance, con número]. ¿Algo que ${T('quieras', 'quiera')} que ajuste?"`,
-      log: 'Lleva un registro semanal de logros: fecha, qué hiciste, el resultado con número y quién lo vio. En dos meses tendrás tu maletín casi listo.'
+      log: 'Lleva un registro semanal de logros con tres partes: qué problema había, qué hiciste y qué resultado logró, con número. En dos meses tendrás tu maletín casi listo.',
+      research: [
+        '¿En qué mes se arma el presupuesto del próximo año? Pide antes de que se cierre.',
+        '¿Quién aprueba los aumentos y qué necesita para defender el tuyo?',
+        '¿Hay una banda o criterios para tu puesto? Tu empresa debe informarte su política salarial (Ley 30709); pregúntalo como curiosidad, no como reclamo.'
+      ]
     };
 
     // Cifras
@@ -82,13 +124,16 @@ const Kit = (() => {
     if (a.contrato === 'plazo') {
       kit.legalNote = 'Dato legal: los contratos a plazo fijo pueden encadenarse hasta cinco años en total. Si superas ese plazo, o si haces labores permanentes que no corresponden a la modalidad de tu contrato, consulta con un abogado laboral. Es información para ti, no un argumento para la reunión.';
     }
+    if (r.code === 'paquete') {
+      kit.package = ['Un bono atado a resultados medibles del semestre.', 'Una capacitación o certificación pagada por la empresa.', 'Horario flexible o días de trabajo remoto.', 'Un título o nivel nuevo que ordene tu siguiente aumento.'];
+    }
     if (!raise) {
       kit.alternatives = [
         'Liderar un proyecto visible, con metas y fecha.',
         'Una capacitación o certificación pagada por la empresa.',
         'Un título o nivel nuevo, con revisión de sueldo en seis meses.',
         'Horario flexible o días de trabajo remoto.',
-        r.code === 'otra_cosa' ? 'Un bono atado a resultados medibles.' : 'Que tu sueldo se revise en la próxima evaluación, con criterios claros.'
+        r.code === 'paquete' ? 'Un bono atado a resultados medibles.' : 'Que tu sueldo se revise en la próxima evaluación, con criterios claros.'
       ];
     }
     if (r.code === 'esperar' && r.cuando) kit.cuando = r.cuando;
@@ -96,12 +141,12 @@ const Kit = (() => {
 
     // Mensaje para pedir la reunión
     const saludo = jefe ? `Hola, ${jefe}. ¿Cómo ${T('estás', 'está')}?` : `Hola, ¿cómo ${T('estás', 'está')}?`;
-    kit.whatsapp = `${saludo} Quería ${T('pedirte', 'pedirle')} 20 minutos esta semana para conversar sobre mis responsabilidades y mi desarrollo en el equipo. ¿${T('Te', 'Le')} acomoda el ${d1} en la mañana o ${T('prefieres', 'prefiere')} el ${d2} en la tarde?`;
+    kit.whatsapp = `${saludo} Quería ${T('pedirte', 'pedirle')} 30 minutos para conversar sobre mis resultados de este año, mi crecimiento y mi remuneración. ¿${T('Te', 'Le')} acomoda el ${d1} en la mañana o ${T('prefieres', 'prefiere')} el ${d2} en la tarde?`;
     const approverText = { gerencia: 'alguien de gerencia', rrhh: 'Recursos Humanos', dueno: 'el dueño' }[k.aprueba];
     kit.whatsappFollow = approverText
       ? `Y para aprovechar bien el tiempo: ¿lo vemos solo ${T('contigo', 'con usted')} o conviene que esté también ${approverText}?`
       : null;
-    kit.whatsappNote = 'No negocies por WhatsApp: el mensaje solo pide la reunión. Si te preguntan de qué se trata, responde: "De mis funciones y mi desarrollo; prefiero conversarlo en persona."';
+    kit.whatsappNote = 'Nombrar la remuneración desde el mensaje evita que tu jefe se sienta emboscado y le da tiempo de revisar el presupuesto. No negocies por chat: el mensaje solo pide la reunión, en un lugar privado.';
 
     if (k.oferta === 'escrita') kit.offerNote = 'Tienes una oferta por escrito. Úsala solo si de verdad estás dispuesto a irte, y sin amenazar: "Recibí una propuesta formal. Prefiero seguir aquí; ¿podemos acercarnos a esa cifra?"';
     else if (k.oferta === 'proceso') kit.offerNote = 'Estás en un proceso afuera: no lo menciones hasta tener una oferta por escrito. Una oferta que no existe se nota.';
@@ -119,14 +164,18 @@ const Kit = (() => {
     };
     const audit = AUDIT[k.estilo] || AUDIT.cercano;
     kit.speech = {
-      auditoria: `Gracias por el tiempo. Antes de empezar: quizá ${T('pienses', 'piense')} ${audit}. Es justo que lo ${T('pienses', 'piense')}, y aun así quiero ${T('mostrarte', 'mostrarle')} por qué creo que vale la pena conversarlo.`,
+      auditoria: `Gracias por el tiempo. Antes de empezar: quizá ${T('pienses', 'piense')} ${audit}. Tiene sentido que lo ${T('pienses', 'piense')}, y aun así quiero ${T('mostrarte', 'mostrarle')} por qué vale la pena conversarlo.`,
       apertura: `Me entusiasma mi trabajo aquí y quiero seguir creciendo; por eso quería conversar ${T('contigo', 'con usted')} sobre mi sueldo. En el último año mi puesto cambió: ${lowerFirst(resp)}.`,
       prueba: `Dos ejemplos concretos: ${lowerFirst(logro1)}. Y ${lowerFirst(logro2)}.`,
       plan: `Traje un resumen de mis resultados y de lo que quiero lograr en los próximos seis meses: ${lowerFirst(plan)}.`,
-      mercado: r.pos === 'alto' ? 'Sé que mi sueldo está bien ubicado frente al mercado; por eso no vengo a pedir un aumento de base.' : mercado,
-      pedido: raise
-        ? `Con base en mis resultados y en lo que paga el mercado por este puesto, quiero proponer llevar mi sueldo a ${money(n.anchor)} mensuales.`
-        : `Por eso quiero proponer dos cosas: liderar un proyecto concreto este semestre, con metas claras, y que eso venga con ${alt}. Y dejar fijada una revisión de mi sueldo en seis meses.`,
+      mercado: r.pos === 'alto' ? 'Sé que mi sueldo está bien ubicado frente al mercado; lo que propongo es que siga reflejando lo que aporto hoy.' : mercado,
+      pedido: r.code === 'trato'
+        ? `Por eso quiero proponer un trato: acordemos hoy dos o tres metas para ${reviewMonth}. Si las cumplo, mi sueldo pasa a ${money(n.anchor)} mensuales. ¿Lo dejamos por escrito?`
+        : r.code === 'paquete'
+          ? `Con base en mis resultados, quiero proponer un ajuste a ${money(n.anchor)} mensuales y que conversemos un bono atado a metas del semestre.`
+          : raise
+            ? `Con base en mis resultados y en lo que paga el mercado por este puesto, quiero proponer llevar mi sueldo a ${money(n.anchor)} mensuales.`
+            : `Por eso quiero proponer que acordemos hoy dos o tres metas para este semestre, que eso venga con ${alt}, y dejar fijada la revisión de mi sueldo en ${reviewMonth}.`,
       silencio: 'Después de decir tu propuesta, haz silencio y deja que responda primero. No la expliques de nuevo ni la rebajes.',
       cierre: `¿Cuándo podríamos tener una respuesta? ¿${T('Te', 'Le')} parece si lo vemos el ${d1} de la próxima semana o ${T('prefieres', 'prefiere')} el ${d2}?`
     };
@@ -264,26 +313,38 @@ const Kit = (() => {
       'Amenazar con irte si no tienes una oferta real.',
       'Dar un rango. Si dices "entre 4,500 y 5,000", te quedas con 4,500.',
       'Preguntar "¿por qué no?": suena a reclamo. Cambia a "¿qué haría falta?".',
-      'Partir la diferencia: si te ofrecen menos, primero pregunta cómo llegar a tu cifra.'
+      'Partir la diferencia: si te ofrecen menos, primero pregunta cómo llegar a tu cifra.',
+      'Palabras que te restan: "creo", "siento", "pienso", "solo", "un poquito", "sería justo", "¿podría ser?". Afirma: "propongo", "mis resultados muestran".',
+      'Hablar de antigüedad en vez de resultados: el tiempo en el puesto no es un argumento, lo que lograste en ese tiempo sí.'
     ];
 
-    if (r.code === 'construye') {
-      kit.plan60 = [
-        'Semanas 1 y 2: anota tus resultados con números: tiempos, montos, clientes, errores evitados.',
-        'Semanas 3 y 4: pide feedback directo: "¿Qué tendría que lograr para crecer aquí?"',
-        'Semanas 5 y 6: toma un proyecto visible y ciérralo.',
-        'Semanas 7 y 8: pide la reunión con este kit y tus nuevos logros.'
-      ];
-    }
+    // Si te dicen que sí
+    kit.ifYes = [
+      'Agradece y para de negociar: no sigas argumentando lo que ya ganaste.',
+      'Confirma tres datos: el monto, desde qué mes rige y que se verá en tu boleta.',
+      'Ese mismo día, déjalo por escrito con el correo de cierre.',
+      `Acuerda cuándo revisarán de nuevo tu desempeño: ${MONTHS[(now.getMonth() + 6) % 12]} es una buena fecha.`
+    ];
+
+    // Plan B: tu empleabilidad no depende de una sola reunión
+    kit.planB = [
+      'Actualiza tu CV y tu perfil de LinkedIn con logros, no con funciones: problema, acción y resultado con número.',
+      'Ten dos conversaciones al mes con gente de tu sector: así sabes cuánto se paga afuera y te encuentran cuando hay vacantes.',
+      `Tu referencia afuera: una pretensión de ${money(n.pretFrom)} a ${money(n.pretTo)} brutos mensuales.`,
+      'Si aparece una oferta por escrito, decídela por lo que ganas en el año y tu crecimiento, no solo por el sueldo mensual.'
+    ];
+    const off = (typeof MARKET !== 'undefined' && MARKET.offers && MARKET.offers[a.nivel]) || null;
+    if (off) kit.planB.push(`En ${off.n} avisos recientes para tu nivel, lo ofrecido equivale a ${Math.round(off.indice * 100)}% de la mediana de mercado: úsalo para saber cuánto se está ofreciendo hoy.`);
+
 
     kit.employerCost = raise ? Math.round((n.anchor - Number(a.sueldo)) * CONFIG.employerFactor / 10) * 10 : null;
     kit.sheet = [
       'Mi maletín: resultados y propuesta',
       `Puesto: ${role.label}, ${lowerFirst(level.label)}${tenure ? ', ' + lowerFirst(tenure.label) + ' en el puesto' : ''}.`,
-      'Resultados del último año:',
-      `- ${logro1}.`,
-      `- ${logro2}.`,
-      `Lo que ganó la empresa: ${impacto}.`,
+      'Resultados del último año (logro, impacto para la empresa y valor aproximado en soles):',
+      `- ${logro1}. Impacto: ${impacto}. Valor: ${clean(k.valor1) || '[S/ aprox.]'}.`,
+      `- ${logro2}. Valor: ${clean(k.valor2) || '[S/ aprox.]'}.`,
+      '- [Agrega de tres a seis logros más con el mismo formato.]',
       `Responsabilidades nuevas: ${resp.charAt(0).toUpperCase() + resp.slice(1)}.`,
       `Lo que me propongo lograr en los próximos seis meses: ${plan}.`,
       `Referencia de mercado: mi sueldo está ${r.pos === 'bajo' ? 'por debajo de la mediana' : r.pos === 'rango' ? 'dentro del rango' : 'sobre la mediana'} para mi perfil. Mediana estimada: ${money(r.band.p50)} brutos mensuales (encuesta de hogares del INEI 2022-2025 actualizada a 2026 y guías salariales 2026).`,
@@ -301,6 +362,7 @@ const Kit = (() => {
     const n = kit.numbers;
     L.push('PÍDELO BIEN: TU KIT PARA LA REUNIÓN', '');
     if (kit.cuando) L.push('Cuándo usarlo: ' + kit.cuando, '');
+    if (kit.timeline) L.push('TU CRONOGRAMA', ...kit.timeline.map(t => `- ${t.fecha}: ${t.paso}`), '');
     if (kit.raise) {
       L.push('TUS NÚMEROS', `Cifra para pedir: ${money(n.anchor)}`, `Objetivo: ${money(n.target)}`, `Piso: ${money(n.floor)}`, `Efecto anual del objetivo: ${money(n.annual)} más al año (régimen general)`);
       if (kit.raiseContext) L.push(kit.raiseContext);
@@ -309,7 +371,8 @@ const Kit = (() => {
     } else {
       L.push('QUÉ PEDIR EN VEZ DE SUELDO', ...kit.alternatives.map(x => '- ' + x), '');
     }
-    if (kit.prep) L.push('ANTES DE LA REUNIÓN', kit.prep.timing, 'Mensaje: ' + kit.prep.ask, 'Qué decir: ' + kit.prep.script, kit.prep.checkin, kit.prep.log, '');
+    if (kit.prep) L.push('ANTES DE LA REUNIÓN', kit.prep.timing, 'Mensaje: ' + kit.prep.ask, 'Qué decir: ' + kit.prep.script, kit.prep.checkin, kit.prep.log, 'Averigua antes:', ...kit.prep.research.map(x => '- ' + x), '');
+    if (kit.package) L.push('AMPLÍA EL PAQUETE', ...kit.package.map(x => '- ' + x), '');
     L.push('MENSAJE PARA PEDIR LA REUNIÓN', kit.whatsapp);
     if (kit.whatsappFollow) L.push(kit.whatsappFollow);
     L.push('', 'TU SPEECH');
@@ -325,7 +388,8 @@ const Kit = (() => {
     L.push('LO QUE TE VAN A DECIR Y QUÉ RESPONDER');
     kit.objections.forEach((o, i) => { L.push(`${i + 1}. "${o.q}"`, '   Qué significa: ' + o.means, '   Qué responder: ' + o.reply, '   Qué no hacer: ' + o.avoid); });
     L.push('', 'CORREO DESPUÉS DE LA REUNIÓN', kit.email, '', 'SI TE DICEN QUE NO', ...kit.ifNo.map(x => '- ' + x), '', 'LO QUE NO DEBES DECIR', ...kit.dont.map(x => '- ' + x), '');
-    if (kit.plan60) L.push('PLAN DE 60 DÍAS', ...kit.plan60.map(x => '- ' + x), '');
+    if (kit.ifYes) L.push('SI TE DICEN QUE SÍ', ...kit.ifYes.map(x => '- ' + x), '');
+    if (kit.planB) L.push('TU PLAN B', ...kit.planB.map(x => '- ' + x), '');
     L.push('TU MALETÍN', kit.sheet, '');
     if (kit.employerCost) L.push(`Tu propuesta le costaría a la empresa cerca de ${money(kit.employerCost)} al año (régimen general).`, '');
     L.push('SI TE LLAMA OTRA EMPRESA', kit.pretension, '');

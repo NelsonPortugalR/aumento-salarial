@@ -159,6 +159,12 @@ const FUNCTIONS = [
   { id: 'no',       label: 'No' }
 ];
 
+const RESULTS = [
+  { id: 'varios', label: 'Sí, varios' },
+  { id: 'alguno', label: 'Uno o dos' },
+  { id: 'no',     label: 'Todavía no los tengo medidos' }
+];
+
 const COMPANY = [
   { id: 'crece',   label: 'Creciendo' },
   { id: 'estable', label: 'Estable' },
@@ -204,6 +210,7 @@ const STEPS = [
   { id: 'sueldo', title: '¿Cuánto ganas al mes, en bruto?', type: 'salary' },
   { id: 'aumento', title: '¿Cuándo fue tu último aumento?', type: 'list', options: LASTRAISE },
   { id: 'funciones', title: 'En el último año, ¿te sumaron funciones sin ajustar tu sueldo?', type: 'list', options: FUNCTIONS },
+  { id: 'logros', title: '¿Puedes mostrar resultados de este año con números?', type: 'list', options: RESULTS },
   { id: 'empresa', title: '¿Cómo ves a tu empresa este año?', type: 'list', options: COMPANY }
 ];
 

@@ -3,7 +3,9 @@
 Entrada: data/benchmarks/avisos/*.csv con las columnas de PLANTILLA.csv. Una fila por aviso, copiada
          por una persona desde el portal: no se automatiza la extracción (las condiciones de LinkedIn
          prohíben el scraping y las de otros portales deben revisarse antes).
-Salida:  data/AVISOS.md: índice "ofrecido / modelo" por nivel y portal. Es un monitor: si el índice
+Captura: data/pipeline/capture_posting.py convierte el texto pegado de un aviso en una fila.
+Salida:  data/AVISOS.md: índice "ofrecido / modelo" por nivel y portal; benchmarks/avisos_indice.json
+         (últimos 90 días, 20 o más avisos por nivel), que el kit muestra en el plan B. Es un monitor: si el índice
          se mueve más de 10% en dos meses seguidos, hay que revisar las anclas. No entra a la banda,
          porque un sueldo ofrecido no es un sueldo pagado.
 """
@@ -19,6 +21,8 @@ from common import ROOT, predict_p50  # noqa: E402
 
 DIR = ROOT / 'benchmarks' / 'avisos'
 USD_PEN = 3.75   # actualizar con el tipo de cambio del mes
+MIN_INDEX = 20   # avisos mínimos por nivel para mostrar el índice en el kit
+INDEX = ROOT / 'benchmarks' / 'avisos_indice.json'
 REQUIRED = ['fecha', 'portal', 'url', 'puesto', 'nivel', 'region', 'sueldo_min', 'moneda', 'periodo']
 
 
@@ -55,6 +59,11 @@ def main():
         L += ['', '| Mes | Portal | Nivel | Avisos | Ofrecido / modelo (mediana) |', '| --- | --- | --- | ---: | ---: |']
         for (mes, portal, nivel), g in df.groupby(['mes', 'portal', 'nivel']):
             L.append(f"| {mes} | {portal} | {nivel} | {len(g)} | {g['indice'].median():.2f} |")
+        # Índice ofrecido / modelo de los últimos 90 días, por nivel, solo con 20 o más avisos: lo usa el kit (plan B)
+        recent = df[pd.to_datetime(df['fecha'], errors='coerce') >= pd.Timestamp.today() - pd.Timedelta(days=90)]
+        idx = {lvl: {'indice': round(float(g['indice'].median()), 3), 'n': int(len(g))}
+               for lvl, g in recent.groupby('nivel') if len(g) >= MIN_INDEX}
+        INDEX.write_text(json.dumps(idx, indent=1) + '\n')
     (ROOT / 'AVISOS.md').write_text('\n'.join(L) + '\n')
     print('\n'.join(L[:6]))
 
