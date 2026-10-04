@@ -1,0 +1,65 @@
+<title>Capturador de avisos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap" rel="stylesheet">
+<style>
+/* Herramienta de trabajo: pegar, revisar y guardar en una columna; resumen arriba, lista abajo */
+:root{
+  --paper:#FFFFFF; --surface:#F1F4F8; --rule:#D3DAE4;
+  --ink:#16233D; --ink-2:#4B5770; --on-ink:#FFFFFF;
+  --go:#127A4A; --go-soft:#E2F2E9; --wait:#9C6209; --wait-soft:#FAEFD9; --stop:#B3261E;
+  --focus:#2F6FED;
+  --font-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1424; --surface:#132037; --rule:#28354E; --ink:#E6EBF3; --ink-2:#A3AEC1; --on-ink:#0C1424;
+    --go:#4FC48D; --go-soft:rgba(79,196,141,.14); --wait:#E3AA3F; --wait-soft:rgba(227,170,63,.14); --stop:#F2766C; --focus:#8DB5FF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1424; --surface:#132037; --rule:#28354E; --ink:#E6EBF3; --ink-2:#A3AEC1; --on-ink:#0C1424;
+  --go:#4FC48D; --go-soft:rgba(79,196,141,.14); --wait:#E3AA3F; --wait-soft:rgba(227,170,63,.14); --stop:#F2766C; --focus:#8DB5FF; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--font-body);margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:20px}
+h1,h2{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:1.7rem}
+h2{font-size:1.2rem}
+p{margin:0}
+.lede{color:var(--ink-2)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--rule)}
+.tab{border:0;background:none;color:var(--ink-2);font:700 .95rem var(--font-body);padding:10px 12px;border-bottom:3px solid transparent;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.panel{display:grid;gap:14px}
+label.field{display:grid;gap:6px;font-weight:700;font-size:.95rem}
+textarea,input,select{width:100%;border:1.5px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);font:inherit;font-weight:400;padding:10px 12px}
+textarea{min-height:150px;resize:vertical}
+textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.btn{border:0;border-radius:10px;background:var(--ink);color:var(--on-ink);font:700 1rem var(--font-body);padding:12px 18px;cursor:pointer}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-ghost{border:1.5px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink);font:700 .95rem var(--font-body);padding:10px 14px;cursor:pointer}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.note{font-size:.88rem;color:var(--ink-2)}
+.msg{font-size:.95rem;padding:10px 12px;border-radius:10px}
+.msg.ok{background:var(--go-soft);color:var(--go)}
+.msg.warn{background:var(--wait-soft);color:var(--wait)}
+.card{background:var(--surface);border-radius:12px;padding:14px;display:grid;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{display:grid;gap:4px}
+.stat b{font-family:var(--font-display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--rule);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--go)}
+.list{display:grid;gap:8px}
+.item{border:1px solid var(--rule);border-radius:10px;padding:10px 12px;display:grid;gap:2px;min-width:0}
+.item .t{font-weight:700;overflow-wrap:anywhere}
+.item .m{font-size:.88rem;color:var(--ink-2);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.item .row{justify-content:space-between}
+.link{background:none;border:0;color:var(--ink);text-decoration:underline;font:inherit;font-size:.88rem;cursor:pointer;padding:0}
+.guide{display:grid;gap:12px}
+.guide ol,.guide ul{margin:0;padding-left:1.2em;display:grid;gap:6px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
