@@ -1,8 +1,8 @@
 /* ============================================================
    INTERFAZ
    ============================================================ */
-const STORE_KEY = 'pidelo-bien-v1';
-const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null });
+const STORE_KEY = 'pidelo-bien-v2';
+const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, consent: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null });
 const S = Object.assign(FRESH(), { unlocked: false });
 const RT = { sample: null, downloads: null, isOwner: false, busy: false, ctl: null, landed: false, userActed: false, simText: '' };
 
@@ -30,7 +30,7 @@ function resetTest() {
 }
 
 const visibleSteps = () => STEPS.filter(s => !s.when || s.when(S.answers));
-const needsField = a => ['mineria', 'construccion', 'agro'].includes(a.sector) || ['ing_minas', 'ing_civil', 'seguridad'].includes(a.puesto);
+const needsField = a => ['mineria', 'construccion', 'agro'].includes(a.sector) || ['ing_minas', 'ing_civil', 'seguridad', 'mantenimiento'].includes(a.puesto);
 const salaryOk = () => S.consent && Number(S.answers.sueldo) >= 500 && Number(S.answers.sueldo) <= 150000;
 
 /* ---------- Render ---------- */
@@ -76,8 +76,17 @@ function optionsBlock(step) {
     ? `<label class="check"><input type="checkbox" data-field="campo" ${S.answers.campo ? 'checked' : ''}><span>Trabajo en unidad minera, obra o campo</span></label>`
     : '';
   const cls = step.type === 'grid' ? 'opts grid' : 'opts';
-  const opts = step.options.map(o => `<button type="button" class="opt${cur === o.id ? ' is-on' : ''}" role="radio" aria-checked="${cur === o.id}" data-action="pick" data-step="${step.id}" data-value="${o.id}">${esc(o.label)}</button>`).join('');
-  return `${extra}<div class="${cls}" role="radiogroup" aria-labelledby="q-title">${opts}</div>`;
+  let list = step.options;
+  let more = '';
+  if (step.id === 'region') {
+    const showAll = S.moreRegions || (cur && !(byId(REGIONS, cur) || {}).main);
+    if (!showAll) {
+      list = REGIONS.filter(o => o.main);
+      more = '<button type="button" class="opt" data-action="more-regions">Otra región</button>';
+    }
+  }
+  const opts = list.map(o => `<button type="button" class="opt${cur === o.id ? ' is-on' : ''}" role="radio" aria-checked="${cur === o.id}" data-action="pick" data-step="${step.id}" data-value="${o.id}">${esc(o.label)}</button>`).join('');
+  return `${extra}<div class="${cls}" role="radiogroup" aria-labelledby="q-title">${opts}${more}</div>`;
 }
 
 function salaryBlock() {
@@ -87,8 +96,10 @@ function salaryBlock() {
       <span>Acepto que se use mi sueldo para calcular mi resultado. Es un dato sensible y lo tratamos como tal. <button type="button" class="link inline" data-action="privacy">Cómo cuidamos tus datos</button></span></label>
     <div class="money"><span class="cur" aria-hidden="true">S/</span><input id="sueldo" data-field="sueldo" inputmode="numeric" autocomplete="off" placeholder="3500" value="${esc(v)}" aria-label="Sueldo bruto mensual en soles"></div>
     <p class="help">Antes de descuentos, sin gratificaciones ni bonos.</p>
+    ${netCalcBlock()}
     <label class="small-label" for="variable">¿Recibes comisiones o bonos cada mes? Promedio, opcional</label>
     <div class="money small"><span class="cur" aria-hidden="true">S/</span><input id="variable" data-field="variable" inputmode="numeric" autocomplete="off" placeholder="0" value="${esc(vv)}"></div>
+    <p class="fine">Lo sumamos a tu sueldo para compararte: el mercado también incluye comisiones y bonos mensuales.</p>
     <p class="warn" id="sueldo-warn" ${salaryWarning() ? '' : 'hidden'}>${esc(salaryWarning())}</p>
     <button type="button" class="btn" data-action="salary-next" ${salaryOk() ? '' : 'disabled'}>Continuar</button>`;
 }
@@ -96,7 +107,22 @@ function salaryWarning() {
   const s = Number(S.answers.sueldo);
   if (!s) return '';
   if (s < CONFIG.rmv) return `Si trabajas jornada completa, el mínimo legal es ${soles(CONFIG.rmv)} desde el 1 de octubre de 2026.`;
-  return '';
+  return Engine.salaryCheck(S.answers) || '';
+}
+
+// ¿Solo sabes lo que te depositan? Calcula el bruto (régimen general, 2026)
+function netCalcBlock() {
+  const nc = S.netCalc;
+  if (!nc) return '<p><button type="button" class="link inline" data-action="net-open">¿Solo sabes lo que te depositan? Calcula tu bruto</button></p>';
+  const gross = Engine.grossFromNet(Number(nc.net) || 0, nc.system);
+  const chip = (id, label) => `<button type="button" class="chip${nc.system === id ? ' is-on' : ''}" role="radio" aria-checked="${nc.system === id}" data-action="net-system" data-value="${id}">${label}</button>`;
+  return `<div class="netcalc">
+      <label class="small-label" for="neto">Lo que te depositan al mes, sin gratificaciones ni bonos</label>
+      <div class="money small"><span class="cur" aria-hidden="true">S/</span><input id="neto" data-field="neto" inputmode="numeric" autocomplete="off" placeholder="2800" value="${esc(nc.net || '')}"></div>
+      <div class="chips" role="radiogroup" aria-label="Sistema de pensiones">${chip('afp', 'AFP')}${chip('onp', 'ONP')}</div>
+      <p class="fine" id="net-out">${gross ? `Tu sueldo bruto sería cerca de ${soles(gross)}.` : 'Escribe el monto para calcularlo.'} Considera AFP o ONP y la retención de quinta categoría de 2026.</p>
+      <button type="button" class="btn-sm" data-action="use-gross" ${gross ? '' : 'disabled'}>Usar este monto</button>
+    </div>`;
 }
 
 /* ---------- Resultado ---------- */
@@ -117,8 +143,11 @@ function viewResult() {
   const landing = RT.landed ? '' : ' landing';
   RT.landed = true;
   const pos = Math.max(4, Math.min(96, r.pct));
-  const conf = 'Confianza baja: es una banda preliminar estimada para tu puesto, nivel, sector, región y tamaño de empresa'
-    + (r.band.otherRole ? '. Como elegiste "Otro puesto", tómala solo como referencia general.' : '.');
+  const conf = confidenceSentence(r.band);
+  const varNote = Number(a.variable) > 0 ? `<p class="fine">Incluye tu variable promedio: comparamos ${soles(r.total)} al mes.</p>` : '';
+  const ctx = MARKET.context || {};
+  const asked = ctx.pedidos && ['pide_ahora', 'pide_pronto', 'merito'].includes(r.code)
+    ? `<p class="fine">En Perú, ${ctx.pedidos.les_dijeron_que_si_pct}% de quienes pidieron aumento en los últimos dos años recibió una respuesta favorable (Guía Salarial Buk 2026).</p>` : '';
   const plus = r.caso.strength || 'Todavía nada claro. Tus logros con números pueden cambiarlo.';
   const obj = mini.objections[0];
   const waWords = mini.whatsapp.split(' ');
@@ -148,13 +177,15 @@ function viewResult() {
         <div class="zl"><span>Bajo</span><span>En rango</span><span>Alto</span></div>
       </div>
       <p>${esc(gapSentence(r.gap))}</p>
-      <p class="fine">${esc(conf)}</p>
+      ${varNote}
+      <p class="fine">${esc(conf)} <button type="button" class="link inline" data-action="method">Cómo lo calculamos</button></p>
       <hr class="tear">
       <h3>El momento</h3>
       <p><span class="label">${esc(r.momento.label)}.</span> ${esc(r.momento.text)}</p>
       <hr class="tear">
       <h3>Tu caso</h3>
       <ul class="facts"><li class="plus"><span class="label">A favor:</span> ${esc(plus)}</li><li class="minus"><span class="label">En contra:</span> ${esc(r.caso.weakness)}</li></ul>
+      ${asked}
     </div>
     <section class="block">
       <h3>Una objeción que vas a escuchar</h3>
@@ -172,6 +203,13 @@ function viewResult() {
       <button type="button" class="link" data-action="restart">Hacer el test de nuevo</button>
     </div>
   </section>`;
+}
+
+function confidenceSentence(b) {
+  const lvl = { alta: 'Confianza alta', media: 'Confianza media', baja: 'Confianza baja' }[b.confidence];
+  const n = Number(b.nRole || 0).toLocaleString('en-US');
+  if (b.otherRole) return `${lvl}: como elegiste "Otro puesto", usamos el promedio de tu nivel, sector, región y tamaño de empresa. Tómalo como referencia general.`;
+  return `${lvl}: banda calculada con ${n} personas de tu área en la encuesta de hogares del INEI (2022-2025) y guías salariales 2026, actualizada a octubre de 2026.`;
 }
 
 /* ---------- Salidas honestas ---------- */
@@ -255,6 +293,23 @@ function privacyHTML() {
       <li>Si usas las funciones con IA del kit, tus respuestas se envían a Claude para redactar el texto.</li>
       <li>Puedes borrar todo con "Hacer el test de nuevo".</li>
     </ul>
+    <button type="button" class="btn" data-action="close-modal">Entendido</button>
+  </div></div>`;
+}
+
+function methodHTML() {
+  const src = MARKET.sources || {};
+  const ctx = MARKET.context || {};
+  return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="method-title">
+    <div class="sheet-head"><h2 id="method-title" tabindex="-1">Cómo lo calculamos</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
+    <ul class="plain">
+      <li><span class="label">Base:</span> ${Number(src.enaho_n || 0).toLocaleString('en-US')} asalariados formales del sector privado de la Encuesta Nacional de Hogares del INEI (${esc(src.years || '')}), con el sueldo bruto mensual que declararon, incluidas comisiones y bonos.</li>
+      <li><span class="label">Tu perfil:</span> estimamos cuánto cambia el sueldo según tu área, nivel, sector, región, tamaño de empresa y años en el puesto. Cuando un grupo tiene pocos datos, se apoya en su grupo vecino.</li>
+      <li><span class="label">Jefaturas y gerencias:</span> casi no aparecen en una encuesta de hogares, así que las calibramos con ${src.buk_cargos || 0} cargos publicados de la Guía Salarial Buk Perú 2026, basada en planillas.</li>
+      <li><span class="label">Fecha:</span> llevamos todo a octubre de 2026 con el crecimiento de los sueldos formales.</li>
+      <li><span class="label">Límites:</span> es una referencia de mercado, no la política salarial de tu empresa. La confianza baja cuando hay pocos datos para tu combinación.</li>
+    </ul>
+    ${ctx.aumentos_2026 ? `<p class="fine">Contexto: las empresas proyectan aumentos de ${String(ctx.aumentos_2026.promedio_pct).replace('.', ',')}% en promedio para 2026 (${esc(ctx.aumentos_2026.fuente)}).</p>` : ''}
     <button type="button" class="btn" data-action="close-modal">Entendido</button>
   </div></div>`;
 }
@@ -423,8 +478,8 @@ function viewKit() {
       <li><span class="label">Después:</span> deja todo por escrito. Si es un no, conviértelo en metas con fecha.</li>
     </ol>
   </section>`);
-  const bandTable = `<table class="band-table"><thead><tr><th>Parte baja</th><th>Mediana</th><th>Parte alta</th></tr></thead><tbody><tr><td>${soles(b.p25)}</td><td>${soles(b.p50)}</td><td>${soles(b.p75)}</td></tr></tbody></table>
-    <p class="fine">Banda preliminar para tu perfil, con confianza baja. En el lanzamiento se reemplaza por datos verificados.</p>`;
+  const bandTable = `<table class="band-table"><thead><tr><th>Parte baja (P25)</th><th>Mediana</th><th>Parte alta (P75)</th></tr></thead><tbody><tr><td>${soles(b.p25)}</td><td>${soles(b.p50)}</td><td>${soles(b.p75)}</td></tr></tbody></table>
+    <p class="fine">${esc(confidenceSentence(b))} Sueldo bruto mensual más variable.</p>`;
   if (k.raise) {
     out.push(`<section class="block"><h2>Tus números</h2>
       <div class="nums">
@@ -434,6 +489,8 @@ function viewKit() {
       </div>
       <p>Dices en voz alta la primera cifra. La segunda es un buen resultado. Por debajo de la tercera, en vez de aceptar, pide una fecha de revisión.</p>
       <p>Si consigues lo que esperas, son ${soles(n.annual)} más al año con gratificaciones y CTS, en régimen general.</p>
+      ${k.mype ? `<p class="fine">${esc(k.mype)}</p>` : ''}
+      ${k.raiseContext ? `<p>${esc(k.raiseContext)}</p>` : ''}
       ${k.employerCost ? `<p>Tu propuesta le costaría a la empresa cerca de ${soles(k.employerCost)} al año. Si tus resultados valen más que eso, dilo con números.</p>` : ''}
       ${k.ladder ? `<p class="label">Si te ofrecen menos</p><ol class="plain">${k.ladder.map(x => `<li>${esc(x)}</li>`).join('')}</ol><p class="fine">${esc(k.ladderRule)}</p>` : ''}
       ${bandTable}
@@ -464,6 +521,7 @@ function viewKit() {
   out.push(`<section class="block"><h2>Tu speech</h2>
     <ol class="speech">${SPEECH_LABELS.map(([key, label]) => `<li><span class="part">${label}</span>${esc(k.speech[key])}</li>`).join('')}</ol>
     ${k.offerNote ? `<p class="fine">${esc(k.offerNote)}</p>` : ''}
+    ${k.legalNote ? `<p class="fine">${esc(k.legalNote)}</p>` : ''}
     <div class="tools"><button type="button" class="btn-sm" data-action="copy" data-copy="speech">Copiar speech</button></div>
   </section>`);
 
@@ -593,6 +651,7 @@ function goStep(delta) {
 
 function onPick(stepId, value) {
   S.answers[stepId] = value;
+  if (stepId === 'region') S.moreRegions = false;
   if (stepId === 'contrato' && EXIT_ROUTES.includes(value)) {
     S.view = 'exit';
     render();
@@ -616,6 +675,15 @@ document.addEventListener('click', e => {
     case 'back': goStep(-1); break;
     case 'salary-next': if (salaryOk()) goStep(1); break;
     case 'privacy': openModal(privacyHTML(), 'priv-title'); break;
+    case 'method': openModal(methodHTML(), 'method-title'); break;
+    case 'more-regions': S.moreRegions = true; render(); break;
+    case 'net-open': S.netCalc = { net: '', system: 'afp' }; render(); { const n = $('#neto'); if (n) n.focus(); } break;
+    case 'net-system': if (S.netCalc) { S.netCalc.system = t.dataset.value; render(); } break;
+    case 'use-gross': {
+      const g = S.netCalc ? Engine.grossFromNet(Number(S.netCalc.net) || 0, S.netCalc.system) : 0;
+      if (g) { S.answers.sueldo = String(g); S.netCalc = null; render(); }
+      break;
+    }
     case 'open-paywall': openModal(paywallHTML(), 'pay-title'); break;
     case 'overlay':
     case 'close-modal': closeModal(); break;
@@ -649,7 +717,17 @@ document.addEventListener('click', e => {
 
 document.addEventListener('input', e => {
   const el = e.target;
-  if (el.dataset.field === 'sueldo' || el.dataset.field === 'variable') {
+  if (el.dataset.field === 'neto') {
+    const digits = el.value.replace(/[^\d]/g, '').slice(0, 6);
+    if (digits !== el.value) el.value = digits;
+    if (S.netCalc) S.netCalc.net = digits;
+    const g = Engine.grossFromNet(Number(digits) || 0, S.netCalc ? S.netCalc.system : 'afp');
+    const out = $('#net-out');
+    if (out) out.textContent = (g ? `Tu sueldo bruto sería cerca de ${soles(g)}.` : 'Escribe el monto para calcularlo.') + ' Considera AFP o ONP y la retención de quinta categoría de 2026.';
+    const ub = document.querySelector('[data-action="use-gross"]');
+    if (ub) ub.disabled = !g;
+    save();
+  } else if (el.dataset.field === 'sueldo' || el.dataset.field === 'variable') {
     const digits = el.value.replace(/[^\d]/g, '').slice(0, 6);
     if (digits !== el.value) el.value = digits;
     S.answers[el.dataset.field] = digits;

@@ -1,0 +1,50 @@
+{
+  "_nota": "Cifras de contexto del mercado laboral peruano que usa el motor. Cada dato lleva su fuente; actualizar cuando salga una versión nueva.",
+  "aumentos_2026": {
+    "promedio_pct": 5.1,
+    "empresas_que_suben_pct": 82,
+    "por_nivel_pct": {"mandos_medios": 5.4, "profesionales": 5.2, "ejecutivos": 5.0, "asistentes_tecnicos_operarios": 4.9},
+    "por_sector_pct": {"construccion": 6.9, "agro": 5.8, "consumo_masivo": 5.7},
+    "historia_pct": {"2023": 6.5, "2024": 6.3, "2025": 5.4, "2026": 5.1},
+    "fuente": "EY Perú, Encuesta de Proyecciones de Incrementos Salariales 2026 (129 empresas), 11 de agosto de 2026",
+    "url": "https://energiminas.com/2026/08/11/ey-peru-8-de-cada-10-empresas-preven-aumentar-salarios-en-promedio-51-este-ano/"
+  },
+  "pedidos": {
+    "pidieron_en_2_anios_pct": 36,
+    "les_dijeron_que_si_pct": 57,
+    "empresas_con_politica_de_revision_pct": 72,
+    "empresas_que_ajustan_por_inflacion_pct": 46,
+    "fuente": "Guía Salarial Buk Perú 2026 (71,143 trabajadores, 1,149 empresas), vía Gestión, 26 de agosto de 2026",
+    "url": "https://gestion.pe/economia/empresas/salarios-en-peru-solo-4-de-cada-10-empresas-ajustan-sueldos-por-inflacion-noticia/"
+  },
+  "inflacion_lima": {
+    "12m_pct": 4.44,
+    "12m_mes": "2026-08",
+    "24m_pct": 5.6,
+    "fuente": "INEI, IPC de Lima Metropolitana: 4.44% a agosto de 2026 y 1.11% a agosto de 2025 (24 meses: 1.0111 × 1.0444)",
+    "url": "https://www.peru-retail.com/precios-en-lima-inflacion-anual-acelera-por-tercer-mes-seguido-y-supera-rango-meta-del-bcrp/"
+  },
+  "avisos_bumeran_jun2026": {
+    "junior": 2365, "semi_senior_senior": 3535, "supervisor_jefe": 5569,
+    "fuente": "Índice Bumeran, salario requerido en avisos, junio de 2026",
+    "url": "https://www.peru-retail.com/salario-requerido-en-peru-sube-119-estas-son-las-profesiones-con-los-sueldos-mas-altos-en-2026/"
+  },
+  "ingreso_formal_privado": {
+    "promedio_mayo_2026": 3199,
+    "var_12m_pct": 2.7,
+    "fuente": "BCRP, planilla electrónica (serie PN37696PM), mayo de 2026, vía resúmenes de prensa",
+    "url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/mensuales/resultados/PN37696PM/html"
+  },
+  "tributos_2026": {
+    "uit": 5500,
+    "deduccion_uit": 7,
+    "tramos_quinta": [[5, 0.08], [20, 0.14], [35, 0.17], [45, 0.20], [null, 0.30]],
+    "afp_aporte": 0.10,
+    "afp_prima": 0.0137,
+    "afp_comision_flujo": 0.0155,
+    "afp_tope_prima": 12672.65,
+    "onp": 0.13,
+    "fuente": "D.S. 301-2025-EF (UIT 2026); Ley del Impuesto a la Renta, art. 53; SBS (aporte 10%, prima 1.37%, comisión sobre flujo 1.47% a 1.69%)",
+    "url": "https://elperuano.pe/noticia/285208-mef-establece-en-s-5-500-la-unidad-impositiva-tributaria-para-2026"
+  }
+}

@@ -9,6 +9,8 @@ const CONFIG = {
   whatsapp: '',      // WhatsApp para pedir el código, formato 51XXXXXXXXX. Vacío = sin botón.
   rmv: 1230,         // RMV desde el 1 de octubre de 2026 (D.S. 015-2026-TR)
   annualFactor: 15.35, // 12 sueldos + 2 gratificaciones + bonificación extraordinaria + CTS (régimen general)
+  annualFactorSmall: 13.59, // pequeña empresa REMYPE: 12 + media grati dos veces + bonificación + media CTS
+  annualFactorMicro: 12,    // microempresa REMYPE: sin gratificación ni CTS
   capNoPromotion: 0.20, // tope del ancla sin ascenso
   employerFactor: 16.4, // costo anual aprox. para la empresa por cada sol mensual: 12 + 2 grati + bonif. + CTS + EsSalud
   // SHA-256 de códigos de acceso (el código en mayúsculas, sin espacios)
@@ -20,74 +22,93 @@ const CONFIG = {
 };
 
 /* ============================================================
-   BANDAS PRELIMINARES — reemplazar por datos verificados
-   Mediana base (S/ brutos mensuales) para Lima, empresa de 101 a 500
-   personas, sector de referencia y 3 a 5 años de experiencia.
-   Cuartiles: P25 = 0.80 × mediana, P75 = 1.25 × mediana.
+   CATÁLOGOS DEL TEST
+   Los multiplicadores y las anclas salen de MARKET (15_bands.js),
+   generado con datos de la ENAHO y guías salariales 2026.
    ============================================================ */
 const LEVELS = [
-  { id: 'asistente', label: 'Asistente o practicante', base: 1900 },
-  { id: 'analista',  label: 'Analista o junior', base: 3300 },
-  { id: 'senior',    label: 'Especialista o senior', base: 5200 },
-  { id: 'jefe',      label: 'Supervisor, coordinador o jefe', base: 8000 },
-  { id: 'gerente',   label: 'Gerente', base: 14000 }
+  { id: 'asistente',  label: 'Asistente, auxiliar o técnico' },
+  { id: 'analista',   label: 'Analista o profesional junior' },
+  { id: 'senior',     label: 'Especialista o analista senior' },
+  { id: 'supervisor', label: 'Coordinador o supervisor' },
+  { id: 'jefe',       label: 'Jefe de área' },
+  { id: 'gerente',    label: 'Gerente o subgerente' }
 ];
 
 const ROLES = [
-  { id: 'contabilidad',   label: 'Contabilidad', mult: 0.95 },
-  { id: 'datos',          label: 'Datos y BI', mult: 1.15 },
-  { id: 'software',       label: 'Desarrollo de software', mult: 1.30 },
-  { id: 'soporte',        label: 'Soporte e infraestructura TI', mult: 0.95 },
-  { id: 'ing_industrial', label: 'Ingeniería industrial', mult: 1.05 },
-  { id: 'ing_civil',      label: 'Ingeniería civil y obras', mult: 1.12 },
-  { id: 'ing_minas',      label: 'Ingeniería de minas', mult: 1.25 },
-  { id: 'seguridad',      label: 'Seguridad y salud (SSOMA)', mult: 1.05 },
-  { id: 'ventas',         label: 'Ventas y comercial', mult: 0.90 },
-  { id: 'rrhh',           label: 'Recursos humanos', mult: 0.95 },
-  { id: 'logistica',      label: 'Logística y compras', mult: 0.95 },
-  { id: 'finanzas',       label: 'Finanzas y tesorería', mult: 1.10 },
-  { id: 'administracion', label: 'Administración', mult: 0.95 },
-  { id: 'marketing',      label: 'Marketing y comunicación', mult: 0.95 },
-  { id: 'enfermeria',     label: 'Enfermería en clínica', mult: 0.95 },
-  { id: 'legal',          label: 'Legal', mult: 1.10 },
-  { id: 'atencion',       label: 'Atención al cliente', mult: 0.78 },
-  { id: 'otro',           label: 'Otro puesto', mult: 1.00 }
+  { id: 'administracion', label: 'Administración' },
+  { id: 'contabilidad',   label: 'Contabilidad' },
+  { id: 'finanzas',       label: 'Finanzas, créditos y tesorería' },
+  { id: 'rrhh',           label: 'Recursos humanos' },
+  { id: 'logistica',      label: 'Logística, compras y almacén' },
+  { id: 'ventas',         label: 'Ventas y comercial' },
+  { id: 'marketing',      label: 'Marketing y comunicación' },
+  { id: 'atencion',       label: 'Atención al cliente' },
+  { id: 'software',       label: 'Desarrollo de software' },
+  { id: 'datos',          label: 'Datos y BI' },
+  { id: 'soporte',        label: 'Soporte e infraestructura TI' },
+  { id: 'ing_industrial', label: 'Ingeniería industrial y producción' },
+  { id: 'mantenimiento',  label: 'Mantenimiento, mecánica y electricidad' },
+  { id: 'ing_civil',      label: 'Ingeniería civil, obras y arquitectura' },
+  { id: 'ing_minas',      label: 'Minería y geología' },
+  { id: 'seguridad',      label: 'Seguridad, salud ocupacional y ambiente' },
+  { id: 'legal',          label: 'Legal' },
+  { id: 'enfermeria',     label: 'Enfermería' },
+  { id: 'salud',          label: 'Medicina, farmacia y tecnología médica' },
+  { id: 'docencia',       label: 'Docencia en colegio, instituto o universidad' },
+  { id: 'otro',           label: 'Otro puesto' }
 ];
 
 const SECTORS = [
-  { id: 'mineria',      label: 'Minería y energía', mult: 1.25 },
-  { id: 'banca',        label: 'Banca, seguros y finanzas', mult: 1.12 },
-  { id: 'tecnologia',   label: 'Tecnología y telecomunicaciones', mult: 1.10 },
-  { id: 'industria',    label: 'Industria y manufactura', mult: 1.00 },
-  { id: 'construccion', label: 'Construcción e inmobiliaria', mult: 1.00 },
-  { id: 'servicios',    label: 'Servicios profesionales', mult: 1.00 },
-  { id: 'comercio',     label: 'Comercio y retail', mult: 0.92 },
-  { id: 'salud',        label: 'Salud privada', mult: 0.95 },
-  { id: 'agro',         label: 'Agroindustria y pesca', mult: 0.92 },
-  { id: 'educacion',    label: 'Educación privada', mult: 0.85 },
-  { id: 'turismo',      label: 'Turismo y restaurantes', mult: 0.85 },
-  { id: 'otro',         label: 'Otro sector', mult: 0.95 }
+  { id: 'mineria',      label: 'Minería, petróleo y energía' },
+  { id: 'banca',        label: 'Banca, seguros y finanzas' },
+  { id: 'tecnologia',   label: 'Tecnología, telecomunicaciones y medios' },
+  { id: 'industria',    label: 'Industria y manufactura' },
+  { id: 'construccion', label: 'Construcción e inmobiliaria' },
+  { id: 'servicios',    label: 'Servicios profesionales y a empresas' },
+  { id: 'comercio',     label: 'Comercio y retail' },
+  { id: 'transporte',   label: 'Transporte y logística' },
+  { id: 'salud',        label: 'Salud privada' },
+  { id: 'agro',         label: 'Agroindustria y pesca' },
+  { id: 'educacion',    label: 'Educación privada' },
+  { id: 'turismo',      label: 'Turismo, hoteles y restaurantes' },
+  { id: 'otro',         label: 'Otro sector' }
 ];
 
+// Las primeras se muestran de entrada; el resto, al tocar "Otra región"
 const REGIONS = [
-  { id: 'lima',       label: 'Lima y Callao', mult: 1.00 },
-  { id: 'arequipa',   label: 'Arequipa', mult: 0.90 },
-  { id: 'libertad',   label: 'La Libertad', mult: 0.86 },
-  { id: 'piura',      label: 'Piura', mult: 0.86 },
-  { id: 'lambayeque', label: 'Lambayeque', mult: 0.85 },
-  { id: 'cusco',      label: 'Cusco', mult: 0.84 },
-  { id: 'ica',        label: 'Ica', mult: 0.88 },
-  { id: 'junin',      label: 'Junín', mult: 0.84 },
-  { id: 'ancash',     label: 'Áncash', mult: 0.88 },
-  { id: 'otra',       label: 'Otra región', mult: 0.82 }
+  { id: 'lima',          label: 'Lima Metropolitana y Callao', main: true },
+  { id: 'arequipa',      label: 'Arequipa', main: true },
+  { id: 'libertad',      label: 'La Libertad', main: true },
+  { id: 'piura',         label: 'Piura', main: true },
+  { id: 'lambayeque',    label: 'Lambayeque', main: true },
+  { id: 'cusco',         label: 'Cusco', main: true },
+  { id: 'ica',           label: 'Ica', main: true },
+  { id: 'junin',         label: 'Junín', main: true },
+  { id: 'ancash',        label: 'Áncash', main: true },
+  { id: 'lima_prov',     label: 'Lima provincias' },
+  { id: 'amazonas',      label: 'Amazonas' },
+  { id: 'apurimac',      label: 'Apurímac' },
+  { id: 'ayacucho',      label: 'Ayacucho' },
+  { id: 'cajamarca',     label: 'Cajamarca' },
+  { id: 'huancavelica',  label: 'Huancavelica' },
+  { id: 'huanuco',       label: 'Huánuco' },
+  { id: 'loreto',        label: 'Loreto' },
+  { id: 'madre_de_dios', label: 'Madre de Dios' },
+  { id: 'moquegua',      label: 'Moquegua' },
+  { id: 'pasco',         label: 'Pasco' },
+  { id: 'puno',          label: 'Puno' },
+  { id: 'san_martin',    label: 'San Martín' },
+  { id: 'tacna',         label: 'Tacna' },
+  { id: 'tumbes',        label: 'Tumbes' },
+  { id: 'ucayali',       label: 'Ucayali' }
 ];
-const FIELD_MULT = 1.12; // unidad minera, obra o campo
 
 const SIZES = [
-  { id: 's1', label: 'De 1 a 10', mult: 0.78 },
-  { id: 's2', label: 'De 11 a 100', mult: 0.90 },
-  { id: 's3', label: 'De 101 a 500', mult: 1.00 },
-  { id: 's4', label: 'Más de 500', mult: 1.10 }
+  { id: 's1', label: 'De 1 a 10' },
+  { id: 's2', label: 'De 11 a 100' },
+  { id: 's3', label: 'De 101 a 500' },
+  { id: 's4', label: 'Más de 500' }
 ];
 
 const CONTRACTS = [
@@ -106,11 +127,11 @@ const EXPIRY = [
 ];
 
 const EXPERIENCE = [
-  { id: 'e0',  label: 'Menos de 1 año', mult: 0.90 },
-  { id: 'e1',  label: 'De 1 a 3 años', mult: 0.96 },
-  { id: 'e3',  label: 'De 3 a 5 años', mult: 1.00 },
-  { id: 'e5',  label: 'De 5 a 10 años', mult: 1.05 },
-  { id: 'e10', label: 'Más de 10 años', mult: 1.08 }
+  { id: 'e0',  label: 'Menos de 1 año' },
+  { id: 'e1',  label: 'De 1 a 3 años' },
+  { id: 'e3',  label: 'De 3 a 5 años' },
+  { id: 'e5',  label: 'De 5 a 10 años' },
+  { id: 'e10', label: 'Más de 10 años' }
 ];
 
 const TENURE = [

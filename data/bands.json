@@ -1,0 +1,887 @@
+{
+  "version": "2026-10-04",
+  "target_month": "2026-10",
+  "reference": "Lima Metropolitana, empresa de 101 a 500 personas, 3 a 5 años en el puesto, puesto y sector promedio; sueldo bruto mensual más variable promedio",
+  "sources": {
+    "enaho": {
+      "name": "INEI, Encuesta Nacional de Hogares 2022-2025, módulo de empleo e ingresos",
+      "n": 10022,
+      "filter": "asalariados del sector privado con seguro de salud pagado por el empleador, 30 a 84 horas semanales, ocupaciones de oficina, técnicas, profesionales, de jefatura y gerencia (CNO 2015, grupos 1 a 4)"
+    },
+    "buk": {
+      "name": "Guía Salarial Buk Perú 2026 (cifras publicadas en prensa y en el blog de Buk)",
+      "n_cargos": 28
+    },
+    "computrabajo": {
+      "name": "Computrabajo, páginas públicas de salarios (consulta del 4 de octubre de 2026)",
+      "uso": "solo validación"
+    }
+  },
+  "assumptions": {
+    "growth_2026": 0.04,
+    "aging_from_2025": 1.05,
+    "buk_aging": 1.02,
+    "buk_total_to_s3": 0.92,
+    "field_mult": 1.1,
+    "enaho_weight": {
+      "asistente": 0.6,
+      "analista": 0.5,
+      "jefe": 0.0,
+      "gerente": 0.2
+    },
+    "role_damping": {
+      "asistente": 1.0,
+      "analista": 1.0,
+      "senior": 1.0,
+      "supervisor": 0.75,
+      "jefe": 0.5,
+      "gerente": 0.3
+    }
+  },
+  "model": {
+    "r2": 0.448,
+    "n": 10022,
+    "tau_role": 0.115,
+    "tau_region": 0.042,
+    "tau_sector": 0.101,
+    "year_index": {
+      "2025": 1.0,
+      "2022": 0.889,
+      "2023": 0.923,
+      "2024": 0.956
+    },
+    "female_gap": 0.884
+  },
+  "levels": {
+    "asistente": {
+      "p50": 2084,
+      "lo": 0.794,
+      "hi": 1.31,
+      "enaho": 2142,
+      "enaho_n": 5887,
+      "buk": 2000,
+      "buk_n": 2,
+      "w_enaho": 0.6,
+      "metodo": "ENAHO y Buk"
+    },
+    "analista": {
+      "p50": 3581,
+      "lo": 0.753,
+      "hi": 1.377,
+      "enaho": 3799,
+      "enaho_n": 2431,
+      "buk": 3375,
+      "buk_n": 2,
+      "w_enaho": 0.5,
+      "metodo": "ENAHO y Buk"
+    },
+    "senior": {
+      "p50": 5067,
+      "lo": 0.753,
+      "hi": 1.377,
+      "enaho": null,
+      "enaho_n": 2431,
+      "buk": 6161,
+      "buk_n": 6,
+      "w_enaho": null,
+      "metodo": "punto medio entre analista y jefe de área"
+    },
+    "supervisor": {
+      "p50": 4756,
+      "lo": 0.738,
+      "hi": 1.393,
+      "enaho": 3156,
+      "enaho_n": 1557,
+      "buk": 7169,
+      "buk_n": 12,
+      "w_enaho": 0.5,
+      "metodo": "punto medio entre supervisores (ENAHO) y jefaturas (Buk)"
+    },
+    "jefe": {
+      "p50": 7169,
+      "lo": 0.738,
+      "hi": 1.393,
+      "enaho": 3156,
+      "enaho_n": 1557,
+      "buk": 7169,
+      "buk_n": 12,
+      "w_enaho": 0.0,
+      "metodo": "Buk"
+    },
+    "gerente": {
+      "p50": 11368,
+      "lo": 0.645,
+      "hi": 1.488,
+      "enaho": 7266,
+      "enaho_n": 147,
+      "buk": 12714,
+      "buk_n": 6,
+      "w_enaho": 0.2,
+      "metodo": "ENAHO y Buk"
+    }
+  },
+  "roles": {
+    "contabilidad": {
+      "mult": 0.967,
+      "n": 403,
+      "raw": 0.963,
+      "w_own": 0.921
+    },
+    "finanzas": {
+      "mult": 1.133,
+      "n": 518,
+      "raw": 1.151,
+      "w_own": 0.877
+    },
+    "datos": {
+      "mult": 1.09,
+      "n": 7,
+      "raw": 0.683,
+      "w_own": 0.146
+    },
+    "software": {
+      "mult": 1.219,
+      "n": 195,
+      "raw": 1.228,
+      "w_own": 0.806
+    },
+    "soporte": {
+      "mult": 1.162,
+      "n": 153,
+      "raw": 1.157,
+      "w_own": 0.768
+    },
+    "ing_industrial": {
+      "mult": 0.928,
+      "n": 246,
+      "raw": 0.902,
+      "w_own": 0.835
+    },
+    "ing_civil": {
+      "mult": 1.242,
+      "n": 273,
+      "raw": 1.267,
+      "w_own": 0.88
+    },
+    "ing_minas": {
+      "mult": 1.065,
+      "n": 131,
+      "raw": 1.063,
+      "w_own": 0.769
+    },
+    "mantenimiento": {
+      "mult": 1.072,
+      "n": 735,
+      "raw": 1.072,
+      "w_own": 0.922
+    },
+    "seguridad": {
+      "mult": 1.009,
+      "n": 122,
+      "raw": 0.995,
+      "w_own": 0.809
+    },
+    "ventas": {
+      "mult": 0.959,
+      "n": 680,
+      "raw": 0.963,
+      "w_own": 0.914
+    },
+    "rrhh": {
+      "mult": 1.004,
+      "n": 54,
+      "raw": 1.001,
+      "w_own": 0.8
+    },
+    "logistica": {
+      "mult": 0.939,
+      "n": 1255,
+      "raw": 0.934,
+      "w_own": 0.934
+    },
+    "administracion": {
+      "mult": 1.062,
+      "n": 2512,
+      "raw": 1.065,
+      "w_own": 0.946
+    },
+    "marketing": {
+      "mult": 0.899,
+      "n": 103,
+      "raw": 0.894,
+      "w_own": 0.805
+    },
+    "enfermeria": {
+      "mult": 0.907,
+      "n": 187,
+      "raw": 0.91,
+      "w_own": 0.842
+    },
+    "salud": {
+      "mult": 0.937,
+      "n": 231,
+      "raw": 0.944,
+      "w_own": 0.87
+    },
+    "docencia": {
+      "mult": 0.846,
+      "n": 632,
+      "raw": 0.841,
+      "w_own": 0.892
+    },
+    "legal": {
+      "mult": 1.063,
+      "n": 104,
+      "raw": 1.085,
+      "w_own": 0.691
+    },
+    "atencion": {
+      "mult": 0.901,
+      "n": 571,
+      "raw": 0.899,
+      "w_own": 0.921
+    },
+    "otro": {
+      "mult": 1.0,
+      "n": 910,
+      "raw": 0.948,
+      "w_own": 1.0
+    }
+  },
+  "role_damping": {
+    "asistente": 1.0,
+    "analista": 1.0,
+    "senior": 1.0,
+    "supervisor": 0.75,
+    "jefe": 0.5,
+    "gerente": 0.3
+  },
+  "sectors": {
+    "servicios": {
+      "mult": 0.962,
+      "n": 1261,
+      "raw": 0.962
+    },
+    "agro": {
+      "mult": 0.972,
+      "n": 319,
+      "raw": 0.968
+    },
+    "banca": {
+      "mult": 1.074,
+      "n": 958,
+      "raw": 1.08
+    },
+    "comercio": {
+      "mult": 0.973,
+      "n": 1655,
+      "raw": 0.972
+    },
+    "construccion": {
+      "mult": 1.102,
+      "n": 799,
+      "raw": 1.11
+    },
+    "educacion": {
+      "mult": 0.902,
+      "n": 1022,
+      "raw": 0.892
+    },
+    "industria": {
+      "mult": 1.017,
+      "n": 1380,
+      "raw": 1.017
+    },
+    "mineria": {
+      "mult": 1.321,
+      "n": 538,
+      "raw": 1.371
+    },
+    "otro": {
+      "mult": 0.966,
+      "n": 345,
+      "raw": 0.96
+    },
+    "salud": {
+      "mult": 0.985,
+      "n": 464,
+      "raw": 0.982
+    },
+    "tecnologia": {
+      "mult": 0.929,
+      "n": 426,
+      "raw": 0.92
+    },
+    "transporte": {
+      "mult": 0.949,
+      "n": 537,
+      "raw": 0.945
+    },
+    "turismo": {
+      "mult": 1.046,
+      "n": 318,
+      "raw": 1.051
+    }
+  },
+  "regions": {
+    "lima": {
+      "mult": {
+        "apoyo": 1.0,
+        "profesional": 1.0,
+        "direccion": 1.0
+      },
+      "n": 3682,
+      "raw": 1.0
+    },
+    "amazonas": {
+      "mult": {
+        "apoyo": 0.865,
+        "profesional": 0.762,
+        "direccion": 0.802
+      },
+      "n": 40,
+      "raw": 0.787
+    },
+    "ancash": {
+      "mult": {
+        "apoyo": 0.896,
+        "profesional": 0.814,
+        "direccion": 0.846
+      },
+      "n": 273,
+      "raw": 0.88
+    },
+    "apurimac": {
+      "mult": {
+        "apoyo": 0.894,
+        "profesional": 0.811,
+        "direccion": 0.844
+      },
+      "n": 47,
+      "raw": 0.914
+    },
+    "arequipa": {
+      "mult": {
+        "apoyo": 0.889,
+        "profesional": 0.802,
+        "direccion": 0.836
+      },
+      "n": 708,
+      "raw": 0.863
+    },
+    "ayacucho": {
+      "mult": {
+        "apoyo": 0.883,
+        "profesional": 0.793,
+        "direccion": 0.829
+      },
+      "n": 76,
+      "raw": 0.858
+    },
+    "cajamarca": {
+      "mult": {
+        "apoyo": 0.896,
+        "profesional": 0.814,
+        "direccion": 0.847
+      },
+      "n": 139,
+      "raw": 0.89
+    },
+    "cusco": {
+      "mult": {
+        "apoyo": 0.878,
+        "profesional": 0.783,
+        "direccion": 0.821
+      },
+      "n": 175,
+      "raw": 0.844
+    },
+    "huancavelica": {
+      "mult": {
+        "apoyo": 0.889,
+        "profesional": 0.802,
+        "direccion": 0.837
+      },
+      "n": 37,
+      "raw": 0.87
+    },
+    "huanuco": {
+      "mult": {
+        "apoyo": 0.885,
+        "profesional": 0.796,
+        "direccion": 0.831
+      },
+      "n": 113,
+      "raw": 0.869
+    },
+    "ica": {
+      "mult": {
+        "apoyo": 0.944,
+        "profesional": 0.898,
+        "direccion": 0.917
+      },
+      "n": 685,
+      "raw": 0.947
+    },
+    "junin": {
+      "mult": {
+        "apoyo": 0.856,
+        "profesional": 0.747,
+        "direccion": 0.79
+      },
+      "n": 368,
+      "raw": 0.809
+    },
+    "lambayeque": {
+      "mult": {
+        "apoyo": 0.868,
+        "profesional": 0.767,
+        "direccion": 0.807
+      },
+      "n": 481,
+      "raw": 0.832
+    },
+    "libertad": {
+      "mult": {
+        "apoyo": 0.837,
+        "profesional": 0.716,
+        "direccion": 0.763
+      },
+      "n": 636,
+      "raw": 0.787
+    },
+    "lima_prov": {
+      "mult": {
+        "apoyo": 0.871,
+        "profesional": 0.773,
+        "direccion": 0.812
+      },
+      "n": 347,
+      "raw": 0.835
+    },
+    "loreto": {
+      "mult": {
+        "apoyo": 0.93,
+        "profesional": 0.873,
+        "direccion": 0.896
+      },
+      "n": 203,
+      "raw": 0.956
+    },
+    "madre_de_dios": {
+      "mult": {
+        "apoyo": 0.923,
+        "profesional": 0.86,
+        "direccion": 0.885
+      },
+      "n": 79,
+      "raw": 0.974
+    },
+    "moquegua": {
+      "mult": {
+        "apoyo": 0.912,
+        "profesional": 0.841,
+        "direccion": 0.87
+      },
+      "n": 312,
+      "raw": 0.912
+    },
+    "pasco": {
+      "mult": {
+        "apoyo": 0.858,
+        "profesional": 0.752,
+        "direccion": 0.794
+      },
+      "n": 163,
+      "raw": 0.801
+    },
+    "piura": {
+      "mult": {
+        "apoyo": 0.893,
+        "profesional": 0.809,
+        "direccion": 0.842
+      },
+      "n": 498,
+      "raw": 0.87
+    },
+    "puno": {
+      "mult": {
+        "apoyo": 0.865,
+        "profesional": 0.762,
+        "direccion": 0.802
+      },
+      "n": 89,
+      "raw": 0.807
+    },
+    "san_martin": {
+      "mult": {
+        "apoyo": 0.912,
+        "profesional": 0.842,
+        "direccion": 0.87
+      },
+      "n": 246,
+      "raw": 0.913
+    },
+    "tacna": {
+      "mult": {
+        "apoyo": 0.865,
+        "profesional": 0.763,
+        "direccion": 0.804
+      },
+      "n": 319,
+      "raw": 0.821
+    },
+    "tumbes": {
+      "mult": {
+        "apoyo": 0.875,
+        "profesional": 0.78,
+        "direccion": 0.818
+      },
+      "n": 132,
+      "raw": 0.837
+    },
+    "ucayali": {
+      "mult": {
+        "apoyo": 0.867,
+        "profesional": 0.765,
+        "direccion": 0.806
+      },
+      "n": 174,
+      "raw": 0.823
+    },
+    "otra": {
+      "mult": {
+        "apoyo": 0.882,
+        "profesional": 0.79,
+        "direccion": 0.827
+      },
+      "n": 6340,
+      "raw": 0.853
+    }
+  },
+  "sizes": {
+    "apoyo": {
+      "s3": 1.0,
+      "s1": 0.88,
+      "s2": 0.98,
+      "s4": 1.081
+    },
+    "profesional": {
+      "s3": 1.0,
+      "s1": 0.704,
+      "s2": 0.851,
+      "s4": 1.0
+    },
+    "direccion": {
+      "s3": 1.0,
+      "s1": 0.794,
+      "s2": 0.875,
+      "s4": 1.043
+    }
+  },
+  "experience": {
+    "e3": 1.0,
+    "e0": 0.876,
+    "e1": 0.928,
+    "e10": 1.199,
+    "e5": 1.072
+  },
+  "level_group": {
+    "asistente": "apoyo",
+    "analista": "profesional",
+    "senior": "profesional",
+    "supervisor": "direccion",
+    "jefe": "direccion",
+    "gerente": "direccion"
+  },
+  "field_mult": 1.1,
+  "validation": [
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Gerente de Administración y Finanzas (CFO)",
+      "publicado": 13500,
+      "modelo": 12577,
+      "dif_pct": -6.8
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Gerente de Planeamiento y Presupuesto",
+      "publicado": 12030,
+      "modelo": 12577,
+      "dif_pct": 4.5
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Planeamiento y Presupuesto",
+      "publicado": 8980,
+      "modelo": 8132,
+      "dif_pct": -9.4
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Control de Gestión",
+      "publicado": 8550,
+      "modelo": 8132,
+      "dif_pct": -4.9
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Contabilidad",
+      "publicado": 7490,
+      "modelo": 7513,
+      "dif_pct": 0.3
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Analista Contable",
+      "publicado": 3790,
+      "modelo": 3690,
+      "dif_pct": -2.6
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Analista Financiero",
+      "publicado": 3710,
+      "modelo": 4324,
+      "dif_pct": 16.5
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Asistente Administrativo Financiero",
+      "publicado": 2330,
+      "modelo": 2358,
+      "dif_pct": 1.2
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Técnico de Contabilidad",
+      "publicado": 2000,
+      "modelo": 2148,
+      "dif_pct": 7.4
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Gerente de TIC (CTO)",
+      "publicado": 15210,
+      "modelo": 12855,
+      "dif_pct": -15.5
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Arquitecto de Software",
+      "publicado": 10850,
+      "modelo": 6580,
+      "dif_pct": -39.4
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de TIC",
+      "publicado": 8000,
+      "modelo": 8434,
+      "dif_pct": 5.4
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Líder de Desarrollo de Software",
+      "publicado": 8300,
+      "modelo": 8434,
+      "dif_pct": 1.6
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Inteligencia de Negocios (BI)",
+      "publicado": 8000,
+      "modelo": 7976,
+      "dif_pct": -0.3
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Especialista en Gestión Ágil de Proyectos",
+      "publicado": 7290,
+      "modelo": 6580,
+      "dif_pct": -9.7
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Infraestructura Tecnológica",
+      "publicado": 7190,
+      "modelo": 8236,
+      "dif_pct": 14.5
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Líder de Aseguramiento de Calidad (QA)",
+      "publicado": 6740,
+      "modelo": 6580,
+      "dif_pct": -2.4
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Sistemas de Información",
+      "publicado": 6620,
+      "modelo": 8434,
+      "dif_pct": 27.4
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Consultor ERP",
+      "publicado": 6420,
+      "modelo": 6580,
+      "dif_pct": 2.5
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefatura de TI (empresa mediana)",
+      "publicado": 6870,
+      "modelo": 7759,
+      "dif_pct": 12.9
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefatura de TI (industria tecnológica)",
+      "publicado": 9030,
+      "modelo": 7206,
+      "dif_pct": -20.2
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Business Developer (empresa grande)",
+      "publicado": 6310,
+      "modelo": 4765,
+      "dif_pct": -24.5
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Business Developer (industria financiera)",
+      "publicado": 7110,
+      "modelo": 5117,
+      "dif_pct": -28.0
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Gerente de RR.HH. (CHRO)",
+      "publicado": 14110,
+      "modelo": 12129,
+      "dif_pct": -14.0
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Desarrollo Organizacional",
+      "publicado": 10020,
+      "modelo": 7655,
+      "dif_pct": -23.6
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Jefe de Marca",
+      "publicado": 10260,
+      "modelo": 7245,
+      "dif_pct": -29.4
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Gerente General",
+      "publicado": 12980,
+      "modelo": 12334,
+      "dif_pct": -5.0
+    },
+    {
+      "fuente": "Buk 2026",
+      "cargo": "Gerente de Mina",
+      "publicado": 20710,
+      "modelo": 12345,
+      "dif_pct": -40.4
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Abogado",
+      "publicado": 2253,
+      "modelo": 2968,
+      "dif_pct": 31.7
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Analista contable",
+      "publicado": 2363,
+      "modelo": 2701,
+      "dif_pct": 14.3
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Analista de datos",
+      "publicado": 2222,
+      "modelo": 3045,
+      "dif_pct": 37.0
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Analista de recursos humanos",
+      "publicado": 1945,
+      "modelo": 2804,
+      "dif_pct": 44.2
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Analista financiero",
+      "publicado": 2640,
+      "modelo": 3165,
+      "dif_pct": 19.9
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Asistente administrativo",
+      "publicado": 1332,
+      "modelo": 2067,
+      "dif_pct": 55.2
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Asistente contable",
+      "publicado": 1467,
+      "modelo": 1882,
+      "dif_pct": 28.3
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Contador",
+      "publicado": 2397,
+      "modelo": 2701,
+      "dif_pct": 12.7
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Ejecutivo de ventas",
+      "publicado": 1245,
+      "modelo": 2679,
+      "dif_pct": 115.2
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Enfermera",
+      "publicado": 1913,
+      "modelo": 2534,
+      "dif_pct": 32.5
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Ingeniero civil",
+      "publicado": 3580,
+      "modelo": 3469,
+      "dif_pct": -3.1
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Jefe de logística",
+      "publicado": 3078,
+      "modelo": 5657,
+      "dif_pct": 83.8
+    },
+    {
+      "fuente": "Computrabajo (avisos, oct-2026)",
+      "cargo": "Supervisor de seguridad",
+      "publicado": 2762,
+      "modelo": 3900,
+      "dif_pct": 41.2
+    }
+  ]
+}

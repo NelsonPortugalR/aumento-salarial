@@ -65,7 +65,23 @@ const Kit = (() => {
     };
 
     // Cifras
-    kit.numbers = { anchor: n.anchor, target: n.target, floor: n.floor, annual: n.annual, band: r.band, pretFrom: n.pretFrom, pretTo: n.pretTo };
+    kit.numbers = { anchor: n.anchor, target: n.target, floor: n.floor, annual: n.annual, band: r.band, pretFrom: n.pretFrom, pretTo: n.pretTo, pctAnchor: n.pctAnchor, pctTarget: n.pctTarget };
+    const ctx = (typeof MARKET !== 'undefined' && MARKET.context) || {};
+    const pct = x => String(x).replace('.', ',') + '%';
+    if (raise && ctx.aumentos_2026) {
+      const avg = ctx.aumentos_2026.promedio_pct;
+      kit.raiseContext = n.pctAnchor <= avg + 0.5
+        ? `Lo que pides es ${pct(n.pctAnchor)} más, en línea con lo que las empresas en Perú proyectan subir este año: ${pct(avg)} en promedio (EY, 2026).`
+        : r.pos === 'bajo'
+          ? `Lo que pides es ${pct(n.pctAnchor)} más. Este año las empresas en Perú proyectan subir ${pct(avg)} en promedio (EY, 2026): tu pedido es mayor porque no es un ajuste anual, es ponerte al nivel del mercado. Ese es tu argumento.`
+          : `Lo que pides es ${pct(n.pctAnchor)} más. Este año las empresas en Perú proyectan subir ${pct(avg)} en promedio (EY, 2026): para pasar de ese número necesitas resultados con cifras o funciones nuevas.`;
+    }
+    if (a.tamano === 's1' && raise) {
+      kit.mype = `Si tu empresa está inscrita en el REMYPE, el efecto anual cambia: en la pequeña empresa son ${money(n.annualSmall)} y en la microempresa ${money(n.annualMicro)}, porque las gratificaciones y la CTS son menores o no existen.`;
+    }
+    if (a.contrato === 'plazo') {
+      kit.legalNote = 'Dato legal: los contratos a plazo fijo pueden encadenarse hasta cinco años en total. Si superas ese plazo, o si haces labores permanentes que no corresponden a la modalidad de tu contrato, consulta con un abogado laboral. Es información para ti, no un argumento para la reunión.';
+    }
     if (!raise) {
       kit.alternatives = [
         'Liderar un proyecto visible, con metas y fecha.',
@@ -92,7 +108,7 @@ const Kit = (() => {
 
     // Speech
     const mercado = r.pos === 'bajo'
-      ? 'Revisé referencias de mercado para mi puesto, mi experiencia y el tamaño de la empresa, y mi sueldo actual está por debajo de la mediana.'
+      ? 'Revisé referencias de mercado, la encuesta de hogares del INEI y guías salariales de este año, para mi puesto, mi experiencia y el tamaño de la empresa, y mi sueldo actual está por debajo de la mediana.'
       : 'Revisé referencias de mercado y mi sueldo está dentro del rango; lo que busco es que refleje lo que estoy aportando hoy.';
     const AUDIT = {
       analitico: 'que no traigo números suficientes, que el presupuesto ya está armado y que lo que voy a pedir es mucho',
@@ -270,11 +286,11 @@ const Kit = (() => {
       `Lo que ganó la empresa: ${impacto}.`,
       `Responsabilidades nuevas: ${resp.charAt(0).toUpperCase() + resp.slice(1)}.`,
       `Lo que me propongo lograr en los próximos seis meses: ${plan}.`,
-      `Referencia de mercado: mi sueldo está ${r.pos === 'bajo' ? 'por debajo de la mediana' : r.pos === 'rango' ? 'dentro del rango' : 'sobre la mediana'} para mi perfil.`,
+      `Referencia de mercado: mi sueldo está ${r.pos === 'bajo' ? 'por debajo de la mediana' : r.pos === 'rango' ? 'dentro del rango' : 'sobre la mediana'} para mi perfil. Mediana estimada: ${money(r.band.p50)} brutos mensuales (encuesta de hogares del INEI 2022-2025 actualizada a 2026 y guías salariales 2026).`,
       raise ? `Propuesta: ${money(n.anchor)} mensuales, desde ${m1}.` : 'Propuesta: proyecto con metas y revisión de sueldo en seis meses.'
     ].join('\n');
 
-    kit.pretension = `Si te llama otra empresa, tu pretensión debería ir de ${money(n.pretFrom)} a ${money(n.pretTo)}. Escríbela así: "${money(n.pretFrom)} a ${money(n.pretTo)} brutos mensuales, negociable según el paquete."`;
+    kit.pretension = `Si te llama otra empresa, tu pretensión debería ir de ${money(n.pretFrom)} a ${money(n.pretTo)}: nunca menos de lo que ganas hoy más 10%, porque cambiar de trabajo tiene un costo y un riesgo. Escríbela así: "${money(n.pretFrom)} a ${money(n.pretTo)} brutos mensuales, negociable según el paquete."`;
     kit.days = [d1, d2];
     kit.months = [m1, m2];
     return kit;
@@ -286,7 +302,10 @@ const Kit = (() => {
     L.push('PÍDELO BIEN: TU KIT PARA LA REUNIÓN', '');
     if (kit.cuando) L.push('Cuándo usarlo: ' + kit.cuando, '');
     if (kit.raise) {
-      L.push('TUS NÚMEROS', `Cifra para pedir: ${money(n.anchor)}`, `Objetivo: ${money(n.target)}`, `Piso: ${money(n.floor)}`, `Efecto anual del objetivo: ${money(n.annual)} más al año (régimen general)`, '');
+      L.push('TUS NÚMEROS', `Cifra para pedir: ${money(n.anchor)}`, `Objetivo: ${money(n.target)}`, `Piso: ${money(n.floor)}`, `Efecto anual del objetivo: ${money(n.annual)} más al año (régimen general)`);
+      if (kit.raiseContext) L.push(kit.raiseContext);
+      if (kit.mype) L.push(kit.mype);
+      L.push(`Banda de mercado para tu perfil: ${money(n.band.p25)} (P25), ${money(n.band.p50)} (mediana), ${money(n.band.p75)} (P75).`, '');
     } else {
       L.push('QUÉ PEDIR EN VEZ DE SUELDO', ...kit.alternatives.map(x => '- ' + x), '');
     }
@@ -310,6 +329,7 @@ const Kit = (() => {
     L.push('TU MALETÍN', kit.sheet, '');
     if (kit.employerCost) L.push(`Tu propuesta le costaría a la empresa cerca de ${money(kit.employerCost)} al año (régimen general).`, '');
     L.push('SI TE LLAMA OTRA EMPRESA', kit.pretension, '');
+    if (kit.legalNote) L.push(kit.legalNote, '');
     L.push('Referencia de mercado, no asesoría legal ni promesa de aumento.');
     return L.join('\n');
   }

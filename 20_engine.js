@@ -4,6 +4,7 @@
 const Engine = (() => {
   const round50 = x => Math.round(x / 50) * 50;
   const round100 = x => Math.round(x / 100) * 100;
+  const Z75 = 0.6744898;
 
   // Abramowitz-Stegun 7.1.26
   function erf(x) {
@@ -18,44 +19,86 @@ const Engine = (() => {
     return EXIT_ROUTES.includes(a.contrato) ? a.contrato : null;
   }
 
-  function band(a) {
-    const level = byId(LEVELS, a.nivel) || LEVELS[1];
-    const role = byId(ROLES, a.puesto) || byId(ROLES, 'otro');
-    const mult = role.mult
-      * ((byId(SECTORS, a.sector) || {}).mult || 1)
-      * ((byId(REGIONS, a.region) || {}).mult || 1)
-      * ((byId(SIZES, a.tamano) || {}).mult || 1)
-      * ((byId(EXPERIENCE, a.experiencia) || {}).mult || 1)
-      * (a.campo ? FIELD_MULT : 1);
-    let p50 = level.base * mult;
-    let p25 = Math.max(p50 * 0.80, CONFIG.rmv);
-    p50 = Math.max(p50, CONFIG.rmv * 1.08);
-    let p75 = Math.max(p50 * 1.25, CONFIG.rmv * 1.25);
-    if (p50 <= p25) p50 = p25 * 1.12;
-    if (p75 <= p50) p75 = p50 * 1.15;
+  const levelOf = a => (MARKET.levels[a.nivel] ? a.nivel : 'analista');
+  const total = a => (Number(a.sueldo) || 0) + (Number(a.variable) || 0);
+
+  // Factores del perfil: cada uno sale de la ENAHO (ver data/METODOLOGIA.md)
+  function factors(a) {
+    const lvl = levelOf(a);
+    const grp = MARKET.level_group[lvl];
+    const role = MARKET.roles[a.puesto] || MARKET.roles.otro;
+    const damp = MARKET.role_damping[lvl] == null ? 1 : MARKET.role_damping[lvl];
+    const sector = MARKET.sectors[a.sector] || MARKET.sectors.otro;
+    const region = MARKET.regions[a.region] || MARKET.regions.otra;
     return {
-      p25: round50(p25), p50: round50(p50), p75: round50(p75),
-      confidence: 'baja', preliminary: true,
-      otherRole: role.id === 'otro'
+      lvl, grp,
+      role: Math.pow(role.mult, damp),
+      sector: sector.mult,
+      region: region.mult[grp],
+      size: (MARKET.sizes[grp] || {})[a.tamano] || 1,
+      exp: MARKET.experience[a.experiencia] || 1,
+      field: a.campo ? MARKET.field_mult : 1
     };
   }
 
-  function percentile(salary, b) {
-    const mu = Math.log(b.p50);
-    const sigma = Math.log(b.p75 / b.p25) / (2 * 0.6744898);
-    const z = (Math.log(Math.max(salary, 1)) - mu) / sigma;
-    return Math.max(1, Math.min(99, Math.round(normCdf(z) * 100)));
+  // Confianza según cuántos datos respaldan el puesto, la región y el nivel
+  function confidence(a) {
+    const lvl = levelOf(a);
+    const role = a.puesto !== 'otro' ? MARKET.roles[a.puesto] : null;
+    const region = MARKET.regions[a.region];
+    const score = n => (n >= 150 ? 2 : (n >= 40 ? 1 : 0));
+    const c = Math.min(role ? score(role.n) : 0, region ? score(region.n) : 0, ['asistente', 'analista'].includes(lvl) ? 2 : 1);
+    return ['baja', 'media', 'alta'][c];
   }
 
-  // Brecha frente a la mediana, con la incertidumbre de una banda preliminar (±8%)
+  function band(a) {
+    const f = factors(a);
+    const L = MARKET.levels[f.lvl];
+    let p50 = L.p50 * f.role * f.sector * f.region * f.size * f.exp * f.field;
+    let p25 = p50 * L.lo, p75 = p50 * L.hi;
+    // Nadie a tiempo completo en planilla gana menos que la RMV
+    p25 = Math.max(p25, CONFIG.rmv);
+    p50 = Math.max(p50, CONFIG.rmv * 1.08);
+    p75 = Math.max(p75, CONFIG.rmv * 1.25);
+    if (p50 <= p25) p50 = p25 * 1.08;
+    if (p75 <= p50) p75 = p50 * 1.15;
+    const role = MARKET.roles[a.puesto] || MARKET.roles.otro;
+    const region = MARKET.regions[a.region] || MARKET.regions.otra;
+    return {
+      p25: round50(p25), p50: round50(p50), p75: round50(p75),
+      confidence: confidence(a),
+      nRole: role.n, nRegion: region.n,
+      method: L.metodo,
+      otherRole: !MARKET.roles[a.puesto] || a.puesto === 'otro'
+    };
+  }
+
+  // Percentil con una banda asimétrica: la parte alta del mercado se estira más que la baja
+  function percentile(salary, b) {
+    const x = Math.log(Math.max(salary, 1)), mu = Math.log(b.p50);
+    const sigma = x < mu ? Math.log(b.p50 / b.p25) / Z75 : Math.log(b.p75 / b.p50) / Z75;
+    return Math.max(1, Math.min(99, Math.round(normCdf((x - mu) / sigma) * 100)));
+  }
+
+  // Brecha frente a la mediana, con la incertidumbre que corresponde a la confianza
+  const UNCERTAINTY = { alta: 0.05, media: 0.08, baja: 0.12 };
   function gapRange(salary, b) {
-    const u = 0.08;
+    const u = UNCERTAINTY[b.confidence] || 0.08;
     const lo = b.p50 * (1 - u), hi = b.p50 * (1 + u);
     const g1 = (lo - salary) / lo * 100, g2 = (hi - salary) / hi * 100;
     return [Math.round(Math.min(g1, g2)), Math.round(Math.max(g1, g2))];
   }
 
   const position = pct => pct < 35 ? 'bajo' : (pct <= 70 ? 'rango' : 'alto');
+
+  // Inflación acumulada aproximada desde el último aumento (IPC de Lima)
+  function inflationSince(a) {
+    const inf = MARKET.context && MARKET.context.inflacion_lima;
+    if (!inf) return null;
+    if (a.aumento === 'a24') return { pct: inf['12m_pct'], text: 'el último año' };
+    if (a.aumento === 'a99') return { pct: inf['24m_pct'], text: 'los últimos dos años', atLeast: true };
+    return null;
+  }
 
   function caseScore(a, pos) {
     let score = 0;
@@ -68,6 +111,8 @@ const Engine = (() => {
     else if (a.aumento === 'a12') { score += 0.5; }
     else if (a.aumento === 'a6') { score -= 1; weaknesses.push('Tu último ajuste fue hace menos de seis meses.'); }
     else if (a.aumento === 'no') { score += 0.5; weaknesses.push('Te dijeron que no hace poco: insistir de inmediato suele cerrar más la puerta.'); }
+    const inf = inflationSince(a);
+    if (inf) strengths.push(`En ${inf.text}, los precios en Lima subieron ${inf.atLeast ? 'más de ' : ''}${String(inf.pct).replace('.', ',')}%: sin ajuste, tu sueldo compra menos que antes.`);
     if (pos === 'bajo') strengths.push('Estás por debajo de la mediana de tu perfil.');
     if (a.antiguedad === 't3') { score += 1; strengths.push('Tienes más de dos años en el puesto: conoces el trabajo y se nota.'); }
     else if (a.antiguedad === 't2') { score += 0.5; }
@@ -79,7 +124,7 @@ const Engine = (() => {
     if (a.empresa === 'recorta') weaknesses.push('Tu empresa está recortando gastos.');
     const level = score >= 3.5 ? 'fuerte' : (score >= 2 ? 'medio' : 'debil');
     return {
-      score, level,
+      score, level, strengths, weaknesses,
       strength: strengths[0] || null,
       weakness: weaknesses[0] || 'Todavía no sabemos tus logros con números, y es lo que más pesa en la reunión.'
     };
@@ -91,6 +136,7 @@ const Engine = (() => {
     if (a.antiguedad === 't0') closed.push({ t: 'Estás en tus primeros meses: primero consolida tu puesto.', cuando: 'Cuando termines tu periodo de prueba y tengas resultados que mostrar.' });
     if (a.aumento === 'a6') closed.push({ t: 'Tu último ajuste fue hace menos de seis meses.', cuando: 'Cuando se cumpla un año de tu último ajuste.' });
     if (a.aumento === 'no') closed.push({ t: 'Te dijeron que no hace poco.', cuando: 'En tres a seis meses, con un caso más fuerte.' });
+    if (a.contrato === 'plazo' && a.empresa === 'recorta') closed.push({ t: 'Tu contrato es a plazo fijo y tu empresa está recortando: pedir ahora puede poner en riesgo tu renovación.', cuando: 'Después de renovar, cuando la empresa se estabilice. Mientras, junta logros con números.' });
     if (a.empresa === 'recorta') closed.push({ t: 'Tu empresa está recortando: un pedido ahora tiene pocas probabilidades.', cuando: 'Cuando la empresa se estabilice. Mientras, junta logros con números.' });
     if (a.contrato === 'plazo' && (a.vence === 'v1' || a.vence === 'v3')) open.push('Tu contrato vence pronto: la renovación es una conversación que igual va a ocurrir.');
     if (m >= 9 && m <= 11) open.push('Es temporada de presupuestos: lo que se pide ahora puede entrar al del próximo año.');
@@ -116,11 +162,12 @@ const Engine = (() => {
   function recommend(a, now = new Date()) {
     const r = { route: route(a) };
     if (r.route) return r;
-    const s = Number(a.sueldo) || 0;
+    const t = total(a);
+    r.total = t;
     r.band = band(a);
-    r.pct = percentile(s, r.band);
+    r.pct = percentile(t, r.band);
     r.pos = position(r.pct);
-    r.gap = gapRange(s, r.band);
+    r.gap = gapRange(t, r.band);
     r.caso = caseScore(a, r.pos);
     r.momento = moment(a, now);
     let code;
@@ -149,17 +196,29 @@ const Engine = (() => {
     return v;
   }
 
-  // Cifras del kit: ancla (lo que dices), objetivo (lo que esperas), piso (lo que aceptas)
-  // y escalera de concesiones decrecientes, con el último número preciso
+  // Factor anual según el régimen: general o REMYPE (pequeña y microempresa)
+  function annualFactor(regime) {
+    if (regime === 'micro') return CONFIG.annualFactorMicro;
+    if (regime === 'pequena') return CONFIG.annualFactorSmall;
+    return CONFIG.annualFactor;
+  }
+
+  // Cifras del kit: ancla (lo que dices), objetivo (lo que esperas) y piso (lo que aceptas),
+  // sobre el sueldo fijo. La posición se mide con el total (fijo + variable), como el mercado.
   function numbers(a, r) {
-    const s = Number(a.sueldo) || 0, b = r.band;
-    const out = { anchor: null, target: null, floor: null, annual: null, pretFrom: round100(b.p50), pretTo: round100(b.p75) };
+    const s = Number(a.sueldo) || 0, v = Number(a.variable) || 0, t = s + v, b = r.band;
+    const pretFrom = round100(Math.max(b.p50, s * 1.10));
+    const out = {
+      anchor: null, target: null, floor: null, annual: null,
+      pretFrom, pretTo: round100(Math.max(b.p75, s * 1.25, pretFrom * 1.08))
+    };
     const asksRaise = ['pide_ahora', 'pide_pronto', 'construye', 'merito', 'esperar', 'mercado'].includes(r.code) && r.pos !== 'alto';
     if (!asksRaise) return out;
     const cap = s * (1 + CONFIG.capNoPromotion);
     let target, anchor, floor;
     if (r.pos === 'bajo') {
-      target = Math.min(b.p50, s * 1.15);
+      // La brecha se mide con el total, pero el objetivo sube a lo sumo 15% el fijo
+      target = Math.min(s + (Math.min(b.p50, t * 1.15) - t), s * 1.15);
       anchor = Math.min(Math.max(target * 1.05, target), cap);
       floor = Math.max(s * 1.05, s + (target - s) * 0.5);
     } else {
@@ -176,7 +235,11 @@ const Engine = (() => {
     if (target <= s) target = floor;
     if (anchor <= s) anchor = target;
     out.anchor = anchor; out.target = target; out.floor = floor;
+    out.pctAnchor = Math.round((anchor / s - 1) * 1000) / 10;
+    out.pctTarget = Math.round((target / s - 1) * 1000) / 10;
     out.annual = Math.round((target - s) * CONFIG.annualFactor / 10) * 10;
+    out.annualSmall = Math.round((target - s) * CONFIG.annualFactorSmall / 10) * 10;
+    out.annualMicro = Math.round((target - s) * CONFIG.annualFactorMicro / 10) * 10;
     const gap = anchor - target;
     const ladder = [anchor];
     if (gap >= 30) {
@@ -186,9 +249,51 @@ const Engine = (() => {
     } else {
       ladder.push(Math.max(precise(target - 20), precise(floor + 10)));
     }
-    out.ladder = ladder.filter((v, i, arr) => i === 0 || (v < arr[i - 1] && v >= floor));
+    out.ladder = ladder.filter((x, i, arr) => i === 0 || (x < arr[i - 1] && x >= floor));
     return out;
   }
 
-  return { band, percentile, gapRange, position, caseScore, moment, recommend, numbers, route, round50, round100, precise };
+  /* ---------- Bruto y neto (régimen general, 2026) ---------- */
+  function incomeTaxAnnual(gross) {
+    const T = MARKET.context.tributos_2026;
+    let base = gross * 14.18 - T.deduccion_uit * T.uit; // 12 sueldos + 2 gratificaciones + bonificación extraordinaria
+    if (base <= 0) return 0;
+    let tax = 0, prev = 0;
+    for (const [upTo, rate] of T.tramos_quinta) {
+      const top = upTo == null ? Infinity : upTo * T.uit;
+      const slice = Math.min(base, top) - prev;
+      if (slice <= 0) break;
+      tax += slice * rate;
+      prev = top;
+    }
+    return tax;
+  }
+  // Neto mensual aproximado: AFP con comisión mixta (10% + prima de seguro) u ONP, y retención de quinta
+  function netFromGross(gross, system) {
+    const T = MARKET.context.tributos_2026;
+    const pension = system === 'onp'
+      ? gross * T.onp
+      : gross * T.afp_aporte + Math.min(gross, T.afp_tope_prima) * T.afp_prima;
+    return gross - pension - incomeTaxAnnual(gross) / 12;
+  }
+  function grossFromNet(net, system) {
+    if (!(net > 0)) return 0;
+    let lo = net, hi = net * 2;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (netFromGross(mid, system) < net) lo = mid; else hi = mid;
+    }
+    return Math.round((lo + hi) / 2);
+  }
+
+  // ¿El sueldo escrito se ve raro para el perfil? (anual, en dólares, neto con variable, etc.)
+  function salaryCheck(a) {
+    const s = Number(a.sueldo) || 0;
+    if (!s || !a.nivel || !a.puesto) return null;
+    const b = band(a);
+    if (s > b.p75 * 4) return 'Ese monto es muy alto para tu perfil. Revisa que sea tu sueldo mensual, no anual, y que esté en soles.';
+    return null;
+  }
+
+  return { band, factors, confidence, percentile, gapRange, position, caseScore, moment, recommend, numbers, route, round50, round100, precise, annualFactor, netFromGross, grossFromNet, incomeTaxAnnual, salaryCheck, inflationSince, total };
 })();

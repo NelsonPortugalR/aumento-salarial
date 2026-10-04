@@ -29,11 +29,21 @@ async function run(name, steps, opts = {}) {
     await pick('nivel', 'analista');
     await pick('sector', 'industria');
     await pick('region', 'arequipa');
+    if (!d.body.textContent.includes('Lima Metropolitana y Callao') && !d.querySelector('[data-step="tamano"]')) throw new Error('region step broken');
     await pick('tamano', 's3');
     await pick('contrato', 'plazo');
     await pick('vence', 'v3');
     await pick('experiencia', 'e3');
     await pick('antiguedad', 't3');
+    // salary: calculadora de bruto desde neto
+    click('[data-action="net-open"]'); await wait(20);
+    type('#neto', '2000');
+    const netOut = d.getElementById('net-out').textContent;
+    if (!/S\/\s2,25\d/.test(netOut)) throw new Error('net calc unexpected: ' + netOut);
+    console.log('net calc:', netOut);
+    click('[data-action="use-gross"]'); await wait(20);
+    if (!d.querySelector('#sueldo').value) throw new Error('use-gross did not fill salary');
+    console.log('gross from net 2000:', d.querySelector('#sueldo').value);
     // salary
     const btn = () => d.querySelector('[data-action="salary-next"]');
     type('#sueldo', 'S/ 2,300x'); // sanitize -> 2300
@@ -52,6 +62,10 @@ async function run(name, steps, opts = {}) {
     console.log('gap:', d.querySelectorAll('.slip p')[1].textContent);
     console.log('moment:', [...d.querySelectorAll('.slip p')].find(p => /^(Buen momento|Momento)/.test(p.textContent)).textContent);
     console.log('preview items:', d.querySelectorAll('.preview li').length);
+    console.log('confidence:', [...d.querySelectorAll('.slip .fine')].map(p => p.textContent).find(t => /Confianza/.test(t)));
+    click('[data-action="method"]'); await wait(20);
+    if (!d.getElementById('method-title')) throw new Error('method modal missing');
+    click('[data-action="close-modal"]'); await wait(20);
     // paywall
     click('[data-action="open-paywall"]'); await wait(20);
     if (d.getElementById('modal-root').hidden) throw new Error('modal not open');
@@ -82,13 +96,16 @@ async function run(name, steps, opts = {}) {
     // copy all
     const copyBtn = d.querySelector('[data-action="copy"][data-copy="all"]'); click(copyBtn); await wait(30);
     // persistence: reload state from localStorage
-    const saved = JSON.parse(w.localStorage.getItem('pidelo-bien-v1'));
+    const saved = JSON.parse(w.localStorage.getItem('pidelo-bien-v2'));
     console.log('saved view:', saved.view, 'unlocked:', saved.unlocked, 'kit?', !!saved.kit);
   });
 
-  // 2) Salida sector público
-  await run('exit-publico', async ({ d, pick, wait }) => {
-    await pick('puesto', 'administracion'); await pick('nivel', 'analista'); await pick('sector', 'otro'); await pick('region', 'lima'); await pick('tamano', 's4');
+  // 2) Salida sector público, eligiendo una región de la lista ampliada
+  await run('exit-publico', async ({ d, click, pick, wait }) => {
+    await pick('puesto', 'administracion'); await pick('nivel', 'analista'); await pick('sector', 'otro');
+    if (d.querySelector('[data-step="region"][data-value="moquegua"]')) throw new Error('more regions shown too early');
+    click('[data-action="more-regions"]'); await wait(20);
+    await pick('region', 'moquegua'); await pick('tamano', 's4');
     await pick('contrato', 'publico'); await wait(30);
     console.log('EXIT title:', d.querySelector('.exit-title').textContent);
   });
@@ -134,4 +151,5 @@ async function run(name, steps, opts = {}) {
   }, { claude: fakeClaude });
 
   console.log('\nERRORS:', errors.length ? errors.join('\n') : 'none');
+  if (errors.length) process.exit(1);
 })().catch(e => { console.error('TEST FAILURE', e); process.exit(1); });

@@ -4,11 +4,13 @@ Prototipo funcional de un test salarial freemium: test de 12 a 13 preguntas, res
 
 ## Estado actual
 
-- `pidelo-bien.html` se arma con `build.sh` desde archivos separados:
+- `pidelo-bien.html` se arma con `build.sh` (`npm run build`) desde archivos separados:
   - `01_head.html` estilos y tokens (claro y oscuro), `02_body.html` estructura.
-  - `10_data.js` configuración (`CONFIG`), puestos, niveles, factores y pasos del test.
-  - `20_engine.js` motor determinístico: banda, percentil (lognormal con P25/P50/P75), caso, momento, recomendación y cifras (ancla, objetivo, piso).
+  - `10_data.js` configuración (`CONFIG`), catálogos del test (6 niveles, 21 puestos, 13 sectores, 25 regiones) y pasos.
+  - `15_bands.js` **generado** por `data/pipeline/02_model.py`: anclas, multiplicadores, dispersión, n por celda y contexto 2026 (`MARKET`). No se edita a mano.
+  - `20_engine.js` motor determinístico: banda, percentil (banda asimétrica), confianza según datos, caso, momento, recomendación, cifras (ancla, objetivo, piso, escalera, pretensión) y bruto↔neto 2026.
   - `30_kit.js` kit con plantillas (funciona sin IA). `40_ui.js` interfaz. `50_ai.js` IA opcional y simulador.
+- Pruebas: `npm test` corre `engine.test.js` (invariantes del motor sobre miles de perfiles) y `flow.test.js` (flujo completo en jsdom).
 - Hoy corre como artefacto de claude.ai: la IA usa la cuenta de quien lo abre, no guarda datos y no mide conversiones. Los códigos de acceso son hashes SHA-256 en `CONFIG.codeHashes`.
 
 ## Regla de oro
@@ -18,7 +20,7 @@ El motor decide (recomendación y cifras) con reglas fijas y auditables. La IA s
 ## Lo que hay que construir
 
 1. **Proyecto real.** Pasar a Astro (o Vite) con los mismos módulos; páginas estáticas para SEO (`/`, `/pretension-salarial`, `/renovacion-de-contrato`, `/como-pedir-aumento-de-sueldo`, `/sueldos/[cargo]`). Desplegar en Netlify con dominio propio.
-2. **Bandas con datos verificados** (hoy son estimaciones preliminares, ver abajo).
+2. **Bandas con datos verificados.** Hecho en su primera versión: ENAHO 2022-2025 más cifras publicadas de Buk 2026 (ver `data/METODOLOGIA.md`). Falta sumar la guía completa de Buk y, más adelante, las respuestas propias del test.
 3. **Backend en Supabase** (región sa-east-1): tablas `responses` (anónimas, versión del consentimiento, sin nombre, DNI ni empresa), `events` (embudo), `bands`, `payments`, `access_tokens`. RLS: el público solo inserta en `responses` y `events`.
 4. **IA del lado servidor**: función (Netlify o Supabase Edge) con la API de Claude para "Personalizar con IA" y el simulador. Límite por sesión e IP. A la IA no viaja ningún dato que identifique a la persona.
 5. **Cobro**: Culqi Checkout (Yape y tarjeta en soles) + webhook que marca el pago y emite un token de acceso al kit. Boleta electrónica automática con un proveedor de facturación con API. Precio en prueba A/B: S/ 29.90 frente a S/ 49.90.
@@ -26,6 +28,8 @@ El motor decide (recomendación y cifras) con reglas fijas y auditables. La IA s
 7. **Legal**: consentimiento expreso para dato sensible (sueldo, Ley 29733), política de privacidad, banco de datos inscrito ante la autoridad de protección de datos, Libro de Reclamaciones virtual, términos y aviso de "referencia de mercado, no asesoría legal ni promesa de aumento".
 
 ## Datos salariales: fuentes y reglas
+
+Las bandas actuales salen de `data/pipeline/` (`npm run data` descarga y recalcula todo; `npm run data:model` solo recalcula). Método, supuestos, validación y límites: `data/METODOLOGIA.md`. Números de la última corrida: `data/RESULTADOS.md`. Los microdatos (`data/raw/`) no se versionan.
 
 | Fuente | Qué aporta | Regla de uso |
 | --- | --- | --- |
@@ -37,7 +41,7 @@ El motor decide (recomendación y cifras) con reglas fijas y auditables. La IA s
 
 Modelo: jerárquico con encogimiento (la celda se apoya en la de arriba cuando tiene pocos datos). Guardar por celda: fuente, fecha, número de observaciones y confianza (alta con 50 o más en 12 meses, media con 15 a 49, baja con menos).
 
-Control rápido con dos datos públicos de Buk: jefatura de TI, mediana S/ 6,870 en empresas medianas y S/ 9,030 en tecnología; business developer, mediana S/ 6,310 en grandes y S/ 7,110 en finanzas. El modelo preliminar queda dentro de ±10% en TI y unos 18% abajo en desarrollo de negocios: hay que recalibrar ventas senior.
+Validación de la versión actual frente a 28 medianas publicadas de Buk: diferencia absoluta mediana de 9.6%. Sigue abajo en ventas senior (business developer, −26% a −28%) y en jefaturas de RR.HH. y marketing (−24% a −29%): son los primeros cargos a recalibrar cuando haya más datos de planilla.
 
 ## Método del kit
 
@@ -55,5 +59,6 @@ Adaptaciones peruanas que no se tocan: calendario (presupuestos de setiembre a n
 ## Pendientes de configuración
 
 - `CONFIG.payUrl` y `CONFIG.whatsapp` vacíos.
+- Contexto 2026 en `data/benchmarks/contexto_2026.json` (aumentos proyectados, inflación, UIT, AFP/ONP): revisar cada trimestre.
 - Nombre y dominio definitivos ("Pídelo Bien" es provisional).
 - RMV: S/ 1,230 desde el 1 de octubre de 2026; segundo tramo a S/ 1,300 en el primer semestre de 2027 por decreto aún no emitido.
