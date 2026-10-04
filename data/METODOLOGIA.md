@@ -143,7 +143,7 @@ La prueba `pipeline/test_responses.py` lo verifica con datos sintéticos: recupe
 
 ## Avisos con sueldo (LinkedIn y otros portales)
 
-Se registran a mano, 50 a 100 al mes, en `benchmarks/avisos/avisos_AAAA-MM.csv` con la plantilla. `pipeline/05_postings.py` normaliza moneda y periodo (un anual se divide entre 14) y calcula el índice "ofrecido / modelo" por nivel y portal en `AVISOS.md`. No entra a la banda, porque un sueldo ofrecido no es un sueldo pagado: es una alarma temprana. Si el índice se mueve más de 10% dos meses seguidos, toca revisar las anclas.
+Se registran por captura asistida, 50 a 100 al mes: una persona copia el texto del aviso y `pipeline/capture_posting.py` extrae sueldo, moneda, periodo, puesto, nivel, región y contrato, y lo agrega a `benchmarks/avisos/avisos_AAAA-MM.csv`. Con 20 o más avisos por nivel en los últimos 90 días, el kit muestra el índice en el plan B, como referencia de lo que se está ofreciendo. `pipeline/05_postings.py` normaliza moneda y periodo (un anual se divide entre 14) y calcula el índice "ofrecido / modelo" por nivel y portal en `AVISOS.md`. No entra a la banda, porque un sueldo ofrecido no es un sueldo pagado: es una alarma temprana. Si el índice se mueve más de 10% dos meses seguidos, toca revisar las anclas.
 
 ## Cómo actualizar
 
