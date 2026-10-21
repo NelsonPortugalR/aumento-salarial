@@ -65,7 +65,6 @@ Adaptaciones peruanas que no se tocan: calendario (presupuestos de setiembre a n
 
 - `CONFIG.payUrl` y `CONFIG.whatsapp` vacíos; para la prueba A/B, los dos links de `CONFIG.priceTest`.
 - `CONFIG.legal` vacío (razón social, RUC, domicilio, correo y código del banco de datos): las páginas legales lo muestran como pendiente.
-- Garantía de 7 días en los términos: confirmar antes de cobrar.
 - Contexto 2026 en `data/benchmarks/contexto_2026.json` (aumentos proyectados, inflación, UIT, AFP/ONP): revisar cada trimestre.
 - Nombre y dominio definitivos ("Pídelo Bien" es provisional).
 - RMV: S/ 1,230 desde el 1 de octubre de 2026; segundo tramo a S/ 1,300 en el primer semestre de 2027 por decreto aún no emitido.

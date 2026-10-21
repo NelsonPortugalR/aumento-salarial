@@ -112,6 +112,7 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
   }
 
   /* 3) Libro de Reclamaciones: número, envío a Netlify Forms y constancia */
+  ok(!/garantía de/i.test(read('terminos.html')), 'los términos no deben ofrecer garantía de devolución');
   {
     const html = read('libro-de-reclamaciones.html');
     ok(/<form[^>]+name="libro-reclamaciones"[^>]+data-netlify="true"[^>]+netlify-honeypot="bot-field"/.test(html), 'formulario sin atributos de Netlify Forms');
