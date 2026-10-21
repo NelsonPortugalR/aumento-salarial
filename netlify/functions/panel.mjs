@@ -1,6 +1,6 @@
-// Panel interno: resumen del embudo y exportación de aportes y eventos. Requiere la variable PANEL_TOKEN.
+// Panel interno: resumen del embudo, exportación y retiro de aportes. Requiere la variable PANEL_TOKEN.
 import { getStore } from '@netlify/blobs';
-import { autorizado, diasHasta, json, leerClave, limaDia } from '../lib/comun.mjs';
+import { autorizado, diasHasta, json, leerClave, leerJSON, limaDia } from '../lib/comun.mjs';
 import { resumir } from '../lib/metricas.mjs';
 
 const listar = async (store, prefix) => (await store.list({ prefix })).blobs.map(b => b.key);
@@ -20,6 +20,25 @@ export default async req => {
   const rango = diasHasta(dias);
   const eventos = getStore('eventos');
   const clavesEventos = async () => (await enLotes(rango, 15, d => listar(eventos, d + '/'))).flat();
+
+  // Retiro de un aporte por su código (derecho de cancelación) y borrado de una sesión de prueba
+  if (url.pathname === '/api/retirar') {
+    if (req.method !== 'POST') return json({ error: 'metodo' }, 405);
+    const b = (await leerJSON(req, 1024)) || {};
+    const valido = v => /^[a-z0-9]{6,16}$/.test(String(v || ''));
+    const out = { aportes: 0, eventos: 0 };
+    if (valido(b.id)) {
+      const store = getStore('aportes');
+      for (const k of (await listar(store, '')).filter(k => k.endsWith('/' + b.id))) { await store.delete(k); out.aportes++; }
+    }
+    if (valido(b.sesion)) {
+      const claves = (await enLotes(diasHasta(180), 15, d => listar(eventos, `${d}/${b.sesion}/`))).flat();
+      await enLotes(claves, 15, k => eventos.delete(k));
+      out.eventos = claves.length;
+    }
+    return json(out);
+  }
+  if (req.method !== 'GET') return json({ error: 'metodo' }, 405);
 
   if (url.pathname === '/api/resumen') {
     const claves = await clavesEventos();
@@ -51,4 +70,4 @@ export default async req => {
   return json({ error: 'tipo_desconocido' }, 400);
 };
 
-export const config = { path: ['/api/resumen', '/api/exportar'], method: 'GET' };
+export const config = { path: ['/api/resumen', '/api/exportar', '/api/retirar'], method: ['GET', 'POST'] };

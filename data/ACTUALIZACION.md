@@ -19,7 +19,8 @@ Quien revisa mira `data/RESULTADOS.md` (validación contra Buk y Computrabajo) y
 | Cada mes, día 1 a 3 | Inflación de Lima (INEI) | Editar `inflacion_lima` en `benchmarks/contexto_2026.json` |
 | Cada semana, media hora | 15 a 25 avisos con sueldo (LinkedIn, Computrabajo, Bumeran), copiados por una persona | [Capturador de avisos](https://claude.ai/artifact/Hp4m2S3VrDUUMiy2czqaHX) (fuente: `herramientas/`) |
 | Cada mes | Pasar los avisos al modelo | En el capturador, "Copiar CSV para el modelo" y guardar como `benchmarks/avisos/avisos_AAAA-MM.csv`, o pedirle a Claude que lea la base del capturador; luego `npm run data:model` |
-| Cada mes, cuando haya backend | Respuestas del test y seguimiento a 30 días | Exportar a `data/private/respuestas/` y `data/private/resultados/`, correr `npm run data:model` |
+| Cada mes | Aportes del test | En el panel (`/panel`), "Aportes (JSONL)"; guardar como `data/private/respuestas/aportes_AAAA-MM-DD.jsonl` y correr `npm run data:model` |
+| Cada mes, cuando haya seguimiento | Resultado a 30 días de quienes compraron | Guardar en `data/private/resultados/` y correr `npm run data:model` |
 | Cada trimestre | Prima y tope de AFP (SBS); validación en Computrabajo | `tributos_2026` en el contexto; CSV nuevo de Computrabajo |
 | Mayo o junio | ENAHO del año anterior | Código nuevo en `00_download.sh` y `01_enaho_extract.py`, RMV del año en `common.py`, `npm run data` |
 | Agosto | Guía Buk y encuesta de aumentos (EY) | Filas en `benchmarks/buk_2026_prensa.csv`; `aumentos_2026` en el contexto |

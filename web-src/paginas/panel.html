@@ -24,6 +24,15 @@
     </div>
     <p class="err" id="p-main-err" role="alert"></p>
     <div id="p-body"></div>
+    <section class="card" aria-labelledby="p-ret-title">
+      <h2 id="p-ret-title">Retirar un aporte</h2>
+      <p class="sub">Si alguien pide borrar su aporte, ingresa el código que le mostró la página al aportar.</p>
+      <form class="token-row" id="p-retirar">
+        <input id="p-codigo" autocomplete="off" placeholder="Código del aporte" aria-label="Código del aporte" maxlength="16">
+        <button class="btn-sm" type="submit">Retirar</button>
+      </form>
+      <p class="note" id="p-ret-out" role="status"></p>
+    </section>
     <section class="card" aria-labelledby="p-exp-title">
       <h2 id="p-exp-title">Descargas</h2>
       <p class="sub">Los aportes salen en el formato que lee <code>data/pipeline/04_responses.py</code>: guárdalos en <code>data/private/respuestas/</code>.</p>

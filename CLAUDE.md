@@ -10,8 +10,9 @@ Prototipo funcional de un test salarial freemium: test de 13 a 14 preguntas, res
   - `15_bands.js` **generado** por `data/pipeline/export.py`: anclas, multiplicadores, dispersión, n por celda y contexto 2026 (`MARKET`). No se edita a mano.
   - `20_engine.js` motor determinístico: banda, percentil (banda asimétrica), confianza según datos, caso, momento, recomendación, cifras (ancla, objetivo, piso, escalera, pretensión) y bruto↔neto 2026.
   - `30_kit.js` kit con plantillas (funciona sin IA). `40_ui.js` interfaz. `50_ai.js` IA opcional y simulador.
-- Pruebas: `npm test` corre `engine.test.js` (invariantes del motor sobre miles de perfiles) y `flow.test.js` (flujo completo en jsdom).
-- Hoy corre como artefacto de claude.ai: la IA usa la cuenta de quien lo abre, no guarda datos y no mide conversiones. Los códigos de acceso son hashes SHA-256 en `CONFIG.codeHashes`.
+- Versión web en Netlify (https://pidelo-bien.netlify.app, sin indexar hasta tener dominio): `build.sh` también corre `web-src/build.mjs`, que arma `web/` (no se versiona) con la app (`12_web.js` activa medición y aporte), términos, privacidad, Libro de Reclamaciones, panel (`/panel`) y 404. Funciones en `netlify/functions/` sobre Netlify Blobs: `/api/evento` (embudo anónimo), `/api/aporte` (con consentimiento), `/api/reclamo` (número correlativo; la hoja va a Netlify Forms), `/api/resumen`, `/api/exportar` y `/api/retirar` (con `PANEL_TOKEN`) y `limpieza` mensual (plazos de la política). `netlify/lib/catalogos.mjs` lo genera el build desde `10_data.js`. Operación, dominio y pagos: `DESPLIEGUE.md`.
+- Pruebas: `npm test` corre `engine.test.js` (invariantes del motor sobre miles de perfiles), `flow.test.js` (flujo completo en jsdom), `web.test.js` (versión web: eventos, aporte, precio A/B, Libro y panel) y `api.test.mjs` (funciones contra un servidor local de Blobs).
+- También corre como artefacto de claude.ai: ahí la IA usa la cuenta de quien lo abre y no se mide nada. En la web no hay IA todavía. Los códigos de acceso son hashes SHA-256 en `CONFIG.codeHashes`; el desbloqueo es en el navegador, así que sirve para validar, no para cobrar a escala.
 
 ## Regla de oro
 
@@ -21,11 +22,11 @@ El motor decide (recomendación y cifras) con reglas fijas y auditables. La IA s
 
 1. **Proyecto real.** Pasar a Astro (o Vite) con los mismos módulos; páginas estáticas para SEO (`/`, `/pretension-salarial`, `/renovacion-de-contrato`, `/como-pedir-aumento-de-sueldo`, `/sueldos/[cargo]`). Desplegar en Netlify con dominio propio.
 2. **Bandas con datos verificados.** Hecho en su primera versión: ENAHO 2022-2025 más cifras publicadas de Buk 2026 (ver `data/METODOLOGIA.md`). Falta sumar la guía completa de Buk y, más adelante, las respuestas propias del test.
-3. **Backend en Supabase** (región sa-east-1): tablas `responses` (anónimas, versión del consentimiento, sin nombre, DNI ni empresa), `events` (embudo), `bands`, `payments`, `access_tokens`. RLS: el público solo inserta en `responses` y `events`.
+3. **Backend en Supabase** (región sa-east-1): tablas `responses` (anónimas, versión del consentimiento, sin nombre, DNI ni empresa), `events` (embudo), `bands`, `payments`, `access_tokens`. RLS: el público solo inserta en `responses` y `events`. Mientras tanto, eventos y aportes viven en Netlify Blobs (ver `DESPLIEGUE.md`); pasar a Supabase cuando lleguen pagos y tokens.
 4. **IA del lado servidor**: función (Netlify o Supabase Edge) con la API de Claude para "Personalizar con IA" y el simulador. Límite por sesión e IP. A la IA no viaja ningún dato que identifique a la persona.
 5. **Cobro**: Culqi Checkout (Yape y tarjeta en soles) + webhook que marca el pago y emite un token de acceso al kit. Boleta electrónica automática con un proveedor de facturación con API. Precio en prueba A/B: S/ 29.90 frente a S/ 49.90.
-6. **Métricas de validación**: eventos `test_start`, `step`, `test_complete`, `paywall_view`, `pay_click`, `paid`, `kit_built`, `sim_start`. Tablero con: tests completos, inicio a completado, completado a pago, costo por pago, compradores que tuvieron la conversación a 30 días.
-7. **Legal**: el sueldo se procesa solo en el navegador para el resultado, sin casilla (aviso breve bajo el campo). Guardarlo requiere consentimiento expreso (dato sensible, Ley 29733): botón aparte "Sí, aportar mi dato" en el resultado. Además: política de privacidad, banco de datos inscrito ante la autoridad de protección de datos, Libro de Reclamaciones virtual, términos y aviso de "referencia de mercado, no asesoría legal ni promesa de aumento".
+6. **Métricas de validación**: eventos `test_start`, `step`, `test_complete`, `paywall_view`, `pay_click`, `paid`, `kit_built`, `sim_start`. Tablero con: tests completos, inicio a completado, completado a pago, costo por pago, compradores que tuvieron la conversación a 30 días. Hecho en la web salvo `paid` (llega con el webhook de pago), costo por pago y seguimiento a 30 días: panel en `/panel`.
+7. **Legal**: el sueldo se procesa solo en el navegador para el resultado, sin casilla (aviso breve bajo el campo). Guardarlo requiere consentimiento expreso (dato sensible, Ley 29733): botón aparte "Sí, aportar mi dato" en el resultado. Además: política de privacidad, banco de datos inscrito ante la autoridad de protección de datos, Libro de Reclamaciones virtual, términos y aviso de "referencia de mercado, no asesoría legal ni promesa de aumento". Páginas hechas en la web; faltan los datos del proveedor en `CONFIG.legal` y la inscripción del banco de datos.
 
 ## Datos salariales: fuentes y reglas
 
@@ -62,7 +63,9 @@ Adaptaciones peruanas que no se tocan: calendario (presupuestos de setiembre a n
 
 ## Pendientes de configuración
 
-- `CONFIG.payUrl` y `CONFIG.whatsapp` vacíos.
+- `CONFIG.payUrl` y `CONFIG.whatsapp` vacíos; para la prueba A/B, los dos links de `CONFIG.priceTest`.
+- `CONFIG.legal` vacío (razón social, RUC, domicilio, correo y código del banco de datos): las páginas legales lo muestran como pendiente.
+- Garantía de 7 días en los términos: confirmar antes de cobrar.
 - Contexto 2026 en `data/benchmarks/contexto_2026.json` (aumentos proyectados, inflación, UIT, AFP/ONP): revisar cada trimestre.
 - Nombre y dominio definitivos ("Pídelo Bien" es provisional).
 - RMV: S/ 1,230 desde el 1 de octubre de 2026; segundo tramo a S/ 1,300 en el primer semestre de 2027 por decreto aún no emitido.

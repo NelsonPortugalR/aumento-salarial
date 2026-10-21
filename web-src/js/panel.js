@@ -262,5 +262,22 @@
     }
   });
 
+  $('p-retirar').addEventListener('submit', async e => {
+    e.preventDefault();
+    const out = $('p-ret-out');
+    const id = $('p-codigo').value.trim().toLowerCase();
+    if (!/^[a-z0-9]{6,16}$/.test(id)) { out.textContent = 'El código tiene entre 6 y 16 letras y números.'; return; }
+    out.textContent = 'Buscando…';
+    try {
+      const r = await fetch('/api/retirar', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      if (r.status === 401) { logout('Ese token no es válido.'); return; }
+      const d = await r.json();
+      out.textContent = d.aportes ? 'Listo: el aporte se borró. Avísale a la persona que ya no está en la base.' : 'No hay ningún aporte con ese código.';
+      if (d.aportes) { $('p-codigo').value = ''; load(); }
+    } catch (x) {
+      out.textContent = 'No se pudo completar. Intenta de nuevo.';
+    }
+  });
+
   if (token) start(); else showLogin();
 })();

@@ -75,6 +75,15 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     ok(w.shareText().endsWith(' https://pidelo.test/?ref=compartido'), 'compartir sin enlace: ' + w.shareText());
   }
 
+  /* 1b) Modo interno: las pruebas de quien administra no se miden ni se aportan */
+  {
+    const { w, d, sent } = page('index.html', '/app.js', app, { path: '?interno=1' });
+    await wait(20);
+    d.querySelector('[data-step="puesto"][data-value="ventas"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    await wait(200);
+    ok(w.localStorage.getItem('pidelo-bien-interno') === '1' && sent.length === 0, 'el modo interno no debe enviar eventos: ' + sent.length);
+  }
+
   /* 2) Prueba A/B: se activa con dos links de pago y el precio queda fijo en el navegador */
   {
     const abApp = app.replace("{ price: 29.90, payUrl: '' }", "{ price: 29.90, payUrl: 'https://pago.test/a' }").replace("{ price: 49.90, payUrl: '' }", "{ price: 49.90, payUrl: 'https://pago.test/b' }");

@@ -46,7 +46,19 @@ function offer() {
 /* ---------- Medición anónima del embudo ---------- */
 // Un id aleatorio por pestaña, sin cookies. Nunca viajan respuestas, sueldo ni datos personales.
 const SID_KEY = 'pidelo-bien-sesion';
-const EV = { sid: '', once: {} };
+const EV = { sid: '', once: {}, internal: null };
+// Quien administra el sitio abre una vez /?interno=1 para que sus pruebas no cuenten (con ?interno=0 vuelve a contar)
+const INTERNAL_KEY = 'pidelo-bien-interno';
+function isInternal() {
+  if (EV.internal != null) return EV.internal;
+  try {
+    const q = new URLSearchParams(location.search).get('interno');
+    if (q === '1') localStorage.setItem(INTERNAL_KEY, '1');
+    if (q === '0') localStorage.removeItem(INTERNAL_KEY);
+    EV.internal = localStorage.getItem(INTERNAL_KEY) === '1';
+  } catch (e) { EV.internal = false; }
+  return EV.internal;
+}
 function sessionId() {
   if (EV.sid) return EV.sid;
   try {
@@ -56,7 +68,7 @@ function sessionId() {
   return EV.sid;
 }
 function track(ev, detail, once) {
-  if (!CONFIG.eventsUrl) return;
+  if (!CONFIG.eventsUrl || isInternal()) return;
   if (once) { if (EV.once[ev]) return; EV.once[ev] = true; }
   try {
     const body = JSON.stringify({ s: sessionId(), e: ev, d: detail ? String(detail) : '' });
@@ -289,6 +301,7 @@ function sendRecord(a, r) {
   const rid = randomId();   // aleatorio: evita contar dos veces el mismo test y permite retirar el aporte
   S.recordId = rid;
   const rec = Object.assign(Engine.responseRecord(Object.assign({ _rid: rid }, a), r), { consentimiento: CONFIG.consentVersion });
+  if (isInternal()) return;   // las pruebas de quien administra no entran a las bandas
   try {
     fetch(CONFIG.collectUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec), keepalive: true }).catch(() => {});
   } catch (e) { /* sin red: no pasa nada */ }

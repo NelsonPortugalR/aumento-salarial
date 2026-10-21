@@ -85,6 +85,15 @@ ok(/attachment; filename="aportes_/.test(exp.headers.get('content-disposition'))
 const csv = await (await panel(get('/api/exportar?tipo=eventos&dias=7', 'token-de-prueba-largo'))).text();
 ok(csv.startsWith('dia,sesion,orden,evento,detalle') && csv.trim().split('\n').length === 12, 'exportación de eventos');
 
+// Retiro por código (derecho de cancelación) y borrado de una sesión de prueba
+const retirar = body => panel(new Request('https://pidelo.test/api/retirar', { method: 'POST', headers: { authorization: 'Bearer token-de-prueba-largo', 'content-type': 'application/json' }, body: JSON.stringify(body) }));
+ok((await aporte(post('/api/aporte', record('eeeeee5555')))).status === 200, 'aporte para retirar');
+ok((await (await retirar({ id: 'eeeeee5555' })).json()).aportes === 1, 'retiro de aporte por código');
+ok((await (await retirar({ id: 'eeeeee5555' })).json()).aportes === 0, 'retiro repetido');
+await send('sesionborra', 'visit', 'p2990.directo.d');
+ok((await (await retirar({ sesion: 'sesionborra' })).json()).eventos === 1, 'borrado de sesión de prueba');
+ok((await panel(new Request('https://pidelo.test/api/retirar', { method: 'POST', body: '{}' }))).status === 401, 'retiro sin token');
+
 /* 4) Libro de Reclamaciones: números correlativos sin choques */
 const hoja = { nombre: 'Ana Pérez', documento: '12345678', email: 'ana@correo.pe', tipo: 'queja', detalle: 'Demoraron en responder.', pedido: 'Respuesta.' };
 const n1 = await (await reclamo(post('/api/reclamo', hoja))).json();
