@@ -63,6 +63,8 @@ const send = async (s, e, d) => (await evento(post('/api/evento', { s, e, d })))
 ok(await send('sesionuno1', 'visit', 'p2990.compartido.m') === 204, 'evento válido no guardado');
 ok(await send('sesionuno1', 'nada') === 400, 'evento inválido aceptado');
 ok((await evento(post('/api/evento', 'no es json'))).status === 400, 'cuerpo inválido aceptado');
+const bot = new Request('https://pidelo.test/api/evento', { method: 'POST', headers: { 'user-agent': 'Mozilla/5.0 HeadlessChrome/131.0', 'content-type': 'application/json' }, body: JSON.stringify({ s: 'sesionbot01', e: 'visit', d: 'p2990.directo.d' }) });
+ok((await evento(bot)).status === 204 && (await getStore('eventos').list({ prefix: limaDia() + '/sesionbot01/' })).blobs.length === 0, 'un navegador automático no debe contar');
 for (const [e, d] of [['test_start', ''], ['step', 'nivel'], ['step', 'sector'], ['test_complete', 'pide_ahora.bajo'], ['paywall_view', 'p2990'], ['pay_click', 'p2990']]) await send('sesionuno1', e, d);
 await send('sesiondos2', 'visit', 'p4990.directo.d');
 await send('sesiondos2', 'test_start');
