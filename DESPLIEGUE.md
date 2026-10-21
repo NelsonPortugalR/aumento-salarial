@@ -5,7 +5,7 @@
 | Qué | Dónde |
 | --- | --- |
 | Sitio | https://pidelo-bien.netlify.app |
-| Panel de validación | https://pidelo-bien.netlify.app/panel (pide el token `PANEL_TOKEN`) |
+| Panel de validación | https://pidelo-bien.netlify.app/panel (pide el token del panel) |
 | Administración | https://app.netlify.com/projects/pidelo-bien (equipo `nelson1614`) |
 
 Mientras no haya dominio propio, el sitio no se indexa (`X-Robots-Tag: noindex`): se puede compartir el enlace, pero no aparece en Google.
@@ -25,7 +25,7 @@ Funciones (`netlify/functions/`), con datos en Netlify Blobs (servidores en EE. 
 | `POST /api/evento` | Paso del embudo, con un id aleatorio por pestaña | Una clave `día/sesión/tiempo~evento~detalle`, sin respuestas ni sueldo |
 | `POST /api/aporte` | Aporte de quien toca "Sí, aportar mi dato" | El registro anónimo validado contra los catálogos, sin IP |
 | `POST /api/reclamo` | Asigna el número correlativo de la hoja | Solo el número y la fecha; la hoja va a Netlify Forms |
-| `GET /api/resumen`, `GET /api/exportar` | Panel: embudo, aportes y descargas | Nada |
+| `GET /api/resumen`, `GET /api/exportar` | Panel: embudo, aportes y descargas (con el token) | Nada |
 | `POST /api/retirar` | Borra un aporte por su código (o una sesión de prueba) | Nada |
 | `limpieza` (día 2 de cada mes) | Borra eventos de más de 2 años y aportes de más de 5 | Nada |
 
@@ -61,7 +61,7 @@ rm -rf /tmp/pb && mkdir /tmp/pb && git archive HEAD | tar -x -C /tmp/pb
 - Eventos: `visit` (precio, origen y celular o computadora), `test_start`, `step` (cada pregunta), `test_complete` (recomendación y zona), `exit_route`, `paywall_view`, `pay_click`, `wa_click`, `code_ok`, `code_bad`, `kit_built`, `sim_start`, `polish`, `share`, `contribute`, `copy`, `download`, `method_view`, `privacy_view` y `restart`. `paid` llega con el webhook de pago.
 - Campañas: agrega `?utm_source=meta` (o `?ref=...`) a los enlaces. El panel agrupa por origen. Los resultados compartidos llegan con `?ref=compartido`.
 - Tus propias pruebas: abre una vez `https://pidelo-bien.netlify.app/?interno=1` en cada navegador que uses. Ese navegador deja de medir y de enviar aportes; con `?interno=0` vuelve a contar.
-- El token del panel es la variable secreta `PANEL_TOKEN`. Para cambiarlo, edítala en Environment variables y vuelve a desplegar.
+- El token del panel no está en el repositorio: solo su huella SHA-256, en `netlify/lib/acceso.mjs`. Para cambiarlo, genera un token nuevo, pega su huella ahí (el comando está en el archivo) y despliega. Si defines la variable `PANEL_TOKEN` en Netlify, esa manda sobre la huella.
 
 ## Aportes de sueldo
 

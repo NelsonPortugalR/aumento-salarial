@@ -6,10 +6,11 @@ export default async req => {
   if (!validarReclamo(await leerJSON(req, 16384))) return json({ ok: false, error: 'datos_incompletos' }, 400);
   const now = new Date();
   const anio = limaDia(now).slice(0, 4);
-  const store = getStore({ name: 'reclamos', consistency: 'strong' });
+  const store = getStore('reclamos');
   const { blobs } = await store.list({ prefix: anio + '/' });
   let n = blobs.reduce((m, b) => Math.max(m, parseInt(b.key.slice(5), 10) || 0), 0) + 1;
-  // Cada número se reserva con una escritura que solo procede si la clave no existe: dos hojas nunca comparten número
+  // Cada número se reserva con una escritura que solo procede si la clave no existe: dos hojas nunca comparten número.
+  // Si la lista llega desactualizada, el número ya tomado falla y se prueba el siguiente.
   for (let i = 0; i < 25; i++, n++) {
     const { modified } = await store.set(`${anio}/${String(n).padStart(6, '0')}`, now.toISOString(), { onlyIfNew: true });
     if (modified) return json({ ok: true, numero: numeroHoja(anio, n), fecha: now.toISOString() });

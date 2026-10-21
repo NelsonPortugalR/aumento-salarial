@@ -21,7 +21,7 @@ const { default: aporte } = await import('./netlify/functions/aporte.mjs');
 const { default: reclamo } = await import('./netlify/functions/reclamo.mjs');
 const { default: panel } = await import('./netlify/functions/panel.mjs');
 const { default: limpieza } = await import('./netlify/functions/limpieza.mjs');
-const { claveEvento, leerClave, validarAporte, validarReclamo, numeroHoja, limaDia, limaMes } = await import('./netlify/lib/comun.mjs');
+const { claveEvento, leerClave, validarAporte, validarReclamo, numeroHoja, limaDia, limaMes, autorizado } = await import('./netlify/lib/comun.mjs');
 
 const post = (url, body) => new Request('https://pidelo.test' + url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body) });
 const get = (url, token) => new Request('https://pidelo.test' + url, { headers: token ? { authorization: 'Bearer ' + token } : {} });
@@ -52,6 +52,11 @@ ok(!('vence' in validarAporte(Object.assign(record('aaaaaa1111'), { vence: 'v3' 
 ok(validarReclamo({ nombre: 'Ana Pérez', documento: '12345678', email: 'ana@correo.pe', tipo: 'reclamo', detalle: 'No pude ver el kit.', pedido: 'Que me den acceso.' }), 'reclamo válido rechazado');
 ok(!validarReclamo({ nombre: 'Ana', documento: '1', email: 'sin-arroba', tipo: 'reclamo', detalle: 'x', pedido: 'y' }), 'reclamo sin correo aceptado');
 ok(numeroHoja('2026', 7) === '000007-2026', 'formato del número de hoja');
+const conToken = t => new Request('https://pidelo.test/', { headers: { authorization: 'Bearer ' + t } });
+const huella = (await import('node:crypto')).createHash('sha256').update('clave-larga').digest('hex');
+ok(autorizado(conToken('clave-larga'), '', huella) && !autorizado(conToken('otra'), '', huella), 'acceso por huella');
+ok(!autorizado(conToken('clave-larga'), 'distinta', huella), 'la variable PANEL_TOKEN manda sobre la huella');
+ok(!autorizado(conToken('x'), '', 'no-es-huella') && !autorizado(new Request('https://pidelo.test/'), '', huella), 'acceso sin huella válida o sin token');
 
 /* 2) Eventos y resumen */
 const send = async (s, e, d) => (await evento(post('/api/evento', { s, e, d }))).status;

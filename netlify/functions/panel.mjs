@@ -2,6 +2,7 @@
 import { getStore } from '@netlify/blobs';
 import { autorizado, diasHasta, json, leerClave, leerJSON, limaDia } from '../lib/comun.mjs';
 import { resumir } from '../lib/metricas.mjs';
+import { PANEL_HUELLA } from '../lib/acceso.mjs';
 
 const listar = async (store, prefix) => (await store.list({ prefix })).blobs.map(b => b.key);
 async function enLotes(items, n, fn) {
@@ -14,7 +15,7 @@ const archivo = (body, tipo, nombre) => new Response(body, {
 });
 
 export default async req => {
-  if (!autorizado(req, Netlify.env.get('PANEL_TOKEN'))) return json({ error: 'no_autorizado' }, 401);
+  if (!autorizado(req, Netlify.env.get('PANEL_TOKEN'), PANEL_HUELLA)) return json({ error: 'no_autorizado' }, 401);
   const url = new URL(req.url);
   const dias = Math.min(180, Math.max(1, parseInt(url.searchParams.get('dias'), 10) || 30));
   const rango = diasHasta(dias);

@@ -22,14 +22,15 @@ export async function leerJSON(req, max = 4096) {
   try { return JSON.parse(text); } catch (e) { return null; }
 }
 
-// Panel: token en la cabecera Authorization, comparado en tiempo constante
-export function autorizado(req, token) {
+// Panel: token en la cabecera Authorization, comparado en tiempo constante con la variable PANEL_TOKEN
+// o, si no existe, con la huella SHA-256 guardada en acceso.mjs
+export function autorizado(req, token, huella) {
   const h = req.headers.get('authorization') || '';
   const given = h.startsWith('Bearer ') ? h.slice(7).trim() : '';
-  if (!token || !given) return false;
+  if (!given) return false;
   const a = createHash('sha256').update(given).digest();
-  const b = createHash('sha256').update(token).digest();
-  return timingSafeEqual(a, b);
+  if (token) return timingSafeEqual(a, createHash('sha256').update(token).digest());
+  return /^[0-9a-f]{64}$/.test(huella || '') && timingSafeEqual(a, Buffer.from(huella, 'hex'));
 }
 
 /* ---------- Eventos del embudo ---------- */
