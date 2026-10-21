@@ -31,6 +31,14 @@ Funciones (`netlify/functions/`), con datos en Netlify Blobs (servidores en EE. 
 
 `/api/evento` y `/api/aporte` tienen límite de solicitudes por IP. El plan gratuito permite dos reglas.
 
+## Créditos de Netlify: cuidado
+
+En los planes por créditos, cada despliegue a producción que sale bien consume 15 créditos del equipo. Las vistas previas (Deploy Previews y despliegues de rama) no consumen. Si el saldo llega a cero, Netlify pausa todos los proyectos del equipo, no solo este: todos responden 503 "Usage exceeded" hasta que se compran créditos, se activa la recarga automática o empieza el siguiente ciclo. Por eso:
+
+- Junta los cambios y despliega a producción pocas veces; prueba en una vista previa.
+- Con el repositorio conectado, cada merge a la rama de producción es un despliegue de 15 créditos. El PR mensual de datos suma uno al mes.
+- Revisa el saldo en la sección de facturación del equipo (Usage / Billing) antes de una ronda de cambios.
+
 ## Cómo desplegar
 
 Recomendado: conectar el repositorio para que cada push despliegue solo. En Netlify, entra a Project configuration, luego a Build & deploy y a Link repository, y elige `NelsonPortugalR/aumento-salarial` con la rama de producción. El comando y la carpeta ya están en `netlify.toml`. Los PR de datos de cada mes tendrán su vista previa.
