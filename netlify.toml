@@ -1,0 +1,11 @@
+# Sitio en Netlify: la app y las páginas salen de build.sh (web/); las funciones viven en netlify/functions.
+[build]
+  command = "bash build.sh"
+  publish = "web"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "esbuild"

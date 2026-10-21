@@ -2,7 +2,7 @@
    INTERFAZ
    ============================================================ */
 const STORE_KEY = 'pidelo-bien-v2';
-const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, contribute: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null, recordSent: false });
+const FRESH = () => ({ view: 'test', stepId: 'puesto', answers: {}, contribute: false, kitIn: null, kitDraft: null, kit: null, polished: false, sim: null, moreRegions: false, netCalc: null, recordSent: false, recordId: '' });
 const S = Object.assign(FRESH(), { unlocked: false });
 const RT = { sample: null, downloads: null, isOwner: false, busy: false, ctl: null, landed: false, userActed: false, simText: '' };
 
@@ -11,6 +11,74 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const soles = n => 'S/\u00A0' + Math.round(n).toLocaleString('en-US');
 const soles2 = n => 'S/\u00A0' + Number(n).toFixed(2);
 const lowerFirstUI = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+
+function randomId() {
+  try {
+    const b = new Uint8Array(10);
+    crypto.getRandomValues(b);
+    return Array.from(b, x => (x % 36).toString(36)).join('');
+  } catch (e) {
+    return (Math.random().toString(36).slice(2) + '0000000000').slice(0, 10);
+  }
+}
+
+/* ---------- Precio (prueba A/B) ---------- */
+// Cada navegador ve siempre el mismo precio. La prueba corre solo si cada precio tiene su link de pago.
+const PRICE_KEY = 'pidelo-bien-precio';
+let OFFER = null;
+function offer() {
+  if (OFFER) return OFFER;
+  const test = CONFIG.priceTest || [];
+  let v = { price: CONFIG.price, payUrl: CONFIG.payUrl };
+  if (test.length > 1 && test.every(t => t.payUrl)) {
+    let i = -1;
+    try { const raw = localStorage.getItem(PRICE_KEY); if (raw != null) i = Number(raw); } catch (e) { /* sin almacenamiento */ }
+    if (!(i >= 0 && i < test.length)) {
+      i = Math.floor(Math.random() * test.length);
+      try { localStorage.setItem(PRICE_KEY, String(i)); } catch (e) { /* ignorar */ }
+    }
+    v = test[i];
+  }
+  OFFER = { price: v.price, payUrl: v.payUrl, variant: 'p' + Math.round(v.price * 100) };
+  return OFFER;
+}
+
+/* ---------- Medición anónima del embudo ---------- */
+// Un id aleatorio por pestaña, sin cookies. Nunca viajan respuestas, sueldo ni datos personales.
+const SID_KEY = 'pidelo-bien-sesion';
+const EV = { sid: '', once: {} };
+function sessionId() {
+  if (EV.sid) return EV.sid;
+  try {
+    EV.sid = sessionStorage.getItem(SID_KEY) || '';
+    if (!EV.sid) { EV.sid = randomId(); sessionStorage.setItem(SID_KEY, EV.sid); }
+  } catch (e) { EV.sid = EV.sid || randomId(); }
+  return EV.sid;
+}
+function track(ev, detail, once) {
+  if (!CONFIG.eventsUrl) return;
+  if (once) { if (EV.once[ev]) return; EV.once[ev] = true; }
+  try {
+    const body = JSON.stringify({ s: sessionId(), e: ev, d: detail ? String(detail) : '' });
+    if (navigator.sendBeacon && navigator.sendBeacon(CONFIG.eventsUrl, new Blob([body], { type: 'application/json' }))) return;
+    fetch(CONFIG.eventsUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  } catch (e) { /* la medición nunca interrumpe el test */ }
+}
+const SOURCES = [['facebook', 'facebook'], ['instagram', 'instagram'], ['linkedin', 'linkedin'], ['lnkd.in', 'linkedin'], ['whatsapp', 'whatsapp'], ['tiktok', 'tiktok'], ['youtube', 'youtube'], ['google', 'google'], ['bing', 'bing'], ['t.co', 'x'], ['twitter', 'x'], ['x.com', 'x']];
+function trafficSource() {
+  let src = 'directo';
+  try {
+    const q = new URLSearchParams(location.search);
+    const tag = q.get('utm_source') || q.get('ref');
+    if (tag) src = tag;
+    else if (document.referrer) {
+      const host = new URL(document.referrer).hostname.replace(/^www\./, '');
+      if (host && host !== location.hostname) { const hit = SOURCES.find(([k]) => host.includes(k)); src = hit ? hit[1] : host; }
+    }
+  } catch (e) { /* ignorar */ }
+  return src.toLowerCase().replace(/[^a-z0-9-]+/g, '_').slice(0, 24) || 'directo';
+}
+const zoneOf = pct => pct < 35 ? 'bajo' : pct < 70 ? 'rango' : 'alto';
 
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* almacenamiento no disponible */ } }
 function load() {
@@ -162,7 +230,7 @@ function viewResult() {
     </ul>`;
   const cta = S.unlocked
     ? `<button type="button" class="btn" data-action="go-kit">Ver mi kit</button>`
-    : `<button type="button" class="btn" data-action="open-paywall">Desbloquear mi kit por ${soles2(CONFIG.price)}</button><p class="fine">Pago único. Tu cifra exacta, el speech, las objeciones y el simulador.</p>`;
+    : `<button type="button" class="btn" data-action="open-paywall">Desbloquear mi kit por ${soles2(offer().price)}</button><p class="fine">Pago único. Tu cifra exacta, el speech, las objeciones y el simulador.</p>`;
   return `<section class="result">
     <div class="slip">
       <div class="slip-head"><span>Tu resultado</span><span>${esc(date)}</span></div>
@@ -187,8 +255,8 @@ function viewResult() {
       ${asked}
     </div>
     ${CONFIG.collectUrl ? (S.recordSent
-      ? '<p class="fine">Gracias: tu dato anónimo ya ayuda a afinar las bandas.</p>'
-      : '<div class="contribute"><p class="fine">¿Aportas tu sueldo, de forma anónima, para afinar las bandas de tu puesto? Se guarda sin nombre, DNI ni empresa.</p><button type="button" class="btn-sm" data-action="contribute">Sí, aportar mi dato</button></div>') : ''}
+      ? `<p class="fine">Gracias: tu dato anónimo ya ayuda a afinar las bandas.${S.recordId ? ` Si luego quieres retirarlo, escríbenos con este código: <b>${esc(S.recordId)}</b>.` : ''}</p>`
+      : `<div class="contribute"><p class="fine">¿Aportas tu sueldo, de forma anónima, para afinar las bandas de tu puesto? Se guarda sin nombre, DNI ni empresa${CONFIG.web ? ', en servidores de Netlify en Estados Unidos. <a href="/privacidad#aporte">Cómo lo usamos</a>' : ''}.</p><button type="button" class="btn-sm" data-action="contribute">Sí, aportar mi dato</button></div>`) : ''}
     <section class="block">
       <h3>Una objeción que vas a escuchar</h3>
       <p class="quote">“${esc(obj.q)}”</p>
@@ -218,7 +286,8 @@ function confidenceSentence(b) {
 function sendRecord(a, r) {
   if (S.recordSent || !S.contribute || !CONFIG.collectUrl) return;
   S.recordSent = true;
-  const rid = Math.random().toString(36).slice(2, 12);   // aleatorio: solo evita contar dos veces el mismo test
+  const rid = randomId();   // aleatorio: evita contar dos veces el mismo test y permite retirar el aporte
+  S.recordId = rid;
   const rec = Object.assign(Engine.responseRecord(Object.assign({ _rid: rid }, a), r), { consentimiento: CONFIG.consentVersion });
   try {
     fetch(CONFIG.collectUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec), keepalive: true }).catch(() => {});
@@ -270,7 +339,8 @@ function viewExit() {
 
 /* ---------- Muro de pago ---------- */
 function paywallHTML() {
-  const hasPay = !!CONFIG.payUrl, hasWa = !!CONFIG.whatsapp;
+  const o = offer();
+  const hasPay = !!o.payUrl, hasWa = !!CONFIG.whatsapp;
   const waText = encodeURIComponent('Hola, ya pagué el kit de Pídelo Bien. ¿Me envías mi código?');
   return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pay-title">
     <div class="sheet-head"><h2 id="pay-title" tabindex="-1">Tu kit para la reunión</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
@@ -281,10 +351,10 @@ function paywallHTML() {
       <li>Las objeciones más comunes, con frases que responden sin ceder.</li>
       <li>Un simulador para practicar con tu jefe, incluso cuando dice que no.</li>
     </ul>
-    <p class="price">${soles2(CONFIG.price)}</p>
-    <p class="fine">Pago único.</p>
-    ${hasPay ? `<a class="btn" href="${esc(CONFIG.payUrl)}" target="_blank" rel="noopener">Pagar ${soles2(CONFIG.price)} con Yape o tarjeta</a>` : ''}
-    ${hasWa ? `<a class="btn-ghost" href="https://wa.me/${esc(CONFIG.whatsapp)}?text=${waText}" target="_blank" rel="noopener">Ya pagué: pedir mi código por WhatsApp</a>` : ''}
+    <p class="price">${soles2(o.price)}</p>
+    <p class="fine">Pago único, incluye IGV.${CONFIG.web ? ' Al pagar aceptas los <a href="/terminos" target="_blank" rel="noopener">términos del servicio</a>.' : ''}</p>
+    ${hasPay ? `<a class="btn" href="${esc(o.payUrl)}" target="_blank" rel="noopener" data-action="pay">Pagar ${soles2(o.price)} con Yape o tarjeta</a>` : ''}
+    ${hasWa ? `<a class="btn-ghost" href="https://wa.me/${esc(CONFIG.whatsapp)}?text=${waText}" target="_blank" rel="noopener" data-action="wa">Ya pagué: pedir mi código por WhatsApp</a>` : ''}
     ${(!hasPay && !hasWa) ? '<p class="fine">Los pagos se habilitan en el lanzamiento. Si tienes un código de acceso, ingrésalo aquí.</p>' : ''}
     <label class="small-label" for="code">Tengo un código</label>
     <div class="code-row"><input id="code" autocomplete="off" autocapitalize="characters" placeholder="PB-XXXX"><button type="button" class="btn-sm" data-action="redeem">Desbloquear</button></div>
@@ -304,9 +374,11 @@ function privacyHTML() {
       <li>No pedimos tu nombre, tu DNI ni el nombre de tu empresa.</li>
       <li>Tu sueldo y tus respuestas se usan en tu navegador para calcular tu resultado. No se envían a ningún lado.</li>
       <li>Solo si tocas "Aportar mi dato", guardamos tus respuestas de forma anónima para afinar las bandas salariales.</li>
-      <li>Si usas las funciones con IA del kit, tus respuestas se envían a Claude para redactar el texto.</li>
+      ${CONFIG.web ? '<li>Medimos de forma anónima cuántas personas avanzan en cada paso, sin cookies, sin tus respuestas y sin tu sueldo.</li>' : ''}
+      ${CONFIG.web ? '' : '<li>Si usas las funciones con IA del kit, tus respuestas se envían a Claude para redactar el texto.</li>'}
       <li>Puedes borrar todo con "Hacer el test de nuevo".</li>
     </ul>
+    ${CONFIG.web ? '<p class="fine">Detalle completo en la <a href="/privacidad" target="_blank" rel="noopener">política de privacidad</a>.</p>' : ''}
     <button type="button" class="btn" data-action="close-modal">Entendido</button>
   </div></div>`;
 }
@@ -402,8 +474,8 @@ async function redeem() {
   if (!code) { err.textContent = 'Escribe tu código.'; return; }
   try {
     const h = await sha256Hex(code);
-    if (CONFIG.codeHashes.includes(h)) unlock();
-    else err.textContent = 'Ese código no es válido. Revisa que esté bien escrito.';
+    if (CONFIG.codeHashes.includes(h)) { track('code_ok'); unlock(); }
+    else { track('code_bad'); err.textContent = 'Ese código no es válido. Revisa que esté bien escrito.'; }
   } catch (e) {
     err.textContent = 'No se pudo validar el código en este navegador.';
   }
@@ -460,6 +532,7 @@ function buildKit() {
   const n = Engine.numbers(S.answers, r);
   S.kitIn = Object.assign({}, draft());
   S.kit = Kit.build(S.answers, r, n, S.kitIn, new Date());
+  track('kit_built', r.code);
   S.polished = false;
   S.sim = null;
   S.view = 'kit';
@@ -614,8 +687,9 @@ async function copyText(t, btn) {
 }
 function shareText() {
   const r = Engine.recommend(S.answers, new Date());
-  if (r.route || !r.gap) return 'Hice el test de Pídelo Bien para saber si me toca pedir aumento. ¿Y tú?';
-  return `Hice el test de Pídelo Bien: ${lowerFirstUI(gapSentence(r.gap)).replace('de tu perfil', 'de mi puesto')} ¿Y tú?`;
+  const link = CONFIG.web ? ' ' + location.origin + '/?ref=compartido' : '';
+  if (r.route || !r.gap) return 'Hice el test de Pídelo Bien para saber si me toca pedir aumento. ¿Y tú?' + link;
+  return `Hice el test de Pídelo Bien: ${lowerFirstUI(gapSentence(r.gap)).replace('de tu perfil', 'de mi puesto')} ¿Y tú?${link}`;
 }
 async function share(btn) {
   const text = shareText();
@@ -648,9 +722,23 @@ function syncCapabilityUI() {
     el.hidden = !show;
   });
 }
+// Fuera de claude.ai (versión web), el kit se descarga con un enlace del propio navegador
+function browserDownloads() {
+  if (typeof Blob !== 'function' || !window.URL || typeof URL.createObjectURL !== 'function') return null;
+  return {
+    save: async ({ filename, data }) => {
+      const url = URL.createObjectURL(new Blob([data], { type: 'text/plain;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.hidden = true;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      return { status: 'saved' };
+    }
+  };
+}
 function initRuntime() {
   const c = window.claude;
-  if (!c || typeof c.use !== 'function') return;
+  if (!c || typeof c.use !== 'function') { RT.downloads = browserDownloads(); syncCapabilityUI(); return; }
   c.use('sample').then(s => { RT.sample = s || null; syncCapabilityUI(); if (S.view === 'kit' && !S.sim) refreshSim(); }).catch(() => {});
   c.use('downloads').then(d => { RT.downloads = d || null; syncCapabilityUI(); }).catch(() => {});
   c.use('user').then(u => {
@@ -665,8 +753,13 @@ function goStep(delta) {
   const i = steps.findIndex(s => s.id === S.stepId);
   const j = i + delta;
   if (j < 0) return;
-  if (j >= steps.length) { S.view = 'result'; RT.landed = false; render(); window.scrollTo(0, 0); return; }
+  if (j >= steps.length) {
+    const r = Engine.recommend(S.answers, new Date());
+    if (!r.route) track('test_complete', `${r.code}.${zoneOf(r.pct)}`);
+    S.view = 'result'; RT.landed = false; render(); window.scrollTo(0, 0); return;
+  }
   S.stepId = steps[j].id;
+  if (delta > 0) track('step', S.stepId);
   render();
   const h = $('#q-title');
   if (h && RT.userActed) h.focus({ preventScroll: true });
@@ -674,9 +767,11 @@ function goStep(delta) {
 }
 
 function onPick(stepId, value) {
+  if (stepId === STEPS[0].id) track('test_start', '', true);
   S.answers[stepId] = value;
   if (stepId === 'region') S.moreRegions = false;
   if (stepId === 'contrato' && EXIT_ROUTES.includes(value)) {
+    track('exit_route', value);
     S.view = 'exit';
     render();
     window.scrollTo(0, 0);
@@ -698,9 +793,9 @@ document.addEventListener('click', e => {
     case 'pick': onPick(t.dataset.step, t.dataset.value); break;
     case 'back': goStep(-1); break;
     case 'salary-next': if (salaryOk()) goStep(1); break;
-    case 'privacy': openModal(privacyHTML(), 'priv-title'); break;
-    case 'method': openModal(methodHTML(), 'method-title'); break;
-    case 'contribute': S.contribute = true; sendRecord(S.answers, Engine.recommend(S.answers, new Date())); render(); break;
+    case 'privacy': track('privacy_view'); openModal(privacyHTML(), 'priv-title'); break;
+    case 'method': track('method_view'); openModal(methodHTML(), 'method-title'); break;
+    case 'contribute': track('contribute'); S.contribute = true; sendRecord(S.answers, Engine.recommend(S.answers, new Date())); render(); break;
     case 'more-regions': S.moreRegions = true; render(); break;
     case 'net-open': S.netCalc = { net: '', system: 'afp' }; render(); { const n = $('#neto'); if (n) n.focus(); } break;
     case 'net-system': if (S.netCalc) { S.netCalc.system = t.dataset.value; render(); } break;
@@ -709,14 +804,16 @@ document.addEventListener('click', e => {
       if (g) { S.answers.sueldo = String(g); S.netCalc = null; render(); }
       break;
     }
-    case 'open-paywall': openModal(paywallHTML(), 'pay-title'); break;
+    case 'open-paywall': track('paywall_view', offer().variant); openModal(paywallHTML(), 'pay-title'); break;
+    case 'pay': track('pay_click', offer().variant); break;
+    case 'wa': track('wa_click'); break;
     case 'overlay':
     case 'close-modal': closeModal(); break;
     case 'redeem': redeem(); break;
     case 'owner-unlock': if (RT.isOwner) unlock(); break;
-    case 'restart': resetTest(); break;
+    case 'restart': track('restart'); resetTest(); break;
     case 'fix-contract': S.view = 'test'; S.stepId = 'contrato'; delete S.answers.contrato; render(); window.scrollTo(0, 0); break;
-    case 'share': share(t); break;
+    case 'share': track('share'); share(t); break;
     case 'go-kit': S.view = S.kit ? 'kit' : 'interview'; render(); window.scrollTo(0, 0); break;
     case 'back-result': S.view = 'result'; render(); window.scrollTo(0, 0); break;
     case 'edit-kit': S.kitDraft = Object.assign({}, S.kitIn || {}); S.view = 'interview'; render(); window.scrollTo(0, 0); break;
@@ -727,9 +824,9 @@ document.addEventListener('click', e => {
       break;
     }
     case 'build-kit': buildKit(); break;
-    case 'copy': copyText(copyPayload(t.dataset.copy), t); break;
-    case 'download': download(); break;
-    case 'polish': polishKit(); break;
+    case 'copy': track('copy', t.dataset.copy); copyText(copyPayload(t.dataset.copy), t); break;
+    case 'download': track('download'); download(); break;
+    case 'polish': track('polish'); polishKit(); break;
     case 'stop-ai': if (RT.ctl) RT.ctl.abort(); break;
     case 'sim-style': simSetStyle(t.dataset.value); break;
     case 'sim-start': simStart(t.dataset.mode); break;

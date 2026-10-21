@@ -15,3 +15,5 @@ sed -e '/^<!doctype html>$/d' -e '/^<html lang=/d' -e '/^<head>$/d' -e '/^<\/hea
 # Capturador de avisos (artefacto con base de datos compartida)
 { cat herramientas/capturador_head.html herramientas/capturador_body.html; echo '<script>'; cat 10_data.js herramientas/capturador.js; echo '</script>'; } > dist/capturador-avisos.html
 { cat 10_data.js herramientas/capturador.js; } > "${TMPDIR:-/tmp}/capturador-all.js" && node --check "${TMPDIR:-/tmp}/capturador-all.js" && echo "CAPTURADOR OK"
+# Versión web (Netlify): app, páginas legales, Libro de Reclamaciones y panel en web/
+node web-src/build.mjs

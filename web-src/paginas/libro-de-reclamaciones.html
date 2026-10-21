@@ -1,0 +1,70 @@
+<!-- {"title": "Libro de Reclamaciones | Pídelo Bien", "description": "Libro de Reclamaciones virtual de Pídelo Bien, conforme al Código de Protección y Defensa del Consumidor.", "tag": "Libro de Reclamaciones", "script": "libro.js"} -->
+<h1>Libro de Reclamaciones</h1>
+<p>Conforme a lo establecido en el Código de Protección y Defensa del Consumidor, este sitio cuenta con un Libro de Reclamaciones virtual a tu disposición.</p>
+<dl class="prov">
+  <div><dt>Proveedor</dt><dd>{{razonSocial}}</dd></div>
+  <div><dt>RUC</dt><dd>{{ruc}}</dd></div>
+  <div><dt>Domicilio</dt><dd>{{domicilio}}</dd></div>
+  <div><dt>Hoja N.°</dt><dd>Se asigna al enviar</dd></div>
+</dl>
+
+<form class="lr-form" id="lr-form" name="libro-reclamaciones" method="POST" action="/reclamo-recibido" data-netlify="true" netlify-honeypot="bot-field">
+  <input type="hidden" name="subject" value="Libro de Reclamaciones: nueva hoja">
+  <input type="hidden" name="numero" value="">
+  <input type="hidden" name="fecha" value="">
+  <p class="hp" aria-hidden="true"><label>No llenes este campo <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
+
+  <fieldset>
+    <legend>1. Tus datos</legend>
+    <label class="field"><span>Nombre completo</span><input name="nombre" required maxlength="120" autocomplete="name"></label>
+    <div class="row2">
+      <label class="field"><span>Documento</span><select name="tipo_documento"><option>DNI</option><option>Carné de extranjería</option><option>Pasaporte</option></select></label>
+      <label class="field"><span>Número de documento</span><input name="documento" required maxlength="20" autocomplete="off"></label>
+    </div>
+    <label class="field"><span>Domicilio</span><input name="domicilio" required maxlength="200" autocomplete="street-address"></label>
+    <div class="row2">
+      <label class="field"><span>Teléfono</span><input name="telefono" type="tel" maxlength="20" autocomplete="tel"></label>
+      <label class="field"><span>Correo electrónico</span><input name="email" type="email" required maxlength="120" autocomplete="email"></label>
+    </div>
+    <label class="check"><input type="checkbox" name="menor" value="Sí"><span>Soy menor de edad</span></label>
+    <label class="field" id="lr-apoderado" hidden><span>Nombre de tu madre, padre o apoderado</span><input name="apoderado" maxlength="120"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Lo que contrataste</legend>
+    <div class="radios">
+      <label class="radio"><input type="radio" name="bien" value="Servicio" checked>Servicio</label>
+      <label class="radio"><input type="radio" name="bien" value="Producto">Producto</label>
+    </div>
+    <label class="field"><span>Descripción</span><input name="descripcion" maxlength="200" value="Kit para negociar sueldo de Pídelo Bien"></label>
+    <label class="field"><span>Monto reclamado en soles</span><input name="monto" maxlength="12" inputmode="decimal"><small>Déjalo vacío si no reclamas un monto.</small></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Tu reclamo o queja</legend>
+    <div class="radios">
+      <label class="radio"><input type="radio" name="tipo" value="reclamo" checked>Reclamo</label>
+      <label class="radio"><input type="radio" name="tipo" value="queja">Queja</label>
+    </div>
+    <p class="fine"><span class="label">Reclamo:</span> disconformidad con el producto o el servicio. <span class="label">Queja:</span> disconformidad que no se relaciona con el producto o el servicio, o malestar con la atención.</p>
+    <label class="field"><span>Detalle</span><textarea name="detalle" required maxlength="4000"></textarea></label>
+    <label class="field"><span>Tu pedido</span><textarea name="pedido" required maxlength="2000"></textarea><small>Qué solución esperas.</small></label>
+  </fieldset>
+
+  <p class="fine">Usamos estos datos solo para atender tu reclamo, como exige la ley. Más detalle en la <a href="/privacidad#reclamos">política de privacidad</a>.</p>
+  <button type="submit" class="btn">Enviar hoja de reclamación</button>
+  <p class="err" id="lr-err" role="alert"></p>
+  <p class="fine">Te responderemos al correo que indiques en un plazo máximo de 15 días hábiles. La formulación del reclamo no impide acudir a otras vías de solución de controversias ni es requisito previo para interponer una denuncia ante el INDECOPI.</p>
+</form>
+
+<section class="constancia" id="lr-constancia" hidden>
+  <h2 tabindex="-1" id="lr-ok">Recibimos tu hoja de reclamación</h2>
+  <p>Guarda esta constancia. Te responderemos al correo que indicaste en un plazo máximo de 15 días hábiles.</p>
+  <div class="num main"><span class="k">Hoja N.°</span><span class="v" id="lr-numero"></span></div>
+  <dl id="lr-datos"></dl>
+  <p class="fine">Observaciones y acciones del proveedor: se registran al responder tu reclamo.</p>
+  <div class="tools no-print">
+    <button type="button" class="btn-sm" id="lr-print">Imprimir o guardar en PDF</button>
+    <button type="button" class="btn-sm" id="lr-download">Descargar constancia</button>
+  </div>
+</section>

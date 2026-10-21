@@ -1,0 +1,38 @@
+<!-- {"title": "Panel | Pídelo Bien", "description": "Panel interno de validación.", "tag": "Panel interno", "script": "panel.js", "wide": true, "private": true} -->
+<div class="viz">
+  <h1 class="h1-sm">Panel de validación</h1>
+  <p class="note">Cada sesión es una pestaña del navegador, sin datos personales. Días en hora de Lima.</p>
+
+  <section id="p-login" hidden>
+    <p>Ingresa el token del panel. Queda guardado solo en este navegador.</p>
+    <form class="token-row" id="p-token-form">
+      <input id="p-token" type="password" autocomplete="off" placeholder="Token del panel" aria-label="Token del panel">
+      <button class="btn-sm" type="submit">Entrar</button>
+    </form>
+    <p class="err" id="p-err" role="alert"></p>
+  </section>
+
+  <section id="p-main" hidden>
+    <div class="filters">
+      <div class="seg" id="p-dias" role="group" aria-label="Periodo">
+        <button type="button" data-dias="7" aria-pressed="false">7 días</button>
+        <button type="button" data-dias="30" aria-pressed="true">30 días</button>
+        <button type="button" data-dias="90" aria-pressed="false">90 días</button>
+      </div>
+      <button type="button" class="btn-sm" id="p-refresh">Actualizar</button>
+      <span class="note" id="p-range" aria-live="polite"></span>
+    </div>
+    <p class="err" id="p-main-err" role="alert"></p>
+    <div id="p-body"></div>
+    <section class="card" aria-labelledby="p-exp-title">
+      <h2 id="p-exp-title">Descargas</h2>
+      <p class="sub">Los aportes salen en el formato que lee <code>data/pipeline/04_responses.py</code>: guárdalos en <code>data/private/respuestas/</code>.</p>
+      <div class="exports">
+        <button type="button" class="btn-sm" data-export="aportes">Aportes (JSONL)</button>
+        <button type="button" class="btn-sm" data-export="eventos">Eventos del periodo (CSV)</button>
+      </div>
+    </section>
+    <p><button type="button" class="link" id="p-logout">Salir en este navegador</button></p>
+  </section>
+  <div class="tip" id="p-tip" hidden></div>
+</div>

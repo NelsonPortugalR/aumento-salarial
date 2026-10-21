@@ -7,8 +7,22 @@ const CONFIG = {
   price: 29.90,
   payUrl: '',        // Link de pago (Culqi, Mercado Pago u otro). Vacío = sin botón de pago.
   whatsapp: '',      // WhatsApp para pedir el código, formato 51XXXXXXXXX. Vacío = sin botón.
+  // Prueba A/B de precio: se activa sola cuando cada precio tiene su propio link de pago.
+  priceTest: [
+    { price: 29.90, payUrl: '' },
+    { price: 49.90, payUrl: '' }
+  ],
   collectUrl: '',    // Endpoint que recibe el registro anónimo de cada test (POST JSON). Vacío = no se envía nada.
+  eventsUrl: '',     // Endpoint de medición anónima del embudo (POST JSON). Vacío = no se mide nada.
   consentVersion: '2026-10',
+  // Datos del proveedor para términos, privacidad y Libro de Reclamaciones (web)
+  legal: {
+    razonSocial: '',
+    ruc: '',
+    domicilio: '',
+    correo: '',
+    registro: ''     // código de inscripción del banco de datos ante la Autoridad Nacional de Protección de Datos Personales
+  },
   rmv: 1230,         // RMV desde el 1 de octubre de 2026 (D.S. 015-2026-TR)
   annualFactor: 15.35, // 12 sueldos + 2 gratificaciones + bonificación extraordinaria + CTS (régimen general)
   annualFactorSmall: 13.59, // pequeña empresa REMYPE: 12 + media grati dos veces + bonificación + media CTS

@@ -271,6 +271,7 @@ function simSetStyle(id) {
 function simStart(mode) {
   const useAI = mode === 'ia' && !!RT.sample;
   const style = (S.kitIn && S.kitIn.estilo) || 'cercano';
+  track('sim_start', (useAI ? 'ia' : 'guiada') + '.' + style);
   S.sim = { mode: useAI ? 'ia' : 'guiada', style, turns: [], bossIdx: 0, done: false, pending: false, feedback: null, status: '' };
   S.sim.turns.push({ role: 'coach', text: 'Empieza tú: abre la reunión con tu aporte y haz tu pedido.' });
   save();
@@ -378,3 +379,4 @@ load();
 if (S.sim && S.sim.pending) S.sim.pending = false;
 render();
 initRuntime();
+track('visit', `${offer().variant}.${trafficSource()}.${window.innerWidth < 768 ? 'm' : 'd'}`, true);
