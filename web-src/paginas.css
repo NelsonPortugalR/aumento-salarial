@@ -9,6 +9,17 @@ a.brand{color:var(--ink)}
 .doc ul,.doc ol{padding-left:1.25em}
 .doc li{margin:6px 0}
 .doc .updated{font-size:.88rem;color:var(--ink-2)}
+.migas{font-size:.86rem;color:var(--ink-2);margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+.migas .sep{color:var(--rule)}
+.migas a{color:var(--ink-2)}
+.doc .btn{max-width:26rem}
+.banda-niveles td b{font-family:var(--font-display);font-size:1.02rem}
+.sueldos-lista{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+@media (min-width:640px){.sueldos-lista{grid-template-columns:1fr 1fr}}
+.sueldos-lista a{display:flex;justify-content:space-between;gap:12px;align-items:baseline;border:1.5px solid var(--rule);border-radius:12px;padding:13px 16px;text-decoration:none;transition:border-color .12s ease,box-shadow .12s ease}
+.sueldos-lista a:hover{border-color:var(--ink);box-shadow:0 3px 14px var(--shadow)}
+.sueldos-lista b{font-family:var(--font-display)}
+.sueldos-lista span{font-size:.86rem;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
 .doc .quote-box{background:var(--surface);border-radius:12px;padding:12px 16px}
 .pendiente{background:var(--wait-soft);border-radius:4px;padding:0 5px;font-size:.92em}
 

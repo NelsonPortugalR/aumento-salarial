@@ -1,0 +1,105 @@
+<style>
+.home-extra{margin-top:44px}
+.home-extra section{border-top:1px solid var(--rule);padding:30px 0 6px}
+.home-extra h2{font-size:clamp(1.35rem,4.8vw,1.7rem)}
+.home-extra .sub{color:var(--ink-2);margin:8px 0 0;max-width:34rem}
+.pasos{display:grid;grid-template-columns:1fr;gap:12px;margin:18px 0 0;padding:0;list-style:none;counter-reset:p}
+@media (min-width:720px){.pasos{grid-template-columns:repeat(3,1fr)}}
+.pasos li{position:relative;background:var(--surface);border-radius:14px;padding:18px 16px 16px 16px}
+.pasos li::before{counter-increment:p;content:counter(p);display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--on-ink);font-family:var(--font-display);font-weight:700;margin-bottom:10px}
+.pasos b{display:block;font-family:var(--font-display);font-size:1.05rem;margin-bottom:4px}
+.pasos p{margin:0;font-size:.95rem;color:var(--ink-2)}
+.duo{display:grid;grid-template-columns:1fr;gap:12px;margin-top:18px}
+@media (min-width:720px){.duo{grid-template-columns:1fr 1fr}}
+.duo .col{border:1.5px solid var(--rule);border-radius:14px;padding:18px 16px}
+.duo .col.kit{border-color:var(--ink);box-shadow:0 10px 26px var(--shadow)}
+.duo h3{font-size:1.05rem}
+.duo .precio-tag{display:inline-block;font-size:.8rem;font-weight:700;border:1px solid var(--rule);border-radius:999px;padding:2px 10px;margin-left:8px;color:var(--ink-2);vertical-align:2px}
+.duo ul{margin:10px 0 0;padding:0;list-style:none}
+.duo li{position:relative;padding:5px 0 5px 24px;font-size:.95rem}
+.duo li::before{content:"";position:absolute;left:2px;top:.85em;width:12px;height:7px;border-left:2.5px solid var(--go);border-bottom:2.5px solid var(--go);transform:rotate(-45deg)}
+.fuentes-nota{background:var(--surface);border-radius:14px;padding:16px 18px;margin-top:18px}
+.fuentes-nota p{margin:.45em 0;font-size:.95rem}
+.guias-lista{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+@media (min-width:720px){.guias-lista{grid-template-columns:1fr 1fr}}
+.guias-lista a{display:block;border:1.5px solid var(--rule);border-radius:12px;padding:14px 16px;text-decoration:none;transition:border-color .12s ease,box-shadow .12s ease}
+.guias-lista a:hover{border-color:var(--ink);box-shadow:0 3px 14px var(--shadow)}
+.guias-lista b{display:block;font-family:var(--font-display)}
+.guias-lista span{font-size:.88rem;color:var(--ink-2)}
+.faq details{border-bottom:1px dashed var(--rule)}
+.faq details:last-of-type{border-bottom:0}
+.faq summary{cursor:pointer;padding:14px 4px;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--font-display);font-weight:700;color:var(--ink-2);flex:none}
+.faq details[open] summary::after{content:"–"}
+.faq .faq-a{margin:0 0 16px;padding:0 4px;color:var(--ink-2)}
+.cta-final{text-align:center;padding-bottom:26px}
+.cta-final .btn{max-width:22rem;margin:20px auto 8px}
+.cta-final .sub{margin-left:auto;margin-right:auto}
+</style>
+<div class="home-extra wrap">
+  <section aria-labelledby="hx-como">
+    <h2 id="hx-como">Cómo funciona</h2>
+    <ol class="pasos">
+      <li><b>Responde 13 preguntas</b><p>Puesto, nivel, sector, región, tamaño de empresa, contrato y tu sueldo bruto. Sin nombre, sin DNI, sin correo.</p></li>
+      <li><b>Ve tu posición y tu momento</b><p>Dónde está tu sueldo frente a la banda de tu perfil, si es buen momento para pedir y qué tan sólido es tu caso.</p></li>
+      <li><b>Llévate el plan y practica</b><p>El kit arma tus cifras, tu speech y tu cronograma, y te deja practicar las objeciones antes de la reunión real.</p></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="hx-recibes">
+    <h2 id="hx-recibes">Lo que recibes</h2>
+    <div class="duo">
+      <div class="col">
+        <h3>Gratis, al terminar el test</h3>
+        <ul>
+          <li>Tu posición frente a la mediana de tu perfil</li>
+          <li>Si es buen momento para pedir, y por qué</li>
+          <li>Lo que juega a favor y en contra de tu caso</li>
+          <li>Una objeción típica de tu situación, resuelta</li>
+          <li>Calculadora de sueldo bruto desde lo que te depositan</li>
+        </ul>
+      </div>
+      <div class="col kit">
+        <h3>Con el kit<span class="precio-tag">pago único</span></h3>
+        <ul>
+          <li>Cuánto pedir, cuánto esperar y tu piso, en soles</li>
+          <li>Plan con fechas: antes, durante y después</li>
+          <li>Mensaje para pedir la reunión y speech completo</li>
+          <li>Tu maletín de logros y respuestas a objeciones</li>
+          <li>Simulador para practicar con cinco estilos de jefe</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="hx-datos">
+    <h2 id="hx-datos">Hecho con datos, no con promedios de internet</h2>
+    <div class="fuentes-nota">
+      <p>Las bandas salen de un modelo propio sobre la <b>Encuesta Nacional de Hogares del INEI (2022-2025)</b>, calibrado con guías salariales 2026 basadas en planillas de miles de empresas peruanas.</p>
+      <p>Cada resultado dice con cuántos datos se calculó y su nivel de confianza. Cuando una combinación tiene pocos datos, te lo decimos en vez de inventar precisión.</p>
+      <p>Es una referencia de mercado, no asesoría legal ni una promesa de aumento.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="hx-guias">
+    <h2 id="hx-guias">Guías para tu caso</h2>
+    <ul class="guias-lista">
+      <li><a href="/como-pedir-aumento-de-sueldo"><b>Cómo pedir un aumento de sueldo</b><span>Cuándo pedir, cuánto pedir y qué decir, paso a paso.</span></a></li>
+      <li><a href="/pretension-salarial"><b>Pretensión salarial</b><span>Qué responder cuando te preguntan cuánto quieres ganar.</span></a></li>
+      <li><a href="/renovacion-de-contrato"><b>Renovación de contrato a plazo fijo</b><span>Cuándo y cómo negociar el ajuste antes de firmar.</span></a></li>
+      <li><a href="/sueldos/"><b>Sueldos por puesto en el Perú</b><span>Bandas de referencia 2026 por área y nivel.</span></a></li>
+    </ul>
+  </section>
+
+  <section class="faq" aria-labelledby="hx-faq">
+    <h2 id="hx-faq">Preguntas frecuentes</h2>
+    <!--FAQ-->
+  </section>
+
+  <section class="cta-final" aria-label="Empezar el test">
+    <h2>Sal de la duda hoy</h2>
+    <p class="sub">Son 90 segundos y no te pedimos ni el nombre.</p>
+    <a class="btn" href="#top">Hacer el test gratis</a>
+  </section>
+</div>

@@ -51,10 +51,29 @@ Ojo: el despliegue que construye en Netlify a partir de la carpeta local, como e
 rm -rf /tmp/pb && mkdir /tmp/pb && git archive HEAD | tar -x -C /tmp/pb
 ```
 
+## SEO y Google
+
+El sitio ya está listo para posicionar, pero **duerme hasta que actives la indexación** (hoy toda página sale con `noindex` para no indexar el dominio provisional `netlify.app`).
+
+Qué ya está hecho:
+
+- Contenido rastreable en la portada (cómo funciona, qué recibes, fuentes, FAQ) además del test.
+- Tres guías: `/como-pedir-aumento-de-sueldo`, `/pretension-salarial` y `/renovacion-de-contrato`.
+- `/sueldos/` con una página por puesto (20), generada del mismo modelo del test en cada despliegue: el PR mensual de datos las actualiza solas.
+- En cada página: `canonical`, título y descripción propios, Open Graph con imagen, datos estructurados (FAQ en la portada, Article en las guías, migas en sueldos) y enlaces internos cruzados.
+- `sitemap.xml` con las 28 rutas y `robots.txt` que lo anuncia.
+
+Para encender el SEO, en este orden:
+
+1. Conecta el dominio propio (abajo) y agrega la variable `INDEXAR=1` (alcance Builds); vuelve a desplegar. Eso quita el `noindex`, abre `robots.txt` y pone el dominio en canonicals y sitemap (usa la variable `URL` de Netlify).
+2. Date de alta en Google Search Console (https://search.google.com/search-console), verifica el dominio por DNS y envía `https://tudominio/sitemap.xml`.
+3. Las primeras páginas suelen indexarse en días; posicionar consultas como "cuánto gana un contador en Perú" toma semanas y mejora con enlaces: comparte las guías en LinkedIn y tu newsletter con el dominio final.
+4. No actives `INDEXAR` antes del dominio: indexar `pidelo-bien.netlify.app` reparte señales que luego hay que migrar.
+
 ## Dominio propio
 
 1. En Netlify, Domain management y luego Add a domain; sigue los pasos de DNS. El dominio `.netlify.app` redirige solo al nuevo.
-2. Agrega la variable `INDEXAR=1` (alcance Builds) y vuelve a desplegar: se quita el noindex y `robots.txt` deja pasar a los buscadores.
+2. Agrega la variable `INDEXAR=1` (alcance Builds) y vuelve a desplegar: se quita el noindex, `robots.txt` deja pasar a los buscadores y el sitemap queda en el dominio nuevo (ver la sección SEO y Google).
 3. La imagen para compartir y las URL usan la variable `URL` que Netlify pone al construir, así que se actualizan solas.
 4. Completa `CONFIG.legal` (razón social, RUC, domicilio, correo y código de inscripción del banco de datos).
 

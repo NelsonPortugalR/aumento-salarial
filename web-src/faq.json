@@ -1,0 +1,26 @@
+[
+  {
+    "q": "¿Cuánto cuesta?",
+    "a": "El test y tu resultado son gratis, sin registro. El kit para preparar la conversación es un pago único; el precio exacto, con IGV incluido, lo ves antes de pagar."
+  },
+  {
+    "q": "¿De dónde salen las cifras?",
+    "a": "De un modelo propio construido con la Encuesta Nacional de Hogares del INEI (2022-2025) y calibrado con guías salariales de 2026 basadas en planillas reales. Cada resultado muestra su nivel de confianza y con cuántos datos se calculó."
+  },
+  {
+    "q": "¿Guardan mi sueldo?",
+    "a": "No. Tu sueldo y tus respuestas se procesan en tu navegador para calcular tu resultado. Solo si tocas \"Sí, aportar mi dato\" guardamos tus respuestas de forma anónima, sin nombre, DNI ni empresa, para afinar las bandas."
+  },
+  {
+    "q": "¿Qué incluye el kit?",
+    "a": "Tus tres cifras (cuánto pedir, cuánto esperar y tu piso), un plan con fechas para antes, durante y después de la reunión, el mensaje para pedir la cita, tu speech, tu maletín de logros, respuestas a las objeciones más comunes y un simulador para practicar con cinco estilos de jefe."
+  },
+  {
+    "q": "¿Sirve si tengo contrato a plazo fijo?",
+    "a": "Sí: el test considera cuándo vence tu contrato y te dice si conviene negociar en la renovación. Si trabajas en el sector público, en construcción civil o con recibos por honorarios, te lo decimos con claridad en vez de darte un plan que no aplica."
+  },
+  {
+    "q": "¿Me garantizan el aumento?",
+    "a": "No, y desconfía de quien te lo prometa. Esto es una referencia de mercado y un método para pedir bien, con argumentos y práctica. La decisión siempre es de tu empleador."
+  }
+]

@@ -124,6 +124,9 @@ function render() {
   else if (S.view === 'kit') html = viewKit();
   else html = viewTest();
   $('#app').innerHTML = html;
+  // Las secciones informativas de la portada (versión web) solo se ven en la primera pregunta
+  const hx = document.querySelector('.home-extra');
+  if (hx) hx.hidden = !(S.view === 'test' && S.stepId === visibleSteps()[0].id);
   syncCapabilityUI();
   save();
 }
@@ -134,7 +137,8 @@ function viewTest() {
   if (idx < 0) { idx = 0; S.stepId = steps[0].id; }
   const step = steps[idx];
   const hero = idx === 0
-    ? `<section class="hero"><h1>¿Te sumaron funciones y el sueldo sigue igual?</h1><p class="lede">En 90 segundos sabes si estás bajo el mercado, si es buen momento para pedir y por cuánto.</p></section>`
+    ? `<section class="hero"><h1>¿Te sumaron funciones y el sueldo sigue igual?</h1><p class="lede">En 90 segundos sabes si estás bajo el mercado, si es buen momento para pedir y por cuánto.</p>
+      <ul class="hero-points"><li>Gratis y anónimo</li><li>13 preguntas, 90 segundos</li><li>Con datos del INEI y guías 2026</li></ul></section>`
     : '';
   const bars = steps.map((s, i) => `<span class="${i <= idx ? 'on' : ''}"></span>`).join('');
   const body = step.type === 'salary' ? salaryBlock() : optionsBlock(step);

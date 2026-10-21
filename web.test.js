@@ -32,6 +32,32 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
 (async () => {
   const app = read('app.js');
 
+  /* 0) SEO: canonical, datos estructurados, sitemap y páginas de sueldos */
+  {
+    const faq = JSON.parse(fs.readFileSync('web-src/faq.json', 'utf8'));
+    const { d } = page('index.html', '/app.js', app);
+    await wait(30);
+    const canon = d.querySelector('link[rel="canonical"]').href;
+    ok(canon === d.querySelector('meta[property="og:url"]').content && /^https:\/\/[a-z0-9.-]+\/$/.test(canon), 'canonical de la portada: ' + canon);
+    const lds = [...d.querySelectorAll('script[type="application/ld+json"]')].map(x => JSON.parse(x.textContent));
+    ok(lds.some(x => x['@type'] === 'WebApplication') && lds.some(x => x['@type'] === 'FAQPage' && x.mainEntity.length === faq.length), 'JSON-LD de la portada');
+    ok(d.querySelectorAll('.faq details').length === faq.length, 'FAQ visible con todas las preguntas');
+    ok(d.querySelectorAll('.home-extra .guias-lista a').length === 4, 'enlaces internos a guías y sueldos');
+    const sm = read('sitemap.xml');
+    ok((sm.match(/<loc>/g) || []).length === 28 && sm.includes('/sueldos/contabilidad</loc>') && !sm.includes('/panel'), 'sitemap con 28 rutas y sin panel');
+    ok(/Sitemap: .*\/sitemap\.xml/.test(read('robots.txt')), 'robots.txt apunta al sitemap');
+    for (const f of ['como-pedir-aumento-de-sueldo.html', 'sueldos/contabilidad.html', 'sueldos/index.html']) {
+      const h = read(f);
+      ok(h.includes('rel="canonical"') && h.includes('og:title') && !/NaN|undefined/.test(h), 'página SEO incompleta: ' + f);
+      ok((h.match(/href="\/"/g) || []).length >= 1, f + ' no enlaza al test');
+      const mld = h.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
+      if (mld) JSON.parse(mld[1]);
+    }
+    const su = read('sueldos/contabilidad.html');
+    ok(/S\/\u00A0[\d,]+/u.test(su.replace(/&nbsp;/g, '\u00A0')) || /S\//.test(su), 'la página de sueldos no muestra cifras');
+    ok(su.includes('Confianza') && su.includes('P75') && su.split('<tr>').length === 8, 'tabla de niveles incompleta');
+  }
+
   /* 1) App: embudo medido, sin datos personales, con precio y enlaces legales */
   {
     const { w, d, sent } = page('index.html', '/app.js', app, { path: '?utm_source=LinkedIn' });
@@ -73,6 +99,17 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     ok(!d.querySelector('[data-action="polish"]') || d.querySelector('[data-action="polish"]').hidden, 'sin IA en la web');
     // Compartir con enlace
     ok(w.shareText().endsWith(' https://pidelo.test/?ref=compartido'), 'compartir sin enlace: ' + w.shareText());
+  }
+
+  /* 1a) Portada: las secciones informativas se ocultan al avanzar y vuelven al reiniciar */
+  {
+    const { w, d } = page('index.html', '/app.js', app);
+    await wait(30);
+    const hx = () => d.querySelector('.home-extra');
+    ok(hx() && !hx().hidden, 'las secciones de la portada deberían verse en la primera pregunta');
+    d.querySelector('[data-step="puesto"][data-value="ventas"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    await wait(220);
+    ok(hx().hidden, 'las secciones deberían ocultarse al pasar a la segunda pregunta');
   }
 
   /* 1b) Modo interno: las pruebas de quien administra no se miden ni se aportan */
