@@ -1,6 +1,6 @@
 # Resultados del modelo de bandas
 
-Generado por `data/pipeline/02_model.py` el 2026-10-04. No editar a mano.
+Generado por `data/pipeline/02_model.py` el 2026-10-21. No editar a mano.
 
 Celda de referencia: Lima Metropolitana, empresa de 101 a 500 personas, 3 a 5 años en el puesto, puesto y sector promedio; sueldo bruto mensual más variable promedio. Cifras en soles de 2026-10.
 
