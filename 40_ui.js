@@ -30,7 +30,7 @@ function offer() {
   if (OFFER) return OFFER;
   const test = CONFIG.priceTest || [];
   let v = { price: CONFIG.price, payUrl: CONFIG.payUrl };
-  if (test.length > 1 && test.every(t => t.payUrl)) {
+  if (test.length > 1 && ((CONFIG.priceTestOn && CONFIG.checkout) || test.every(t => t.payUrl))) {
     let i = -1;
     try { const raw = localStorage.getItem(PRICE_KEY); if (raw != null) i = Number(raw); } catch (e) { /* sin almacenamiento */ }
     if (!(i >= 0 && i < test.length)) {
@@ -102,8 +102,8 @@ function load() {
   } catch (e) { /* ignorar */ }
 }
 function resetTest() {
-  const keepUnlock = S.unlocked;
-  Object.assign(S, FRESH(), { unlocked: keepUnlock });
+  const keepUnlock = S.unlocked, keepCode = S.accessCode;
+  Object.assign(S, FRESH(), { unlocked: keepUnlock, accessCode: keepCode });
   RT.landed = false;
   render();
   window.scrollTo(0, 0);
@@ -357,7 +357,8 @@ function viewExit() {
 /* ---------- Muro de pago ---------- */
 function paywallHTML() {
   const o = offer();
-  const hasPay = !!o.payUrl, hasWa = !!CONFIG.whatsapp;
+  const card = RT.pago === true;
+  const hasPay = !card && !!o.payUrl, hasWa = !card && !!CONFIG.whatsapp;
   const waText = encodeURIComponent('Hola, ya pagué el kit de Pídelo Bien. ¿Me envías mi código?');
   return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pay-title">
     <div class="sheet-head"><h2 id="pay-title" tabindex="-1">Tu kit para la reunión</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
@@ -370,16 +371,17 @@ function paywallHTML() {
     </ul>
     <p class="price">${soles2(o.price)}</p>
     <p class="fine">Pago único, incluye IGV.${CONFIG.web ? ' Al pagar aceptas los <a href="/terminos" target="_blank" rel="noopener">términos del servicio</a>.' : ''}</p>
+    ${card ? `<button type="button" class="btn" data-action="checkout">Pagar ${soles2(o.price)} con tarjeta</button><p class="fine">Pagas en la página segura de Mercado Pago y vuelves aquí con tu kit desbloqueado. No vemos ni guardamos los datos de tu tarjeta.</p><p class="err" id="pay-err" role="alert"></p>` : ''}
     ${hasPay ? `<a class="btn" href="${esc(o.payUrl)}" target="_blank" rel="noopener" data-action="pay">Pagar ${soles2(o.price)} con Yape o tarjeta</a>` : ''}
     ${hasWa ? `<a class="btn-ghost" href="https://wa.me/${esc(CONFIG.whatsapp)}?text=${waText}" target="_blank" rel="noopener" data-action="wa">Ya pagué: pedir mi código por WhatsApp</a>` : ''}
-    ${(!hasPay && !hasWa) ? '<p class="fine">Los pagos se habilitan en el lanzamiento. Si tienes un código de acceso, ingrésalo aquí.</p>' : ''}
+    ${(!card && !hasPay && !hasWa) ? '<p class="fine">Los pagos se habilitan en el lanzamiento. Si tienes un código de acceso, ingrésalo aquí.</p>' : ''}
     <label class="small-label" for="code">Tengo un código</label>
-    <div class="code-row"><input id="code" autocomplete="off" autocapitalize="characters" placeholder="PB-XXXX"><button type="button" class="btn-sm" data-action="redeem">Desbloquear</button></div>
+    <div class="code-row"><input id="code" autocomplete="off" autocapitalize="characters" placeholder="PB-XXXX-XXXX"><button type="button" class="btn-sm" data-action="redeem">Desbloquear</button></div>
     <p class="err" id="code-err" role="alert"></p>
     <div class="owner" data-needs="owner" hidden>
       <p class="fine">Solo tú ves esto, como dueño de la página.</p>
       <button type="button" class="btn-ghost" data-action="owner-unlock">Ver el kit sin pagar</button>
-      ${(!hasPay || !hasWa) ? '<p class="fine">Antes de lanzar, configura tu link de pago y tu WhatsApp en CONFIG, al inicio del código.</p>' : ''}
+      ${(!card && (!hasPay || !hasWa)) ? '<p class="fine">Antes de lanzar, configura tu link de pago y tu WhatsApp en CONFIG, al inicio del código.</p>' : ''}
     </div>
   </div></div>`;
 }
@@ -491,7 +493,13 @@ async function redeem() {
   if (!code) { err.textContent = 'Escribe tu código.'; return; }
   try {
     const h = await sha256Hex(code);
-    if (CONFIG.codeHashes.includes(h)) { track('code_ok'); unlock(); }
+    let ok = CONFIG.codeHashes.includes(h);
+    if (!ok && CONFIG.checkout && /^PB-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) {
+      const r = await fetch('/api/codigo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: code }) });
+      ok = r.ok;
+      if (ok) S.accessCode = code;
+    }
+    if (ok) { track('code_ok'); unlock(); }
     else { track('code_bad'); err.textContent = 'Ese código no es válido. Revisa que esté bien escrito.'; }
   } catch (e) {
     err.textContent = 'No se pudo validar el código en este navegador.';
@@ -569,6 +577,7 @@ function viewKit() {
     <h1 class="h1-sm">Tu kit para la reunión</h1>
     <p class="lede">${k.cuando ? 'Úsalo ' + esc(lowerFirstUI(k.cuando)) : 'Léelo completo una vez y practica el speech en voz alta antes de pedir la reunión.'}</p>
     ${k.urgent ? `<p class="warn">${esc(k.urgent)}</p>` : ''}
+    ${S.accessCode ? `<p class="fine">Tu código de acceso: <b>${esc(S.accessCode)}</b>. Úsalo para abrir el kit en otro equipo.</p>` : ''}
     <div class="kit-tools no-print">
       <button type="button" class="btn-sm" data-action="polish" data-needs="sample" hidden>${S.polished ? 'Volver a personalizar con IA' : 'Personalizar con IA'}</button>
       <button type="button" class="btn-sm" data-action="stop-ai" id="stop-ai" hidden>Detener</button>
@@ -727,6 +736,92 @@ async function download() {
   }
 }
 
+/* ---------- Cobro con tarjeta (versión web) ---------- */
+const PEDIDO_KEY = 'pidelo-bien-pedido';
+function irA(url) { window.location.href = url; }
+function guardarPedido(id) { try { localStorage.setItem(PEDIDO_KEY, JSON.stringify({ id, t: Date.now() })); } catch (e) { /* ignorar */ } }
+function pedidoGuardado() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PEDIDO_KEY) || 'null');
+    if (p && /^[a-f0-9]{24}$/.test(p.id) && Date.now() - p.t < 3 * 86400e3) return p.id;
+    localStorage.removeItem(PEDIDO_KEY);
+  } catch (e) { /* ignorar */ }
+  return null;
+}
+function olvidarPedido() { try { localStorage.removeItem(PEDIDO_KEY); } catch (e) { /* ignorar */ } }
+
+async function checkout(btn) {
+  const o = offer();
+  const err = $('#pay-err');
+  btn.disabled = true;
+  btn.textContent = 'Abriendo el pago…';
+  try {
+    const r = await fetch(CONFIG.checkout + '/crear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ variante: o.variant, s: sessionId() }) });
+    const j = await r.json();
+    if (!r.ok || !j.url || !j.pedido) throw new Error(j.error || 'pago');
+    guardarPedido(j.pedido);
+    save();
+    irA(j.url);
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = `Pagar ${soles2(o.price)} con tarjeta`;
+    if (err) err.textContent = 'No pudimos abrir el pago. Inténtalo de nuevo en un momento.';
+  }
+}
+
+function pagoHTML(codigo) {
+  return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ok-title">
+    <div class="sheet-head"><h2 id="ok-title" tabindex="-1">Pago confirmado</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
+    <p>Tu kit ya está desbloqueado en este navegador. Guarda tu código por si quieres abrirlo en otro equipo:</p>
+    <p class="price">${esc(codigo)}</p>
+    <div class="tools"><button type="button" class="btn-sm" data-action="copy-code">Copiar código</button></div>
+    <button type="button" class="btn" data-action="go-interview">Armar mi kit</button>
+  </div></div>`;
+}
+function avisoPagoHTML(texto) {
+  return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pp-title">
+    <div class="sheet-head"><h2 id="pp-title" tabindex="-1">Tu pago</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
+    <p>${esc(texto)}</p>
+    <button type="button" class="btn" data-action="close-modal">Entendido</button>
+  </div></div>`;
+}
+
+// Al volver de Mercado Pago (o en la siguiente visita) se confirma el pago con el servidor y se desbloquea el kit
+async function revisarPago() {
+  if (!CONFIG.checkout) return;
+  let pedido = null, volvio = false;
+  try {
+    const q = new URLSearchParams(location.search).get('pago');
+    if (q) { volvio = true; history.replaceState(null, '', location.pathname); }
+    pedido = q && /^[a-f0-9]{24}$/.test(q) ? q : pedidoGuardado();
+  } catch (e) { return; }
+  if (!pedido) return;
+  for (let i = 0; i < (volvio ? 8 : 1); i++) {
+    if (i) await new Promise(res => setTimeout(res, 2500));   // Mercado Pago puede tardar unos segundos en confirmar
+    try {
+      const r = await fetch(`${CONFIG.checkout}/estado?pedido=${pedido}`);
+      if (r.status === 404 || r.status === 400) { olvidarPedido(); return; }
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (j.estado === 'pagado' && j.codigo) {
+        olvidarPedido();
+        S.unlocked = true;
+        S.accessCode = j.codigo;
+        if (S.view === 'test' && S.answers.sueldo) S.view = 'result';
+        render();
+        openModal(pagoHTML(j.codigo), 'ok-title');
+        return;
+      }
+      if (j.estado === 'rechazado') {
+        olvidarPedido();
+        if (volvio) openModal(avisoPagoHTML('El pago no se completó. Puedes intentarlo de nuevo con otra tarjeta: no se te cobró nada.'), 'pp-title');
+        return;
+      }
+      if (['pendiente', 'revisar'].includes(j.estado) && volvio && i === 7) openModal(avisoPagoHTML('Tu pago está en revisión. Cuando Mercado Pago lo confirme, tu kit se desbloqueará al volver a esta página.'), 'pp-title');
+    } catch (e) { /* sin red: se reintenta */ }
+  }
+}
+
 /* ---------- Capacidades del visor ---------- */
 function syncCapabilityUI() {
   document.querySelectorAll('[data-needs]').forEach(el => {
@@ -754,6 +849,7 @@ function browserDownloads() {
   };
 }
 function initRuntime() {
+  if (CONFIG.checkout) fetch(CONFIG.checkout + '/disponible').then(r => r.json()).then(j => { RT.pago = j.disponible === true; }).catch(() => {});
   const c = window.claude;
   if (!c || typeof c.use !== 'function') { RT.downloads = browserDownloads(); syncCapabilityUI(); return; }
   c.use('sample').then(s => { RT.sample = s || null; syncCapabilityUI(); if (S.view === 'kit' && !S.sim) refreshSim(); }).catch(() => {});
@@ -823,6 +919,9 @@ document.addEventListener('click', e => {
     }
     case 'open-paywall': track('paywall_view', offer().variant); openModal(paywallHTML(), 'pay-title'); break;
     case 'pay': track('pay_click', offer().variant); break;
+    case 'checkout': track('pay_click', offer().variant); checkout(t); break;
+    case 'go-interview': closeModal(); S.view = S.kit ? 'kit' : 'interview'; render(); window.scrollTo(0, 0); break;
+    case 'copy-code': copyText(S.accessCode || '', t); break;
     case 'wa': track('wa_click'); break;
     case 'overlay':
     case 'close-modal': closeModal(); break;

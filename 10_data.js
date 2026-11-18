@@ -7,11 +7,13 @@ const CONFIG = {
   price: 29.90,
   payUrl: '',        // Link de pago (Culqi, Mercado Pago u otro). Vacío = sin botón de pago.
   whatsapp: '',      // WhatsApp para pedir el código, formato 51XXXXXXXXX. Vacío = sin botón.
-  // Prueba A/B de precio: se activa sola cuando cada precio tiene su propio link de pago.
+  // Prueba A/B de precio: corre con el cobro automático (priceTestOn) o cuando cada precio tiene su propio link de pago.
   priceTest: [
     { price: 29.90, payUrl: '' },
     { price: 49.90, payUrl: '' }
   ],
+  priceTestOn: false,
+  checkout: '',      // Cobro automático con tarjeta (versión web: '/api/pago'). Vacío = link de pago y código manual.
   collectUrl: '',    // Endpoint que recibe el registro anónimo de cada test (POST JSON). Vacío = no se envía nada.
   eventsUrl: '',     // Endpoint de medición anónima del embudo (POST JSON). Vacío = no se mide nada.
   consentVersion: '2026-10',

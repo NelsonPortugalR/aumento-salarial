@@ -3,6 +3,7 @@ import { getStore } from '@netlify/blobs';
 import { autorizado, diasHasta, json, leerClave, leerJSON, limaDia } from '../lib/comun.mjs';
 import { resumir } from '../lib/metricas.mjs';
 import { PANEL_HUELLA } from '../lib/acceso.mjs';
+import { precioDe } from '../lib/pagos.mjs';
 
 const listar = async (store, prefix) => (await store.list({ prefix })).blobs.map(b => b.key);
 async function enLotes(items, n, fn) {
@@ -48,10 +49,21 @@ export default async req => {
     const reclamos = await listar(getStore('reclamos'), anio + '/');
     const porMes = {};
     for (const k of aportes) porMes[k.slice(0, 7)] = (porMes[k.slice(0, 7)] || 0) + 1;
+    // Ventas confirmadas por Mercado Pago: pagados/día/pedido~variante
+    const ventas = (await listar(getStore('pagos'), 'pagados/')).map(k => {
+      const [, dia, resto = ''] = k.split('/');
+      const variante = resto.split('~')[1] || '';
+      return { dia, variante, monto: precioDe(variante) || 0 };
+    });
+    const enPeriodo = ventas.filter(v => v.dia >= rango[0]);
+    const suma = l => Math.round(100 * l.reduce((a, v) => a + v.monto, 0)) / 100;
+    const porVariante = {};
+    for (const v of enPeriodo) porVariante[v.variante] = (porVariante[v.variante] || 0) + 1;
     return json({
       generado: new Date().toISOString(), dias, desde: rango[0], hasta: rango[rango.length - 1], eventos: claves.length,
       ...resumir(claves, rango),
       aportes: { total: aportes.length, por_mes: porMes },
+      ventas: { total: ventas.length, monto: suma(ventas), periodo: enPeriodo.length, monto_periodo: suma(enPeriodo), por_variante: porVariante },
       reclamos: { anio, total: reclamos.length }
     });
   }

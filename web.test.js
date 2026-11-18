@@ -118,7 +118,8 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     await wait(20);
     d.querySelector('[data-step="puesto"][data-value="ventas"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     await wait(200);
-    ok(w.localStorage.getItem('pidelo-bien-interno') === '1' && sent.length === 0, 'el modo interno no debe enviar eventos: ' + sent.length);
+    const enviados = sent.filter(s => ['/api/evento', '/api/aporte'].includes(s.url));
+    ok(w.localStorage.getItem('pidelo-bien-interno') === '1' && enviados.length === 0, 'el modo interno no debe enviar eventos: ' + enviados.length);
   }
 
   /* 2) Prueba A/B: se activa con dos links de pago y el precio queda fijo en el navegador */
@@ -146,6 +147,67 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
       }
     }
     ok(seen.size === 2, 'la prueba A/B debe repartir ambas variantes: ' + [...seen]);
+  }
+
+  /* 2b) Cobro con tarjeta: crear el pago, ir a Mercado Pago, volver y desbloquear */
+  {
+    const RESP = { puesto: 'contabilidad', nivel: 'analista', sector: 'industria', region: 'lima', tamano: 's3', contrato: 'indefinido', experiencia: 'e3', antiguedad: 't3', sueldo: '2400', aumento: 'a99', funciones: 'mas', logros: 'alguno', empresa: 'estable' };
+    const estadoGuardado = w => w.localStorage.setItem('pidelo-bien-v2', JSON.stringify({ view: 'result', stepId: 'empresa', answers: RESP, unlocked: false }));
+    const PED = 'a'.repeat(24);
+    // a) Ir a pagar
+    const { w, d, sent } = page('index.html', '/app.js', app, {
+      before: estadoGuardado,
+      respond: (url, init) => url === '/api/pago/disponible' ? { status: 200, json: { disponible: true } }
+        : url === '/api/pago/crear' ? { status: 200, json: { pedido: PED, url: 'https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=x' } }
+        : { status: 200, json: {} }
+    });
+    await wait(40);
+    let destino = '';
+    w.irA = u => { destino = u; };
+    d.querySelector('[data-action="open-paywall"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    await wait(20);
+    const boton = d.querySelector('[data-action="checkout"]');
+    ok(boton && /Pagar S\/\s29\.90 con tarjeta/.test(boton.textContent) && !d.querySelector('[data-action="pay"]'), 'botón de pago con tarjeta en el muro');
+    boton.dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    await wait(40);
+    const crear = sent.find(s => s.url === '/api/pago/crear');
+    const cuerpo = crear && JSON.parse(crear.body);
+    ok(cuerpo && cuerpo.variante === 'p2990' && /^[a-z0-9]{10}$/.test(cuerpo.s), 'el pedido viaja con variante y sesión, sin precio: ' + (crear && crear.body));
+    ok(destino.startsWith('https://www.mercadopago.com.pe/') && JSON.parse(w.localStorage.getItem('pidelo-bien-pedido')).id === PED, 'redirige a Mercado Pago y recuerda el pedido');
+    ok(events(sent).some(e => e.e === 'pay_click' && e.d === 'p2990'), 'pay_click al ir a pagar');
+
+    // b) Volver con el pago aprobado
+    const ok2 = page('index.html', '/app.js', app, {
+      path: `?pago=${PED}&collection_status=approved&payment_id=1`, before: estadoGuardado,
+      respond: url => url === `/api/pago/estado?pedido=${PED}` ? { status: 200, json: { estado: 'pagado', codigo: 'PB-ABCD-EFGH' } } : { status: 200, json: {} }
+    });
+    await wait(80);
+    ok(ok2.w.eval('S.unlocked') === true && ok2.w.eval('S.accessCode') === 'PB-ABCD-EFGH', 'el kit se desbloquea al volver con el pago aprobado');
+    ok(/PB-ABCD-EFGH/.test(ok2.d.getElementById('modal-root').textContent) && ok2.w.location.search === '', 'muestra el código y limpia la dirección');
+    ok2.d.querySelector('[data-action="go-interview"]').dispatchEvent(new ok2.w.MouseEvent('click', { bubbles: true }));
+    await wait(20);
+    ok(ok2.d.querySelector('[data-kf="logro1"]'), 'de la confirmación pasa a armar el kit');
+
+    // c) Volver con el pago rechazado
+    const no = page('index.html', '/app.js', app, {
+      path: `?pago=${'b'.repeat(24)}`, before: estadoGuardado,
+      respond: url => url.startsWith('/api/pago/estado') ? { status: 200, json: { estado: 'rechazado' } } : { status: 200, json: {} }
+    });
+    await wait(80);
+    ok(no.w.eval('S.unlocked') === false && /no se completó/.test(no.d.getElementById('modal-root').textContent), 'pago rechazado: no desbloquea y lo explica');
+
+    // d) Código de compra en otro equipo
+    const otro = page('index.html', '/app.js', app, {
+      before: estadoGuardado,
+      respond: url => url === '/api/codigo' ? { status: 200, json: { ok: true } } : { status: 200, json: {} }
+    });
+    await wait(40);
+    otro.d.querySelector('[data-action="open-paywall"]').dispatchEvent(new otro.w.MouseEvent('click', { bubbles: true }));
+    await wait(20);
+    otro.d.getElementById('code').value = 'pb-abcd-efgh';
+    otro.d.querySelector('[data-action="redeem"]').dispatchEvent(new otro.w.MouseEvent('click', { bubbles: true }));
+    await wait(80);
+    ok(otro.w.eval('S.unlocked') === true && otro.sent.some(s => s.url === '/api/codigo' && JSON.parse(s.body).codigo === 'PB-ABCD-EFGH'), 'un código de compra desbloquea en otro equipo');
   }
 
   /* 3) Libro de Reclamaciones: número, envío a Netlify Forms y constancia */
@@ -184,8 +246,8 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     });
     await wait(60);
     ok(sent[0].init.headers.Authorization === 'Bearer tok', 'el panel debe enviar el token');
-    ok(d.querySelectorAll('.kpi').length === 6 && d.querySelector('.kpi .v').textContent === '2', 'indicadores del panel');
-    ok(d.querySelectorAll('.bars li').length === 8 + 14, 'barras de embudo y preguntas');
+    ok(d.querySelectorAll('.kpi').length === 7 && d.querySelector('.kpi .v').textContent === '2', 'indicadores del panel');
+    ok(d.querySelectorAll('.bars li').length === 9 + 14, 'barras de embudo y preguntas');
     ok(d.querySelector('.chart svg polyline') && d.querySelector('details.table-view table'), 'gráfico diario con tabla');
     const bad = page('panel.html', '/js/panel.js', read('js/panel.js'), { before: w => w.localStorage.setItem('pidelo-bien-panel', 'malo'), respond: () => ({ status: 401, json: {} }) });
     await wait(60);

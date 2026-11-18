@@ -380,3 +380,4 @@ if (S.sim && S.sim.pending) S.sim.pending = false;
 render();
 initRuntime();
 track('visit', `${offer().variant}.${trafficSource()}.${window.innerWidth < 768 ? 'm' : 'd'}`, true);
+revisarPago();

@@ -95,8 +95,27 @@ Para encender el SEO, en este orden:
 - Al mes, en el panel, "Aportes (JSONL)". Guárdalo en `data/private/respuestas/aportes_AAAA-MM-DD.jsonl`, corre `npm run data:model` y revisa `data/RESPUESTAS.md`.
 - Si alguien pide borrar su aporte, usa "Retirar un aporte" en el panel con el código que le mostró la página.
 
-## Precio y pagos
+## Cobro con tarjeta (Mercado Pago)
 
-- Con un solo precio: `CONFIG.payUrl` (link de Culqi) y `CONFIG.whatsapp` para pedir el código.
-- Prueba A/B: llena los dos `payUrl` de `CONFIG.priceTest` (un link de S/ 29.90 y otro de S/ 49.90). Se activa sola, cada navegador ve siempre el mismo precio y el panel compara las dos variantes.
-- Límite conocido: el desbloqueo por código ocurre en el navegador y el kit se arma ahí, así que alguien con conocimientos técnicos puede saltárselo. Sirve para validar la disposición a pagar. Antes de vender a escala, el pago debe emitir un token que valide el servidor (webhook de Culqi, `CLAUDE.md` punto 5).
+El cobro automático ya está programado y espera solo la clave de tu cuenta. Mientras no exista, el muro sigue mostrando "Los pagos se habilitan en el lanzamiento".
+
+Cómo funciona: la persona toca "Pagar con tarjeta", paga en la página segura de Mercado Pago (crédito o débito, un solo pago) y vuelve sola al sitio. El servidor confirma el pago directamente con Mercado Pago, desbloquea el kit y le entrega un código `PB-XXXX-XXXX` para abrirlo en otro equipo. Si cierra la pestaña antes de volver, el aviso de Mercado Pago marca el pago igual y el kit se desbloquea en su siguiente visita. No vemos ni guardamos datos de tarjeta. Cada venta aparece en el panel (ventas, ingresos y conversión por precio).
+
+Lo que tienes que hacer tú (una sola vez):
+
+1. Entra con tu cuenta de Mercado Pago (o créala) y completa la verificación de identidad.
+2. Ve a https://www.mercadopago.com.pe/developers/panel/app, crea una aplicación ("Pídelo Bien", producto Checkout Pro, pagos online) y abre **Credenciales de producción**. Si te las pide, completa los datos del negocio.
+3. Copia el **Access Token** de producción (empieza con `APP_USR-`). Es secreto: no lo mandes por chat ni correo.
+4. En Netlify, entra a https://app.netlify.com/projects/pidelo-bien, luego a Project configuration, Environment variables, y crea `MP_ACCESS_TOKEN` con ese valor, marcado como secreto y con alcance Functions.
+5. Avísame: vuelvo a desplegar (la clave se toma al desplegar), activo la prueba de precios, reviso que `https://pidelo-bien.netlify.app/api/pago/disponible` diga `true` y abro un pago real.
+6. Haz una compra real con tu tarjeta para probar de punta a punta y luego devuélvela desde la actividad de Mercado Pago.
+
+Detalles:
+
+- Precio: sale de `CONFIG.price` o de la prueba A/B (`CONFIG.priceTest`, se activa con `priceTestOn: true`). El servidor solo acepta esos precios; el navegador no puede cambiarlos.
+- Las cuotas y los pagos en efectivo están desactivados: así cada pago se aprueba o rechaza al instante.
+- Comisión: según tu tarifa de Mercado Pago, alrededor de 3.5% a 5% + IGV por venta. Revísala en tu cuenta antes de lanzar.
+- Comprobante: Mercado Pago no emite la boleta por ti. Mientras haya pocas ventas, emítela gratis en SOL de SUNAT (para montos bajo S/ 700 no hace falta el DNI del comprador); con volumen, se automatiza con un proveedor de facturación electrónica.
+- Devoluciones: desde la actividad de Mercado Pago. El código de esa compra sigue valiendo; si hace falta anularlo, se borra en el almacén `pagos`.
+- Límite conocido: el kit se arma en el navegador, así que alguien con conocimientos técnicos podría saltarse el pago. Para validar la disposición a pagar es suficiente.
+- Alternativa manual: sin la clave, `CONFIG.payUrl` (un link de pago) y `CONFIG.whatsapp` siguen funcionando con códigos enviados a mano.

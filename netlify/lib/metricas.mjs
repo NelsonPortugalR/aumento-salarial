@@ -9,6 +9,7 @@ export const EMBUDO = [
   ['completaron', s => tiene(s, 'test_complete')],
   ['vieron_el_muro', s => tiene(s, 'paywall_view')],
   ['clic_en_pagar', s => tiene(s, 'pay_click', 'wa_click')],
+  ['pagaron', s => tiene(s, 'paid')],
   ['desbloquearon', s => tiene(s, 'code_ok', 'paid')],
   ['armaron_el_kit', s => tiene(s, 'kit_built')],
   ['practicaron', s => tiene(s, 'sim_start')]
@@ -56,6 +57,8 @@ export function resumir(claves, dias) {
       inicio_a_completo: tasa(embudo.completaron, embudo.iniciaron),
       completo_a_muro: tasa(embudo.vieron_el_muro, embudo.completaron),
       muro_a_clic: tasa(embudo.clic_en_pagar, embudo.vieron_el_muro),
+      muro_a_pago: tasa(embudo.pagaron, embudo.vieron_el_muro),
+      completo_a_pago: tasa(embudo.pagaron, embudo.completaron),
       completo_a_desbloqueo: tasa(embudo.desbloquearon, embudo.completaron)
     },
     pasos: PASOS.map((id, i) => ({ paso: id, sesiones: i === 0 ? embudo.iniciaron : lista.filter(s => s.pasos.has(id)).length })),

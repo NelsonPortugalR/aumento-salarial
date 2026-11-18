@@ -8,7 +8,7 @@
   try { token = localStorage.getItem(KEY) || ''; } catch (e) { /* sin almacenamiento */ }
   let dias = 30;
 
-  const EMBUDO = { visitas: 'Visitas', iniciaron: 'Empezaron el test', completaron: 'Completaron el test', vieron_el_muro: 'Vieron el precio', clic_en_pagar: 'Tocaron pagar o WhatsApp', desbloquearon: 'Desbloquearon el kit', armaron_el_kit: 'Armaron su kit', practicaron: 'Practicaron con el simulador' };
+  const EMBUDO = { visitas: 'Visitas', iniciaron: 'Empezaron el test', completaron: 'Completaron el test', vieron_el_muro: 'Vieron el precio', clic_en_pagar: 'Tocaron pagar o WhatsApp', pagaron: 'Pagaron', desbloquearon: 'Desbloquearon el kit', armaron_el_kit: 'Armaron su kit', practicaron: 'Practicaron con el simulador' };
   const PASOS = { puesto: 'Puesto', nivel: 'Nivel', sector: 'Sector', region: 'Región', tamano: 'Tamaño de empresa', contrato: 'Contrato', vence: 'Vencimiento (solo plazo fijo)', experiencia: 'Experiencia', antiguedad: 'Tiempo en el puesto', sueldo: 'Sueldo', aumento: 'Último aumento', funciones: 'Funciones nuevas', logros: 'Logros medibles', empresa: 'Situación de la empresa' };
   const CODIGOS = { pide_ahora: 'Pide ahora', pide_pronto: 'Pide en unas semanas', construye: 'Pide en 8 semanas', merito: 'Pide por mérito', trato: 'Pide un trato', paquete: 'Pide más que sueldo', metas: 'Pide metas primero', esperar: 'Pide en un mes concreto', mercado: 'Negocia con el mercado' };
   const ZONAS = { bajo: 'Bajo el rango', rango: 'En rango', alto: 'Sobre el rango' };
@@ -143,6 +143,7 @@
       kpi('Tests completos', fmt(e.completaron), `${pctR(t.inicio_a_completo)} de quienes empezaron`),
       kpi('Vieron el precio', fmt(e.vieron_el_muro), `${pctR(t.completo_a_muro)} de los tests completos`),
       kpi('Tocaron pagar', fmt(e.clic_en_pagar), `${pctR(t.muro_a_clic)} de quienes vieron el precio`),
+      kpi('Ventas', fmt((d.ventas || {}).periodo || 0), `S/ ${Number((d.ventas || {}).monto_periodo || 0).toFixed(2)} en el periodo · ${pctR(t.completo_a_pago)} de los tests`),
       kpi('Desbloquearon el kit', fmt(e.desbloquearon), `${pctR(t.completo_a_desbloqueo)} de los tests completos`),
       kpi('Aportes de sueldo', fmt(d.aportes.total), 'desde el inicio')));
     if (!e.visitas) body.append(h('p', { class: 'empty' }, 'Todavía no hay visitas en este periodo. Abre el test en otra pestaña y vuelve a actualizar.'));
@@ -163,13 +164,14 @@
       completaron: { t: 'Completaron', n: 1, f: r => fmt(r.completaron) },
       muro: { t: 'Vieron el precio', n: 1, f: r => fmt(r.vieron_el_muro) },
       clic: { t: 'Tocaron pagar', n: 1, f: r => fmt(r.clic_en_pagar) },
+      pagaron: { t: 'Pagaron', n: 1, f: r => fmt(r.pagaron) },
       desbloqueo: { t: 'Desbloquearon', n: 1, f: r => fmt(r.desbloquearon) },
-      tasa: { t: 'Precio a pagar', n: 1, f: r => pct(r.clic_en_pagar, r.vieron_el_muro) }
+      tasa: { t: 'Precio a pago', n: 1, f: r => pct(r.pagaron, r.vieron_el_muro) }
     };
     const n = { t: 'Sesiones', n: 1, f: r => fmt(r.n) };
     body.append(h('div', { class: 'cards' },
       card('Prueba de precio', d.precios.length > 1 ? 'Cada navegador ve siempre el mismo precio.' : 'Hay un solo precio activo. La prueba empieza cuando cada precio tiene su link de pago.',
-        table([{ t: 'Precio', f: r => precio(r.valor) }, f.visitas, f.completaron, f.muro, f.clic, f.desbloqueo, f.tasa], d.precios))));
+        table([{ t: 'Precio', f: r => precio(r.valor) }, f.visitas, f.completaron, f.muro, f.clic, f.pagaron, f.tasa], d.precios))));
     body.append(h('div', { class: 'cards two' },
       card('De dónde llegan', 'Según el parámetro utm_source o ref del enlace, o el sitio de origen.',
         table([{ t: 'Origen', f: r => label(FUENTES, r.valor) }, f.visitas, f.completaron, f.clic], d.fuentes)),

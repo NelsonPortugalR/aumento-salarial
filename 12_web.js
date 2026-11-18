@@ -4,5 +4,6 @@
 Object.assign(CONFIG, {
   web: true,
   collectUrl: '/api/aporte',
-  eventsUrl: '/api/evento'
+  eventsUrl: '/api/evento',
+  checkout: '/api/pago'
 });
