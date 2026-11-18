@@ -56,6 +56,7 @@ const META = [
   '<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
   '<meta name="theme-color" content="#16233D">'
 ].filter(Boolean).join('\n');
+const mesLargo = iso => new Date(iso + 'T12:00:00Z').toLocaleDateString('es-PE', { timeZone: 'UTC', month: 'long', year: 'numeric' });
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ld = obj => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
 // Open Graph por página: título y descripción propios, imagen y marca comunes
@@ -109,8 +110,14 @@ const legal = (k, label) => {
   pending.push(label);
   return `<span class="pendiente">${label} por completar</span>`;
 };
+const CTX = D.MARKET.context || {};
+const pct = n => String(n).replace(/\.0$/, '') + '%';
+const inf = CTX.inflacion_lima;
 const VARS = {
   marca: C.brand, sitio: SITE, consentimiento: C.consentVersion,
+  // Cifras de contexto: salen de data/benchmarks/contexto_2026.json, igual que en el kit
+  inflacion: `${pct(inf['12m_pct'])} anual a ${mesLargo(inf['12m_mes'] + '-01')}`,
+  aumentoPromedio: pct(CTX.aumentos_2026.promedio_pct),
   razonSocial: legal('razonSocial', 'Razón social'), ruc: legal('ruc', 'RUC'), domicilio: legal('domicilio', 'Domicilio'), correo: legal('correo', 'Correo de contacto'),
   registro: legal('registro', 'Código de inscripción del banco de datos')
 };
@@ -184,7 +191,6 @@ const SLUGS = {
 };
 const EXP_TIPICA = { asistente: 'e1', analista: 'e3', senior: 'e5', supervisor: 'e5', jefe: 'e10', gerente: 'e10' };
 const CONFIANZA = { alta: 'Alta', media: 'Media', baja: 'Baja' };
-const mesLargo = iso => new Date(iso + 'T12:00:00Z').toLocaleDateString('es-PE', { timeZone: 'UTC', month: 'long', year: 'numeric' });
 const actualizado = mesLargo(D.MARKET.version);
 const bandasDe = puesto => D.LEVELS.map(l => ({
   nivel: l,

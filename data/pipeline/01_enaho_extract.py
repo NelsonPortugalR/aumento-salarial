@@ -66,6 +66,7 @@ def main():
     for c in ['UBIGEO']:
         df[c] = df[c].astype('Int64').astype(str).str.zfill(6)
     df['DEPTO'] = df['UBIGEO'].str[:2]
+    OUT.parent.mkdir(parents=True, exist_ok=True)   # data/work no se versiona: en una copia nueva no existe
     df.to_parquet(OUT, index=False)
     print('guardado', OUT, len(df))
 

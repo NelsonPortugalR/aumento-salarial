@@ -119,6 +119,7 @@ def main():
     df['exp'] = [exp_of(c, s) for c, s in zip(df['crit'], df['seg'])]
     df['spread_lo'] = df['mn'] / df['md']
     df['spread_hi'] = df['mx'] / df['md']
+    (ROOT / 'work').mkdir(parents=True, exist_ok=True)
     df.to_parquet(ROOT / 'work' / 'guia_privada_normalizada.parquet', index=False)
 
     # Gradiente de tamaño: mismo cargo, área e industria en distinta facturación (solo el resumen se versiona)
