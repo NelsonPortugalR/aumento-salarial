@@ -6,7 +6,7 @@ const CONFIG = {
   brand: 'Pídelo Bien',
   price: 29.90,
   payUrl: '',        // Link de pago (Culqi, Mercado Pago u otro). Vacío = sin botón de pago.
-  whatsapp: '',      // WhatsApp para pedir el código, formato 51XXXXXXXXX. Vacío = sin botón.
+  whatsapp: '51994607605', // WhatsApp para dudas de pago y pedidos manuales, formato 51XXXXXXXXX. Vacío = sin botón.
   // Prueba A/B de precio: corre con el cobro automático (priceTestOn) o cuando cada precio tiene su propio link de pago.
   priceTest: [
     { price: 29.90, payUrl: '' },

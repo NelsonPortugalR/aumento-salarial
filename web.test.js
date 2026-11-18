@@ -95,6 +95,8 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     click('[data-action="open-paywall"]'); await wait(20);
     ok(d.querySelector('.price').textContent.includes('29.90') && /incluye IGV/.test(d.getElementById('modal-root').textContent), 'precio con IGV en el muro');
     ok(d.querySelector('#modal-root a[href="/terminos"]'), 'el muro debe enlazar los términos');
+    const wa = d.querySelector('#modal-root a[data-action="wa"]');
+    ok(wa && wa.href.startsWith('https://wa.me/51994607605?text=') && /quiero%20el%20kit/.test(wa.href) && /Pedir el kit por WhatsApp/.test(wa.textContent), 'sin cobro con tarjeta, el kit se pide por WhatsApp');
     ok(events(sent).some(e => e.e === 'paywall_view' && e.d === 'p2990'), 'paywall_view con variante');
     ok(!d.querySelector('[data-action="polish"]') || d.querySelector('[data-action="polish"]').hidden, 'sin IA en la web');
     // Compartir con enlace
@@ -168,6 +170,8 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     await wait(20);
     const boton = d.querySelector('[data-action="checkout"]');
     ok(boton && /Pagar S\/\s29\.90 con tarjeta/.test(boton.textContent) && !d.querySelector('[data-action="pay"]'), 'botón de pago con tarjeta en el muro');
+    const ayuda = d.querySelector('#modal-root a[data-action="wa"]');
+    ok(ayuda && /duda/.test(decodeURIComponent(ayuda.href)) && !/Pedir el kit/.test(d.getElementById('modal-root').textContent), 'con tarjeta, WhatsApp queda solo para dudas');
     boton.dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     await wait(40);
     const crear = sent.find(s => s.url === '/api/pago/crear');

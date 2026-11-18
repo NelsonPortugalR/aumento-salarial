@@ -355,11 +355,13 @@ function viewExit() {
 }
 
 /* ---------- Muro de pago ---------- */
+const waLink = texto => `https://wa.me/${encodeURIComponent(CONFIG.whatsapp)}?text=${encodeURIComponent(texto)}`;
+const waAyuda = (texto, pedido) => CONFIG.whatsapp
+  ? `<p class="fine">¿Dudas con tu pago? <a href="${esc(waLink('Hola, tengo una duda con mi pago de Pídelo Bien.' + (pedido ? ' Pedido: ' + pedido : '')))}" target="_blank" rel="noopener" data-action="wa">${texto}</a></p>` : '';
 function paywallHTML() {
   const o = offer();
   const card = RT.pago === true;
   const hasPay = !card && !!o.payUrl, hasWa = !card && !!CONFIG.whatsapp;
-  const waText = encodeURIComponent('Hola, ya pagué el kit de Pídelo Bien. ¿Me envías mi código?');
   return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pay-title">
     <div class="sheet-head"><h2 id="pay-title" tabindex="-1">Tu kit para la reunión</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
     <ul class="plain">
@@ -371,9 +373,10 @@ function paywallHTML() {
     </ul>
     <p class="price">${soles2(o.price)}</p>
     <p class="fine">Pago único, incluye IGV.${CONFIG.web ? ' Al pagar aceptas los <a href="/terminos" target="_blank" rel="noopener">términos del servicio</a>.' : ''}</p>
-    ${card ? `<button type="button" class="btn" data-action="checkout">Pagar ${soles2(o.price)} con tarjeta</button><p class="fine">Pagas en la página segura de Mercado Pago y vuelves aquí con tu kit desbloqueado. No vemos ni guardamos los datos de tu tarjeta.</p><p class="err" id="pay-err" role="alert"></p>` : ''}
+    ${card ? `<button type="button" class="btn" data-action="checkout">Pagar ${soles2(o.price)} con tarjeta</button><p class="fine">Pagas en la página segura de Mercado Pago y vuelves aquí con tu kit desbloqueado. No vemos ni guardamos los datos de tu tarjeta.</p><p class="err" id="pay-err" role="alert"></p>${waAyuda('Escríbenos por WhatsApp')}` : ''}
     ${hasPay ? `<a class="btn" href="${esc(o.payUrl)}" target="_blank" rel="noopener" data-action="pay">Pagar ${soles2(o.price)} con Yape o tarjeta</a>` : ''}
-    ${hasWa ? `<a class="btn-ghost" href="https://wa.me/${esc(CONFIG.whatsapp)}?text=${waText}" target="_blank" rel="noopener" data-action="wa">Ya pagué: pedir mi código por WhatsApp</a>` : ''}
+    ${hasWa && hasPay ? `<a class="btn-ghost" href="${esc(waLink('Hola, ya pagué el kit de Pídelo Bien. ¿Me envías mi código?'))}" target="_blank" rel="noopener" data-action="wa">Ya pagué: pedir mi código por WhatsApp</a>` : ''}
+    ${hasWa && !hasPay ? `<a class="btn" href="${esc(waLink(`Hola, quiero el kit de Pídelo Bien (${soles2(o.price).replace('\u00A0', ' ')}).`))}" target="_blank" rel="noopener" data-action="wa">Pedir el kit por WhatsApp</a><p class="fine">Te respondemos con la forma de pago y tu código de acceso.</p>` : ''}
     ${(!card && !hasPay && !hasWa) ? '<p class="fine">Los pagos se habilitan en el lanzamiento. Si tienes un código de acceso, ingrésalo aquí.</p>' : ''}
     <label class="small-label" for="code">Tengo un código</label>
     <div class="code-row"><input id="code" autocomplete="off" autocapitalize="characters" placeholder="PB-XXXX-XXXX"><button type="button" class="btn-sm" data-action="redeem">Desbloquear</button></div>
@@ -778,10 +781,11 @@ function pagoHTML(codigo) {
     <button type="button" class="btn" data-action="go-interview">Armar mi kit</button>
   </div></div>`;
 }
-function avisoPagoHTML(texto) {
+function avisoPagoHTML(texto, pedido) {
   return `<div class="overlay" data-action="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="pp-title">
     <div class="sheet-head"><h2 id="pp-title" tabindex="-1">Tu pago</h2><button type="button" class="link" data-action="close-modal">Cerrar</button></div>
     <p>${esc(texto)}</p>
+    ${waAyuda('Escríbenos por WhatsApp', pedido)}
     <button type="button" class="btn" data-action="close-modal">Entendido</button>
   </div></div>`;
 }
@@ -814,10 +818,10 @@ async function revisarPago() {
       }
       if (j.estado === 'rechazado') {
         olvidarPedido();
-        if (volvio) openModal(avisoPagoHTML('El pago no se completó. Puedes intentarlo de nuevo con otra tarjeta: no se te cobró nada.'), 'pp-title');
+        if (volvio) openModal(avisoPagoHTML('El pago no se completó. Puedes intentarlo de nuevo con otra tarjeta: no se te cobró nada.', pedido), 'pp-title');
         return;
       }
-      if (['pendiente', 'revisar'].includes(j.estado) && volvio && i === 7) openModal(avisoPagoHTML('Tu pago está en revisión. Cuando Mercado Pago lo confirme, tu kit se desbloqueará al volver a esta página.'), 'pp-title');
+      if (['pendiente', 'revisar'].includes(j.estado) && volvio && i === 7) openModal(avisoPagoHTML('Tu pago está en revisión. Cuando Mercado Pago lo confirme, tu kit se desbloqueará al volver a esta página.', pedido), 'pp-title');
     } catch (e) { /* sin red: se reintenta */ }
   }
 }
