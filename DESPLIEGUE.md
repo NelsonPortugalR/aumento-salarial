@@ -97,25 +97,24 @@ Para encender el SEO, en este orden:
 
 ## Cobro con tarjeta (Mercado Pago)
 
-El cobro automático ya está programado y espera solo la clave de tu cuenta. Mientras no exista, el muro sigue mostrando "Los pagos se habilitan en el lanzamiento".
+Pídelo Bien cobra con el **motor de cobros central** (`cobros/`), el mismo de Lo Tuyo, Buen Partido y Buen Ojo: una función en Supabase (proyecto "NelsonPortugalR's Project") que crea el pago en Mercado Pago Checkout Pro, lo confirma contra Mercado Pago y entrega un código por compra. Detalle técnico en `cobros/README.md`. Mientras no exista la clave de Mercado Pago, el muro ofrece pedir el kit por WhatsApp.
 
-Cómo funciona: la persona toca "Pagar con tarjeta", paga en la página segura de Mercado Pago (crédito o débito, un solo pago) y vuelve sola al sitio. El servidor confirma el pago directamente con Mercado Pago, desbloquea el kit y le entrega un código `PB-XXXX-XXXX` para abrirlo en otro equipo. Si cierra la pestaña antes de volver, el aviso de Mercado Pago marca el pago igual y el kit se desbloquea en su siguiente visita. No vemos ni guardamos datos de tarjeta. Cada venta aparece en el panel (ventas, ingresos y conversión por precio).
+Cómo funciona: la persona toca "Pagar con tarjeta", paga en la página segura de Mercado Pago (crédito o débito, un solo pago) y vuelve sola al sitio. El motor confirma el pago con Mercado Pago, el kit se desbloquea y la persona recibe un código `PB-XXXX-XXXX` para abrirlo en otro equipo. Si cierra la pestaña antes de volver, el aviso de Mercado Pago marca el pago igual y el kit se desbloquea en su siguiente visita. No vemos ni guardamos datos de tarjeta. Las ventas de todas las páginas aparecen en el panel.
 
-Lo que tienes que hacer tú (una sola vez):
+Lo que tienes que hacer tú (una sola vez, sirve para todas las páginas):
 
 1. Entra con tu cuenta de Mercado Pago (o créala) y completa la verificación de identidad.
-2. Ve a https://www.mercadopago.com.pe/developers/panel/app, crea una aplicación ("Pídelo Bien", producto Checkout Pro, pagos online) y abre **Credenciales de producción**. Si te las pide, completa los datos del negocio.
+2. Ve a https://www.mercadopago.com.pe/developers/panel/app, crea una aplicación (producto Checkout Pro, pagos online) y abre **Credenciales de producción**. Si te las pide, completa los datos del negocio.
 3. Copia el **Access Token** de producción (empieza con `APP_USR-`). Es secreto: no lo mandes por chat ni correo.
-4. En Netlify, entra a https://app.netlify.com/projects/pidelo-bien, luego a Project configuration, Environment variables, y crea `MP_ACCESS_TOKEN` con ese valor, marcado como secreto y con alcance Functions.
-5. Avísame: vuelvo a desplegar (la clave se toma al desplegar), activo la prueba de precios, reviso que `https://pidelo-bien.netlify.app/api/pago/disponible` diga `true` y abro un pago real.
-6. Haz una compra real con tu tarjeta para probar de punta a punta y luego devuélvela desde la actividad de Mercado Pago.
+4. En Supabase, entra a https://supabase.com/dashboard/project/unzbrfdqsjjpnokirlsk/functions/secrets y crea el secreto `MP_ACCESS_TOKEN` con ese valor. No hace falta volver a desplegar nada: el cobro se activa al instante en las páginas conectadas.
+5. Haz una compra real con tu tarjeta para probar de punta a punta y devuélvela desde la actividad de Mercado Pago (el motor anula el código de una compra devuelta).
 
 Detalles:
 
-- Precio: sale de `CONFIG.price` o de la prueba A/B (`CONFIG.priceTest`, se activa con `priceTestOn: true`). El servidor solo acepta esos precios; el navegador no puede cambiarlos.
+- Precio: sale de `CONFIG.price` o de la prueba A/B (`CONFIG.priceTest`, activa con `priceTestOn: true`). El motor solo acepta los precios de su catálogo (`cb_productos`); el navegador no puede cambiarlos. Si cambias un precio aquí, cámbialo también en el catálogo.
 - Las cuotas y los pagos en efectivo están desactivados: así cada pago se aprueba o rechaza al instante.
 - Comisión: según tu tarifa de Mercado Pago, alrededor de 3.5% a 5% + IGV por venta. Revísala en tu cuenta antes de lanzar.
 - Comprobante: Mercado Pago no emite la boleta por ti. Mientras haya pocas ventas, emítela gratis en SOL de SUNAT (para montos bajo S/ 700 no hace falta el DNI del comprador); con volumen, se automatiza con un proveedor de facturación electrónica.
-- Devoluciones: desde la actividad de Mercado Pago. El código de esa compra sigue valiendo; si hace falta anularlo, se borra en el almacén `pagos`.
+- Devoluciones: desde la actividad de Mercado Pago. El motor marca el pedido como devuelto y su código deja de abrir en otros equipos.
 - Límite conocido: el kit se arma en el navegador, así que alguien con conocimientos técnicos podría saltarse el pago. Para validar la disposición a pagar es suficiente.
 - Alternativa manual: sin la clave, `CONFIG.payUrl` (un link de pago) y `CONFIG.whatsapp` siguen funcionando con códigos enviados a mano.

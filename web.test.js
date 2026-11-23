@@ -22,6 +22,8 @@ function page(file, src, code, opts = {}) {
         const r = opts.respond ? await opts.respond(String(url), init) : { status: 200, json: {} };
         return { ok: r.status < 400, status: r.status, json: async () => r.json, text: async () => JSON.stringify(r.json), headers: { get: () => null }, blob: async () => new w.Blob(['x']) };
       };
+      // Con la prueba de precio activa cada navegador sortea su precio: las pruebas fijan el primero salvo que pidan sorteo
+      if (opts.precio !== 'azar') w.localStorage.setItem('pidelo-bien-precio', String(opts.precio || 0));
       if (opts.before) opts.before(w);
     }
   });
@@ -129,7 +131,7 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     const abApp = app.replace("{ price: 29.90, payUrl: '' }", "{ price: 29.90, payUrl: 'https://pago.test/a' }").replace("{ price: 49.90, payUrl: '' }", "{ price: 49.90, payUrl: 'https://pago.test/b' }");
     const seen = new Set();
     for (let i = 0; i < 12; i++) {
-      const { w, d, sent } = page('index.html', '/app.js', abApp);
+      const { w, d, sent } = page('index.html', '/app.js', abApp, { precio: 'azar' });
       await wait(10);
       const o = w.offer();
       seen.add(o.variant);
@@ -156,11 +158,12 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     const RESP = { puesto: 'contabilidad', nivel: 'analista', sector: 'industria', region: 'lima', tamano: 's3', contrato: 'indefinido', experiencia: 'e3', antiguedad: 't3', sueldo: '2400', aumento: 'a99', funciones: 'mas', logros: 'alguno', empresa: 'estable' };
     const estadoGuardado = w => w.localStorage.setItem('pidelo-bien-v2', JSON.stringify({ view: 'result', stepId: 'empresa', answers: RESP, unlocked: false }));
     const PED = 'a'.repeat(24);
+    const C = 'https://unzbrfdqsjjpnokirlsk.supabase.co/functions/v1/cobros';
     // a) Ir a pagar
     const { w, d, sent } = page('index.html', '/app.js', app, {
       before: estadoGuardado,
-      respond: (url, init) => url === '/api/pago/disponible' ? { status: 200, json: { disponible: true } }
-        : url === '/api/pago/crear' ? { status: 200, json: { pedido: PED, url: 'https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=x' } }
+      respond: (url, init) => url === `${C}/disponible?producto=pidelo-bien-kit` ? { status: 200, json: { disponible: true } }
+        : url === `${C}/crear` ? { status: 200, json: { pedido: PED, url: 'https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=x' } }
         : { status: 200, json: {} }
     });
     await wait(40);
@@ -174,19 +177,20 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     ok(ayuda && /duda/.test(decodeURIComponent(ayuda.href)) && !/Pedir el kit/.test(d.getElementById('modal-root').textContent), 'con tarjeta, WhatsApp queda solo para dudas');
     boton.dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
     await wait(40);
-    const crear = sent.find(s => s.url === '/api/pago/crear');
+    const crear = sent.find(s => s.url === `${C}/crear`);
     const cuerpo = crear && JSON.parse(crear.body);
-    ok(cuerpo && cuerpo.variante === 'p2990' && /^[a-z0-9]{10}$/.test(cuerpo.s), 'el pedido viaja con variante y sesión, sin precio: ' + (crear && crear.body));
+    ok(cuerpo && cuerpo.producto === 'pidelo-bien-kit' && cuerpo.variante === 'p2990' && cuerpo.volver === 'https://pidelo.test/' && !('precio' in cuerpo) && !('monto' in cuerpo), 'el pedido viaja al motor central con producto, variante y vuelta, sin precio: ' + (crear && crear.body));
     ok(destino.startsWith('https://www.mercadopago.com.pe/') && JSON.parse(w.localStorage.getItem('pidelo-bien-pedido')).id === PED, 'redirige a Mercado Pago y recuerda el pedido');
     ok(events(sent).some(e => e.e === 'pay_click' && e.d === 'p2990'), 'pay_click al ir a pagar');
 
     // b) Volver con el pago aprobado
     const ok2 = page('index.html', '/app.js', app, {
       path: `?pago=${PED}&collection_status=approved&payment_id=1`, before: estadoGuardado,
-      respond: url => url === `/api/pago/estado?pedido=${PED}` ? { status: 200, json: { estado: 'pagado', codigo: 'PB-ABCD-EFGH' } } : { status: 200, json: {} }
+      respond: url => url === `${C}/estado?pedido=${PED}` ? { status: 200, json: { estado: 'pagado', codigo: 'PB-ABCD-EFGH', variante: 'p2990' } } : { status: 200, json: {} }
     });
     await wait(80);
     ok(ok2.w.eval('S.unlocked') === true && ok2.w.eval('S.accessCode') === 'PB-ABCD-EFGH', 'el kit se desbloquea al volver con el pago aprobado');
+    ok(events(ok2.sent).filter(e => e.e === 'paid' && e.d === 'p2990').length === 1, 'el pago queda en el embudo una sola vez, con su precio');
     ok(/PB-ABCD-EFGH/.test(ok2.d.getElementById('modal-root').textContent) && ok2.w.location.search === '', 'muestra el código y limpia la dirección');
     ok2.d.querySelector('[data-action="go-interview"]').dispatchEvent(new ok2.w.MouseEvent('click', { bubbles: true }));
     await wait(20);
@@ -195,7 +199,7 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     // c) Volver con el pago rechazado
     const no = page('index.html', '/app.js', app, {
       path: `?pago=${'b'.repeat(24)}`, before: estadoGuardado,
-      respond: url => url.startsWith('/api/pago/estado') ? { status: 200, json: { estado: 'rechazado' } } : { status: 200, json: {} }
+      respond: url => url.startsWith(`${C}/estado`) ? { status: 200, json: { estado: 'rechazado' } } : { status: 200, json: {} }
     });
     await wait(80);
     ok(no.w.eval('S.unlocked') === false && /no se completó/.test(no.d.getElementById('modal-root').textContent), 'pago rechazado: no desbloquea y lo explica');
@@ -203,7 +207,7 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     // d) Código de compra en otro equipo
     const otro = page('index.html', '/app.js', app, {
       before: estadoGuardado,
-      respond: url => url === '/api/codigo' ? { status: 200, json: { ok: true } } : { status: 200, json: {} }
+      respond: url => url === `${C}/codigo` ? { status: 200, json: { ok: true } } : { status: 200, json: {} }
     });
     await wait(40);
     otro.d.querySelector('[data-action="open-paywall"]').dispatchEvent(new otro.w.MouseEvent('click', { bubbles: true }));
@@ -211,7 +215,7 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     otro.d.getElementById('code').value = 'pb-abcd-efgh';
     otro.d.querySelector('[data-action="redeem"]').dispatchEvent(new otro.w.MouseEvent('click', { bubbles: true }));
     await wait(80);
-    ok(otro.w.eval('S.unlocked') === true && otro.sent.some(s => s.url === '/api/codigo' && JSON.parse(s.body).codigo === 'PB-ABCD-EFGH'), 'un código de compra desbloquea en otro equipo');
+    ok(otro.w.eval('S.unlocked') === true && otro.sent.some(s => s.url === `${C}/codigo` && JSON.parse(s.body).codigo === 'PB-ABCD-EFGH' && JSON.parse(s.body).producto === 'pidelo-bien-kit'), 'un código de compra desbloquea en otro equipo');
   }
 
   /* 3) Libro de Reclamaciones: número, envío a Netlify Forms y constancia */
@@ -219,7 +223,7 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
   {
     const html = read('libro-de-reclamaciones.html');
     ok(/<form[^>]+name="libro-reclamaciones"[^>]+data-netlify="true"[^>]+netlify-honeypot="bot-field"/.test(html), 'formulario sin atributos de Netlify Forms');
-    ok(/Razón social por completar/.test(html), 'los datos legales vacíos deben verse como pendientes');
+    ok(/RUC por completar/.test(html) && html.includes('<dd>Portugal Research International S.A.C.</dd>'), 'los datos legales vacíos deben verse como pendientes y los completos, tal cual');
     const { w, d, sent } = page('libro-de-reclamaciones.html', '/js/libro.js', read('js/libro.js'), {
       respond: url => url === '/api/reclamo' ? { status: 200, json: { ok: true, numero: '000001-2026', fecha: '2026-10-21T15:30:00.000Z' } } : { status: 200, json: {} }
     });
@@ -244,13 +248,35 @@ const events = sent => sent.filter(s => s.url === '/api/evento').map(s => JSON.p
     const hoy = new Date().toISOString().slice(0, 10);
     const claves = [`${hoy}/aaaaaa1111/1~visit~p2990.directo.m`, `${hoy}/aaaaaa1111/2~test_start`, `${hoy}/aaaaaa1111/3~step~nivel`, `${hoy}/aaaaaa1111/4~test_complete~pide_ahora.bajo`, `${hoy}/bbbbbb2222/1~visit~p2990.google.d`];
     const resumen = Object.assign({ generado: hoy, dias: 30, desde: hoy, hasta: hoy, eventos: claves.length, aportes: { total: 3, por_mes: { '2026-10': 3 } }, reclamos: { anio: '2026', total: 0 } }, resumir(claves, [hoy]));
-    const { d, sent } = page('panel.html', '/js/panel.js', read('js/panel.js'), {
+    const C = 'https://unzbrfdqsjjpnokirlsk.supabase.co/functions/v1/cobros';
+    const central = {
+      productos: [{ id: 'pidelo-bien-kit', sitio: 'pidelo-bien' }, { id: 'lo-tuyo-reporte', sitio: 'lo-tuyo' }, { id: 'buen-ojo-reporte', sitio: 'buen-ojo' }],
+      mercado_pago: false,
+      ventas: { total: 2, monto: 68.9, por_producto: {
+        'pidelo-bien-kit': { ventas: 1, monto: 29.9, por_variante: { p2990: { ventas: 1, monto: 29.9 } }, por_dia: { [hoy]: { ventas: 1, monto: 29.9 } } },
+        'lo-tuyo-reporte': { ventas: 1, monto: 39, por_variante: { unico: { ventas: 1, monto: 39 } }, por_dia: { '2020-01-01': { ventas: 1, monto: 39 } } } } },
+      reclamos: [{ id: 7, sitio: 'buen-ojo', numero: '000001-2026', creado: new Date().toISOString(), respondido: null, datos: { nombre: 'Ana Pérez', tipo_documento: 'DNI', documento: '12345678', email: 'ana@correo.pe', tipo: 'reclamo', detalle: 'No abrió el reporte.', pedido: 'Que lo arreglen.' } }]
+    };
+    const { w, d, sent } = page('panel.html', '/js/panel.js', read('js/panel.js'), {
       before: w => w.localStorage.setItem('pidelo-bien-panel', 'tok'),
-      respond: url => url.startsWith('/api/resumen') ? { status: 200, json: resumen } : { status: 404, json: {} }
+      respond: url => url.startsWith('/api/resumen') ? { status: 200, json: resumen }
+        : url === `${C}/resumen` ? { status: 200, json: central }
+        : url === `${C}/reclamo/respondido` ? { status: 200, json: { ok: true } } : { status: 404, json: {} }
     });
     await wait(60);
     ok(sent[0].init.headers.Authorization === 'Bearer tok', 'el panel debe enviar el token');
+    ok(sent.some(s => s.url === `${C}/resumen` && s.init.headers['x-panel'] === 'tok'), 'el panel pide ventas y reclamos al motor central con el mismo token');
     ok(d.querySelectorAll('.kpi').length === 7 && d.querySelector('.kpi .v').textContent === '2', 'indicadores del panel');
+    const kVentas = [...d.querySelectorAll('.kpi')].find(k => k.querySelector('.k').textContent === 'Ventas');
+    ok(kVentas && kVentas.querySelector('.v').textContent === '1' && /S\/ 29\.90/.test(kVentas.textContent), 'ventas de Pídelo Bien en el periodo, desde el motor central');
+    const vc = [...d.querySelectorAll('.card')].find(c => c.querySelector('h2').textContent === 'Ventas de tus tests');
+    ok(vc && vc.querySelectorAll('tbody tr').length === 3 && /Lo Tuyo/.test(vc.textContent) && /S\/ 39\.00/.test(vc.textContent), 'tabla de ventas de todas las páginas');
+    const rc = [...d.querySelectorAll('.card')].find(c => /Libro de Reclamaciones de Lo Tuyo/.test(c.querySelector('h2').textContent));
+    ok(rc && /1 hoja pendiente/.test(rc.textContent) && /Buen Ojo · Hoja 000001-2026/.test(rc.textContent) && /Ana Pérez/.test(rc.textContent), 'hojas de reclamación de las otras páginas');
+    rc.querySelector('[data-respondido]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+    await wait(40);
+    const marca = sent.find(s => s.url === `${C}/reclamo/respondido`);
+    ok(marca && JSON.parse(marca.body).id === 7 && marca.init.headers['x-panel'] === 'tok', 'marcar una hoja como respondida');
     ok(d.querySelectorAll('.bars li').length === 9 + 14, 'barras de embudo y preguntas');
     ok(d.querySelector('.chart svg polyline') && d.querySelector('details.table-view table'), 'gráfico diario con tabla');
     const bad = page('panel.html', '/js/panel.js', read('js/panel.js'), { before: w => w.localStorage.setItem('pidelo-bien-panel', 'malo'), respond: () => ({ status: 401, json: {} }) });

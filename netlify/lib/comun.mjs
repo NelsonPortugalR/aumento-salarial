@@ -1,6 +1,6 @@
 // Utilidades de las funciones de Netlify: respuestas, fechas de Lima, validación y acceso al panel.
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { CATALOGOS, PASOS, SALIDAS, CONSENTIMIENTO } from './catalogos.mjs';
+import { CATALOGOS, PASOS, SALIDAS, CONSENTIMIENTO, VARIANTES } from './catalogos.mjs';
 
 export const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -34,7 +34,7 @@ export function autorizado(req, token, huella) {
 }
 
 /* ---------- Eventos del embudo ---------- */
-export const EVENTOS = ['visit', 'test_start', 'step', 'test_complete', 'exit_route', 'paywall_view', 'pay_click', 'wa_click', 'code_ok', 'code_bad', 'kit_built', 'sim_start', 'polish', 'share', 'contribute', 'copy', 'download', 'method_view', 'privacy_view', 'restart'];
+export const EVENTOS = ['visit', 'test_start', 'step', 'test_complete', 'exit_route', 'paywall_view', 'pay_click', 'wa_click', 'code_ok', 'code_bad', 'kit_built', 'sim_start', 'polish', 'share', 'contribute', 'copy', 'download', 'method_view', 'privacy_view', 'restart', 'paid'];
 const ID = /^[a-z0-9]{6,16}$/;
 const DETALLE = /^[a-z0-9_.-]{0,48}$/;
 
@@ -45,6 +45,8 @@ export function claveEvento(b, now = new Date()) {
   if (!ID.test(s) || !EVENTOS.includes(e) || !DETALLE.test(d)) return null;
   if (e === 'step' && !PASOS.includes(d)) return null;
   if (e === 'exit_route' && !SALIDAS.includes(d)) return null;
+  // La venta la confirma el motor de cobros; este evento solo ubica el pago en el embudo, con su precio
+  if (e === 'paid' && !VARIANTES.includes(d)) return null;
   const t = now.getTime().toString(36) + Math.floor(Math.random() * 1296).toString(36).padStart(2, '0');
   return `${limaDia(now)}/${s}/${t}~${e}${d ? '~' + d : ''}`;
 }

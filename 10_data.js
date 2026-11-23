@@ -12,16 +12,17 @@ const CONFIG = {
     { price: 29.90, payUrl: '' },
     { price: 49.90, payUrl: '' }
   ],
-  priceTestOn: false,
-  checkout: '',      // Cobro automático con tarjeta (versión web: '/api/pago'). Vacío = link de pago y código manual.
+  priceTestOn: true,
+  checkout: '',      // Motor de cobros central (versión web: la función cobros en Supabase). Vacío = link de pago y código manual.
+  producto: 'pidelo-bien-kit', // Producto en el catálogo del motor de cobros (tabla cb_productos)
   collectUrl: '',    // Endpoint que recibe el registro anónimo de cada test (POST JSON). Vacío = no se envía nada.
   eventsUrl: '',     // Endpoint de medición anónima del embudo (POST JSON). Vacío = no se mide nada.
   consentVersion: '2026-10',
   // Datos del proveedor para términos, privacidad y Libro de Reclamaciones (web)
   legal: {
-    razonSocial: '',
+    razonSocial: 'Portugal Research International S.A.C.',
     ruc: '',
-    domicilio: '',
+    domicilio: 'Av. Cayma 628, Of. 502, Arequipa, Perú',
     correo: '',
     registro: ''     // código de inscripción del banco de datos ante la Autoridad Nacional de Protección de Datos Personales
   },

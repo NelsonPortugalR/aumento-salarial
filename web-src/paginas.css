@@ -99,6 +99,12 @@ a.brand{color:var(--ink)}
 .tabla-wrap{overflow-x:auto}
 details.table-view{margin-top:10px}
 details.table-view summary{cursor:pointer;font-size:.88rem;color:var(--ink-2)}
+.card details{border-top:1px solid var(--rule);padding:10px 0}
+.card details summary{cursor:pointer;font-size:.92rem}
+.hoja{display:grid;gap:6px;margin:10px 0}
+.hoja div{display:grid;grid-template-columns:minmax(90px,30%) 1fr;gap:10px}
+.hoja dt{color:var(--ink-2);font-size:.85rem}
+.hoja dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .note{font-size:.86rem;color:var(--ink-2)}
 .empty{color:var(--ink-2);font-size:.92rem;margin-top:12px}
 .token-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}

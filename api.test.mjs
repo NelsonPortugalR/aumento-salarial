@@ -16,30 +16,11 @@ setEnvironmentContext({ siteID: 'pidelo-test', token: 'tok', edgeURL: `http://lo
 process.env.PANEL_TOKEN = 'token-de-prueba-largo';
 globalThis.Netlify = { env: { get: k => process.env[k] } };
 
-// Mercado Pago simulado: preferencias y pagos en memoria; el resto del tráfico (Blobs local) pasa directo
-const MP = { prefs: [], pagos: [] };
-const fetchReal = globalThis.fetch;
-globalThis.fetch = async (input, init = {}) => {
-  const u = new URL(typeof input === 'string' ? input : input.url);
-  if (u.hostname !== 'api.mercadopago.com') return fetchReal(input, init);
-  if ((init.headers || {}).Authorization !== 'Bearer TOKEN-PRUEBA') return Response.json({ message: 'invalid token' }, { status: 401 });
-  if (u.pathname === '/checkout/preferences' && init.method === 'POST') {
-    const b = JSON.parse(init.body);
-    MP.prefs.push(b);
-    return Response.json({ id: 'pref-' + MP.prefs.length, init_point: 'https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=pref-' + MP.prefs.length });
-  }
-  if (u.pathname === '/v1/payments/search') return Response.json({ results: MP.pagos.filter(p => p.external_reference === u.searchParams.get('external_reference')) });
-  const m = u.pathname.match(/^\/v1\/payments\/(\d+)$/);
-  if (m) { const p = MP.pagos.find(x => String(x.id) === m[1]); return p ? Response.json(p) : Response.json({ message: 'not found' }, { status: 404 }); }
-  return Response.json({ message: 'ruta simulada inexistente' }, { status: 404 });
-};
-
 const { default: evento } = await import('./netlify/functions/evento.mjs');
 const { default: aporte } = await import('./netlify/functions/aporte.mjs');
 const { default: reclamo } = await import('./netlify/functions/reclamo.mjs');
 const { default: panel } = await import('./netlify/functions/panel.mjs');
 const { default: limpieza } = await import('./netlify/functions/limpieza.mjs');
-const { default: pago } = await import('./netlify/functions/pago.mjs');
 const { claveEvento, leerClave, validarAporte, validarReclamo, numeroHoja, limaDia, limaMes, autorizado } = await import('./netlify/lib/comun.mjs');
 
 const post = (url, body) => new Request('https://pidelo.test' + url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body) });
@@ -146,46 +127,12 @@ ok((await getStore('aportes').list({ prefix: '2019-01/' })).blobs.length === 0, 
 ok((await getStore('eventos').list({ prefix: limaDia() + '/' })).blobs.length === 11, 'la limpieza borró eventos recientes');
 ok((await getStore('aportes').list()).blobs.length === 1, 'la limpieza borró aportes recientes');
 
-/* 6) Cobro con tarjeta: Mercado Pago confirma, el servidor emite un código por compra */
-const pg = (ruta, body) => pago(body === undefined ? new Request('https://pidelo.test' + ruta) : post(ruta, body));
-delete process.env.MP_ACCESS_TOKEN;
-ok((await (await pg('/api/pago/disponible')).json()).disponible === false, 'sin clave el cobro no debe figurar disponible');
-ok((await pg('/api/pago/crear', { variante: 'p2990' })).status === 503, 'sin clave no se crean pagos');
-process.env.MP_ACCESS_TOKEN = 'TOKEN-PRUEBA';
-ok((await (await pg('/api/pago/disponible')).json()).disponible === true, 'con clave el cobro debe figurar disponible');
-ok((await pg('/api/pago/crear', { variante: 'p1' })).status === 400, 'variante inventada aceptada');
-const c1 = await (await pg('/api/pago/crear', { variante: 'p2990', s: 'sesioncompra1' })).json();
-const pref = MP.prefs[MP.prefs.length - 1];
-ok(/^[a-f0-9]{24}$/.test(c1.pedido) && c1.url.includes('mercadopago.com.pe'), 'creación del pago: ' + JSON.stringify(c1));
-ok(pref.items[0].unit_price === 29.9 && pref.items[0].currency_id === 'PEN' && pref.external_reference === c1.pedido, 'preferencia con precio del servidor y pedido');
-ok(pref.back_urls.success === `https://pidelo.test/?pago=${c1.pedido}` && pref.notification_url === 'https://pidelo.test/api/pago/aviso' && pref.binary_mode === true && pref.auto_return === 'approved', 'preferencia: retorno, aviso y modo binario');
-const estado = async ped => (await pg('/api/pago/estado?pedido=' + ped)).json();
-ok((await estado(c1.pedido)).estado === 'creado', 'pedido sin pago');
-ok((await pg('/api/pago/estado?pedido=' + 'f'.repeat(24))).status === 404 && (await pg('/api/pago/estado?pedido=x')).status === 400, 'pedido inexistente o inválido');
-MP.pagos.push({ id: 9001, external_reference: c1.pedido, status: 'approved', currency_id: 'PEN', transaction_amount: 1 });
-ok((await estado(c1.pedido)).estado === 'revisar', 'un pago por otro monto no desbloquea');
-MP.pagos.push({ id: 9002, external_reference: c1.pedido, status: 'approved', currency_id: 'PEN', transaction_amount: 29.9 });
-const e1 = await estado(c1.pedido);
-ok(e1.estado === 'pagado' && /^PB-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(e1.codigo), 'pago aprobado con código: ' + JSON.stringify(e1));
-ok((await estado(c1.pedido)).codigo === e1.codigo, 'el código de una compra no cambia');
-ok((await pg('/api/codigo', { codigo: e1.codigo.toLowerCase() })).status === 200, 'el código de compra debe valer');
-ok((await pg('/api/codigo', { codigo: 'PB-AAAA-BBBB' })).status === 404 && (await pg('/api/codigo', { codigo: 'hola' })).status === 400, 'códigos falsos o mal formados');
-// Aviso de Mercado Pago cuando la persona no vuelve al sitio
-const c2 = await (await pg('/api/pago/crear', { variante: 'p4990', s: 'sesioncompra2' })).json();
-MP.pagos.push({ id: 9003, external_reference: c2.pedido, status: 'approved', currency_id: 'PEN', transaction_amount: 49.9 });
-const aviso = await pago(new Request(`https://pidelo.test/api/pago/aviso?data.id=9003&type=payment`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'payment.updated', type: 'payment', data: { id: '9003' } }) }));
-ok(aviso.status === 200 && (await estado(c2.pedido)).estado === 'pagado', 'el aviso confirma el pago');
-ok((await pago(new Request('https://pidelo.test/api/pago/aviso?data.id=123&type=payment', { method: 'POST', body: '{}' }))).status === 500, 'aviso de un pago desconocido: Mercado Pago debe reintentar');
-ok((await pago(new Request('https://pidelo.test/api/pago/aviso?id=55&topic=merchant_order', { method: 'POST', body: '{}' }))).status === 200, 'avisos de otro tipo se ignoran');
-const c3 = await (await pg('/api/pago/crear', { variante: 'p2990' })).json();
-MP.pagos.push({ id: 9004, external_reference: c3.pedido, status: 'rejected', currency_id: 'PEN', transaction_amount: 29.9 });
-ok((await estado(c3.pedido)).estado === 'rechazado', 'pago rechazado');
-const r3 = await (await panel(get('/api/resumen?dias=7', 'token-de-prueba-largo'))).json();
-ok(r3.ventas.total === 2 && r3.ventas.monto === 79.8 && r3.ventas.por_variante.p2990 === 1 && r3.ventas.por_variante.p4990 === 1, 'ventas en el panel: ' + JSON.stringify(r3.ventas));
-ok(r3.embudo.pagaron === 2, 'el embudo cuenta a quienes pagaron');
-process.env.MP_ACCESS_TOKEN = 'TOKEN-MALO';
-ok((await pg('/api/pago/crear', { variante: 'p2990' })).status === 502, 'clave rechazada por Mercado Pago: error controlado');
-delete process.env.MP_ACCESS_TOKEN;
+/* 6) Pago: lo confirma el motor de cobros central; el navegador solo ubica la venta en el embudo */
+ok(claveEvento({ s: 'abc123xyz0', e: 'paid', d: 'p2990' }) !== null, 'el evento paid con una variante del catálogo debe valer');
+ok(claveEvento({ s: 'abc123xyz0', e: 'paid', d: 'p1' }) === null && claveEvento({ s: 'abc123xyz0', e: 'paid' }) === null, 'paid con precio inventado o sin precio aceptado');
+ok((await send('sesioncompra1', 'paid', 'p2990')) === 204 && (await send('sesioncompra2', 'paid', 'p4990')) === 204, 'eventos de pago aceptados');
+const r6 = await (await panel(get('/api/resumen?dias=7', 'token-de-prueba-largo'))).json();
+ok(r6.embudo.pagaron === 2 && !('ventas' in r6), 'el embudo cuenta a quienes pagaron; las ventas vienen del motor central');
 
 await server.stop();
 fs.rmSync(dir, { recursive: true, force: true });

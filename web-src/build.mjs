@@ -255,7 +255,7 @@ ${comoSeCalcula}`);
 for (const f of fs.readdirSync(path.join(SRC, 'js'))) fs.copyFileSync(path.join(SRC, 'js', f), path.join(OUT, 'js', f));
 fs.cpSync(path.join(SRC, 'static'), OUT, { recursive: true });
 
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'";
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://unzbrfdqsjjpnokirlsk.supabase.co; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'";
 fs.writeFileSync(path.join(OUT, '_headers'), `/*
   Content-Security-Policy: ${CSP}
   X-Content-Type-Options: nosniff

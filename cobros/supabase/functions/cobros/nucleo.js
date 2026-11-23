@@ -17,7 +17,7 @@ const CODIGO = /^([A-Z]{2})-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 const PRODUCTO = /^[a-z0-9-]{3,40}$/;
 const VARIANTE = /^[a-z0-9]{1,20}$/;
 const CUPON = /^[A-Z0-9]{3,30}$/;
-const LIBROS = ['lo-tuyo', 'buen-partido'];   // páginas cuyo Libro de Reclamaciones guarda este servicio
+const LIBROS = ['lo-tuyo', 'buen-partido', 'buen-ojo'];   // páginas cuyo Libro de Reclamaciones guarda este servicio
 
 const hex = bytes => Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 // El número de pedido es aleatorio y solo lo conoce el navegador que pagó: funciona como su llave

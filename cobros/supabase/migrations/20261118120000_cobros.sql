@@ -1,5 +1,5 @@
--- Cobros: un solo servicio de pagos con Mercado Pago (Checkout Pro) para Pídelo Bien, Lo Tuyo y Buen Partido,
--- más el Libro de Reclamaciones de Lo Tuyo y Buen Partido.
+-- Cobros: un solo servicio de pagos con Mercado Pago (Checkout Pro) para Pídelo Bien, Lo Tuyo, Buen Partido y Buen Ojo,
+-- más el Libro de Reclamaciones de Lo Tuyo, Buen Partido y Buen Ojo.
 -- Solo la función "cobros" usa estas tablas, con la clave secreta del proyecto: RLS activo, sin políticas
 -- y sin permisos para anon ni authenticated. Nada de esto se lee ni se escribe desde el navegador.
 
@@ -58,7 +58,7 @@ create table public.cb_reclamos (
   respondido timestamptz,
   unique (sitio, numero)
 );
-comment on table public.cb_reclamos is 'Libro de Reclamaciones de Lo Tuyo y Buen Partido: una hoja por fila, con número correlativo por página y año. Se conservan al menos dos años.';
+comment on table public.cb_reclamos is 'Libro de Reclamaciones de Lo Tuyo, Buen Partido y Buen Ojo: una hoja por fila, con número correlativo por página y año. Se conservan al menos dos años.';
 
 create table public.cb_contadores (
   clave text primary key,
@@ -155,8 +155,11 @@ insert into public.cb_productos (id, sitio, nombre, precios, cupones, origenes, 
   -- Lo Tuyo cobra con un nombre neutro: el estado de cuenta y el correo de Mercado Pago no dicen de qué se trata
   ('lo-tuyo-reporte', 'lo-tuyo', 'Reporte personalizado',
    '{"unico": 39}', '{}',
-   array['https://lo-tuyo.netlify.app', 'https://*--lo-tuyo.netlify.app'], 'PORTUGALRI', 'LT');
+   array['https://lo-tuyo.netlify.app', 'https://*--lo-tuyo.netlify.app'], 'PORTUGALRI', 'LT'),
+  ('buen-ojo-reporte', 'buen-ojo', 'Reporte completo (Buen Ojo)',
+   '{"p3900": 39, "p5900": 59}', '{}',
+   array['https://buen-ojo.netlify.app', 'https://*--buen-ojo.netlify.app'], 'BUENOJO', 'BO');
 
--- Huella SHA-256 del token del panel de Pídelo Bien (el mismo token abre las ventas de las tres páginas).
+-- Huella SHA-256 del token del panel de Pídelo Bien (el mismo token abre las ventas de todas las páginas).
 insert into public.cb_config (clave, valor) values
   ('panel_huella', '4f00ae8464cee199dcbc75f763e06e0d7e783d6ae5059566ca8a957a2988808e');

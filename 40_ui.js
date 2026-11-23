@@ -498,7 +498,7 @@ async function redeem() {
     const h = await sha256Hex(code);
     let ok = CONFIG.codeHashes.includes(h);
     if (!ok && CONFIG.checkout && /^PB-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) {
-      const r = await fetch('/api/codigo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: code }) });
+      const r = await fetch(CONFIG.checkout + '/codigo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: code, producto: CONFIG.producto }) });
       ok = r.ok;
       if (ok) S.accessCode = code;
     }
@@ -759,7 +759,7 @@ async function checkout(btn) {
   btn.disabled = true;
   btn.textContent = 'Abriendo el pago…';
   try {
-    const r = await fetch(CONFIG.checkout + '/crear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ variante: o.variant, s: sessionId() }) });
+    const r = await fetch(CONFIG.checkout + '/crear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ producto: CONFIG.producto, variante: o.variant, volver: location.origin + '/' }) });
     const j = await r.json();
     if (!r.ok || !j.url || !j.pedido) throw new Error(j.error || 'pago');
     guardarPedido(j.pedido);
@@ -809,6 +809,7 @@ async function revisarPago() {
       const j = await r.json();
       if (j.estado === 'pagado' && j.codigo) {
         olvidarPedido();
+        track('paid', j.variante || offer().variant, true);
         S.unlocked = true;
         S.accessCode = j.codigo;
         if (S.view === 'test' && S.answers.sueldo) S.view = 'result';
@@ -816,6 +817,7 @@ async function revisarPago() {
         openModal(pagoHTML(j.codigo), 'ok-title');
         return;
       }
+      if (j.estado === 'devuelto') { olvidarPedido(); return; }
       if (j.estado === 'rechazado') {
         olvidarPedido();
         if (volvio) openModal(avisoPagoHTML('El pago no se completó. Puedes intentarlo de nuevo con otra tarjeta: no se te cobró nada.', pedido), 'pp-title');
@@ -853,7 +855,7 @@ function browserDownloads() {
   };
 }
 function initRuntime() {
-  if (CONFIG.checkout) fetch(CONFIG.checkout + '/disponible').then(r => r.json()).then(j => { RT.pago = j.disponible === true; }).catch(() => {});
+  if (CONFIG.checkout) fetch(`${CONFIG.checkout}/disponible?producto=${encodeURIComponent(CONFIG.producto)}`).then(r => r.json()).then(j => { RT.pago = j.disponible === true; }).catch(() => {});
   const c = window.claude;
   if (!c || typeof c.use !== 'function') { RT.downloads = browserDownloads(); syncCapabilityUI(); return; }
   c.use('sample').then(s => { RT.sample = s || null; syncCapabilityUI(); if (S.view === 'kit' && !S.sim) refreshSim(); }).catch(() => {});

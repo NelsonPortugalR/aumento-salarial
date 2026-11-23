@@ -1,7 +1,10 @@
 'use strict';
 // Panel interno: lee /api/resumen con el token guardado en este navegador y dibuja el embudo.
+// Las ventas y los reclamos de las otras páginas vienen del motor de cobros central, con el mismo token.
 (() => {
   const KEY = 'pidelo-bien-panel';
+  const COBROS = 'https://unzbrfdqsjjpnokirlsk.supabase.co/functions/v1/cobros';   // el mismo de 12_web.js
+  const SITIOS = { 'pidelo-bien': 'Pídelo Bien', 'buen-partido': 'Buen Partido', 'lo-tuyo': 'Lo Tuyo', 'buen-ojo': 'Buen Ojo' };
   const $ = id => document.getElementById(id);
   const tip = $('p-tip');
   let token = '';
@@ -132,8 +135,46 @@
     return [legend, h('div', { class: 'chart' }, svg), tv];
   }
 
+  /* ---------- Motor de cobros: ventas de todas las páginas y reclamos ---------- */
+  const soles = n => 'S/ ' + Number(n || 0).toFixed(2);
+  const enRango = (porDia, desde, hasta) => Object.entries(porDia || {})
+    .filter(([dia]) => dia >= desde && dia <= hasta)
+    .reduce((a, [, v]) => ({ ventas: a.ventas + v.ventas, monto: a.monto + v.monto }), { ventas: 0, monto: 0 });
+  const diasDesde = iso => Math.floor((Date.now() - new Date(iso).getTime()) / 86400e3);
+  function ventasCard(cb, d) {
+    if (!cb) return card('Ventas de tus tests', null, h('p', { class: 'empty' }, 'El motor de cobros no respondió. Las ventas aparecen aquí cuando esté publicado en Supabase.'));
+    const filas = cb.productos.map(p => {
+      const v = cb.ventas.por_producto[p.id] || { ventas: 0, monto: 0, por_dia: {} };
+      const r = enRango(v.por_dia, d.desde, d.hasta);
+      return { pagina: SITIOS[p.sitio] || p.sitio, ventas: r.ventas, monto: r.monto, total: v.ventas, montoTotal: v.monto };
+    });
+    return card('Ventas de tus tests', cb.mercado_pago ? 'Cobro con tarjeta activo. Ventas confirmadas por Mercado Pago, sin las devueltas.' : 'El cobro con tarjeta se activa cuando cargues la clave de Mercado Pago en Supabase (ver DESPLIEGUE.md).',
+      table([{ t: 'Página', f: r => r.pagina }, { t: 'Ventas', n: 1, f: r => fmt(r.ventas) }, { t: 'Ingresos', n: 1, f: r => soles(r.monto) }, { t: 'Desde el inicio', n: 1, f: r => fmt(r.total) }, { t: 'Ingresos totales', n: 1, f: r => soles(r.montoTotal) }], filas));
+  }
+  function reclamosCard(cb) {
+    if (!cb) return null;
+    const lista = cb.reclamos || [];
+    const pend = lista.filter(r => !r.respondido).length;
+    const sub = lista.length ? `${pend} ${pend === 1 ? 'hoja pendiente' : 'hojas pendientes'}. Responde al correo de cada persona, citando el número de hoja, en un plazo máximo de 15 días hábiles.` : 'Todavía no hay hojas.';
+    const items = lista.map(r => {
+      const x = r.datos || {};
+      const estado = r.respondido ? 'Respondida' : `Pendiente · hace ${diasDesde(r.creado)} días`;
+      const det = h('details', {}, h('summary', {}, `${SITIOS[r.sitio] || r.sitio} · Hoja ${r.numero} · ${new Date(r.creado).toLocaleDateString('es-PE')} · ${estado}`),
+        h('dl', { class: 'hoja' },
+          [['Nombre', x.nombre], [x.tipo_documento || 'Documento', x.documento], ['Domicilio', x.domicilio], ['Teléfono', x.telefono], ['Correo', x.email],
+            ['Menor de edad', x.menor ? 'Sí, apoderado: ' + (x.apoderado || '') : 'No'], ['Contrató', [x.bien, x.descripcion].filter(Boolean).join(': ')], ['Monto', x.monto], ['Compra', x.compra],
+            ['Tipo', x.tipo === 'queja' ? 'Queja' : 'Reclamo'], ['Detalle', x.detalle], ['Pedido', x.pedido]]
+            .filter(([, v]) => v).map(([k, v]) => h('div', {}, h('dt', {}, k), h('dd', {}, v)))),
+        r.respondido ? null : h('button', { type: 'button', class: 'btn-sm', 'data-respondido': String(r.id) }, 'Marcar como respondida'));
+      return det;
+    });
+    return card('Libro de Reclamaciones de Lo Tuyo, Buen Partido y Buen Ojo', sub, ...items);
+  }
+
   /* ---------- Resumen ---------- */
-  function render(d) {
+  function render(d, cb) {
+    const pb = cb && cb.ventas.por_producto['pidelo-bien-kit'];
+    const vpb = pb ? enRango(pb.por_dia, d.desde, d.hasta) : null;
     const body = $('p-body');
     body.textContent = '';
     $('p-range').textContent = `Del ${diaLargo(d.desde)} al ${diaLargo(d.hasta)} · ${fmt(d.eventos)} eventos`;
@@ -143,10 +184,11 @@
       kpi('Tests completos', fmt(e.completaron), `${pctR(t.inicio_a_completo)} de quienes empezaron`),
       kpi('Vieron el precio', fmt(e.vieron_el_muro), `${pctR(t.completo_a_muro)} de los tests completos`),
       kpi('Tocaron pagar', fmt(e.clic_en_pagar), `${pctR(t.muro_a_clic)} de quienes vieron el precio`),
-      kpi('Ventas', fmt((d.ventas || {}).periodo || 0), `S/ ${Number((d.ventas || {}).monto_periodo || 0).toFixed(2)} en el periodo · ${pctR(t.completo_a_pago)} de los tests`),
+      kpi('Ventas', vpb ? fmt(vpb.ventas) : '—', vpb ? `${soles(vpb.monto)} en el periodo · ${pctR(t.completo_a_pago)} de los tests` : 'El motor de cobros no respondió'),
       kpi('Desbloquearon el kit', fmt(e.desbloquearon), `${pctR(t.completo_a_desbloqueo)} de los tests completos`),
       kpi('Aportes de sueldo', fmt(d.aportes.total), 'desde el inicio')));
     if (!e.visitas) body.append(h('p', { class: 'empty' }, 'Todavía no hay visitas en este periodo. Abre el test en otra pestaña y vuelve a actualizar.'));
+    body.append(h('div', { class: 'cards' }, ventasCard(cb, d)));
 
     const keys = Object.keys(EMBUDO);
     const funnel = keys.map((k, i) => ({
@@ -191,7 +233,9 @@
       card('Aportes y reclamos', null,
         h('p', {}, `${fmt(d.aportes.total)} ${d.aportes.total === 1 ? 'aporte' : 'aportes'} de sueldo con consentimiento.`),
         table([{ t: 'Mes', f: r => r.valor }, { t: 'Aportes', n: 1, f: r => fmt(r.n) }], meses, 'Todavía no hay aportes.'),
-        h('p', { class: 'note' }, `${fmt(d.reclamos.total)} ${d.reclamos.total === 1 ? 'hoja' : 'hojas'} de reclamación en ${d.reclamos.anio}. El detalle llega a Netlify, en Forms; respóndelas en un plazo máximo de 15 días hábiles.`))));
+        h('p', { class: 'note' }, `${fmt(d.reclamos.total)} ${d.reclamos.total === 1 ? 'hoja' : 'hojas'} de reclamación de Pídelo Bien en ${d.reclamos.anio}. El detalle llega a Netlify, en Forms; respóndelas en un plazo máximo de 15 días hábiles.`))));
+    const rc = reclamosCard(cb);
+    if (rc) body.append(h('div', { class: 'cards' }, rc));
   }
 
   async function load() {
@@ -199,10 +243,18 @@
     body.classList.add('loading');
     $('p-main-err').textContent = '';
     try {
-      const r = await fetch(`/api/resumen?dias=${dias}`, { headers: { Authorization: 'Bearer ' + token } });
+      const [r, c] = await Promise.all([
+        fetch(`/api/resumen?dias=${dias}`, { headers: { Authorization: 'Bearer ' + token } }),
+        fetch(`${COBROS}/resumen`, { headers: { 'x-panel': token } }).catch(() => null)
+      ]);
       if (r.status === 401) { logout('Ese token no es válido.'); return; }
       if (!r.ok) throw new Error(String(r.status));
-      render(await r.json());
+      let cb = null;
+      try {
+        const j = c && c.ok ? await c.json() : null;
+        if (j && j.ventas && j.ventas.por_producto && Array.isArray(j.productos)) cb = j;
+      } catch (x) { cb = null; }
+      render(await r.json(), cb);
     } catch (e) {
       $('p-main-err').textContent = 'No se pudo cargar el resumen. Intenta de nuevo en un momento.';
     } finally {
@@ -242,6 +294,19 @@
     load();
   });
   $('p-refresh').addEventListener('click', load);
+  $('p-body').addEventListener('click', async e => {
+    const b = e.target.closest('[data-respondido]');
+    if (!b) return;
+    b.disabled = true;
+    try {
+      const r = await fetch(`${COBROS}/reclamo/respondido`, { method: 'POST', headers: { 'x-panel': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: Number(b.dataset.respondido) }) });
+      if (!r.ok) throw new Error(String(r.status));
+      load();
+    } catch (x) {
+      b.disabled = false;
+      $('p-main-err').textContent = 'No se pudo marcar la hoja. Intenta de nuevo.';
+    }
+  });
   $('p-logout').addEventListener('click', () => logout(''));
   for (const b of document.querySelectorAll('[data-export]')) b.addEventListener('click', async () => {
     const prev = b.textContent;
