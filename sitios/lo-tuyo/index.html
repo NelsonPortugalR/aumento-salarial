@@ -2383,6 +2383,12 @@ if (typeof module !== 'undefined') module.exports = LT;
   const SIT = LT.SITUATIONS;
   const reduced = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const PRICE = { report: 39, was: 59, consult: 190 };
+  /* Pago con el motor de cobros central, el mismo de los otros tests (cobros/ en el repositorio aumento-salarial).
+     Todo vive en memoria, como el diagnóstico: Mercado Pago se abre en otra pestaña y el reporte se abre aquí. */
+  const COBROS = { url: 'https://unzbrfdqsjjpnokirlsk.supabase.co/functions/v1/cobros', producto: 'lo-tuyo-reporte', variante: 'unico' };
+  const PAGO = { activo: undefined, consulta: null, pedido: '', url: '', codigo: '', error: '', timer: null, hasta: 0, preparando: false };
+  const PROVEEDOR = { nombre: 'Portugal Research International S.A.C.', ruc: '', domicilio: 'Av. Cayma 628, Of. 502, Arequipa, Perú' };
+  const pagoReal = () => PAGO.activo === true;
 
   /* ---------- Íconos ---------- */
   const svg = p => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -2580,7 +2586,7 @@ if (typeof module !== 'undefined') module.exports = LT;
       <div><p class="h3">Plan Patrimonio</p><p class="muted small">Para parejas con empresa, inversiones o herencias: evaluación, estrategia y acompañamiento con abogada senior y asesor financiero. Desde S/ 1,500. Próximamente.</p></div>
       <div><p class="h3">Respaldo, para empresas</p><p class="muted small">Un beneficio para tus colaboradoras, con diagnóstico, reportes y consultas incluidas. Próximamente.</p></div>
     </div>
-    <p class="fine">Versión de prueba: todavía no se realizan cobros.</p>`;
+    <p class="fine">${pagoReal() ? 'El reporte completo se paga una sola vez, con tarjeta. Las consultas y los trámites todavía no están activos.' : 'Versión de prueba: todavía no se realizan cobros.'}</p>`;
 
   /* ---------- Vistas ---------- */
   function home() {
@@ -2746,7 +2752,7 @@ if (typeof module !== 'undefined') module.exports = LT;
         <p class="price">S/ ${PRICE.report}<s>S/ ${PRICE.was}</s></p>
         <p class="small muted">Pago único · precio de lanzamiento</p>
         <button class="btn btn-primary" data-act="unlock">Obtener mi reporte</button>
-        <p class="fine">Versión de prueba: no se cobra nada.</p>
+        <p class="fine">${pagoReal() ? 'Pago único con tarjeta. Se abre al instante.' : 'Versión de prueba: no se cobra nada.'}</p>
       </div>
     </section>`;
   }
@@ -3239,7 +3245,10 @@ if (typeof module !== 'undefined') module.exports = LT;
       </section>
       <section class="stack" aria-labelledby="ab-legal"><h2 class="h2" id="ab-legal">Aviso legal</h2>
         <p>Lo Tuyo ofrece información general sobre la ley peruana en temas de pareja, familia y bienes. No es asesoría legal para tu caso ni reemplaza a una abogada. Las normas y su interpretación cambian: el contenido está actualizado al ${esc(LT.UPDATED)} y pendiente de revisión por una abogada colegiada.</p>
-        <p>Esta es una versión de prueba: los pagos, las consultas y los trámites con abogadas todavía no están activos y no se realiza ningún cobro.</p>
+        ${pagoReal()
+          ? `<p>El reporte completo se paga con tarjeta, en la página segura de Mercado Pago: no vemos ni guardamos los datos de tu tarjeta. De cada compra guardamos solo un número de pedido al azar, el precio, la fecha, el estado del pago y el código de acceso, sin nada que te identifique. En el estado de cuenta y en el correo de Mercado Pago figura como «Reporte personalizado» de PORTUGALRI. Las consultas y los trámites con abogadas todavía no están activos.</p>`
+          : '<p>Esta es una versión de prueba: los pagos, las consultas y los trámites con abogadas todavía no están activos y no se realiza ningún cobro.</p>'}
+        <p class="small muted">Lo Tuyo es un servicio de ${esc(PROVEEDOR.nombre)}, RUC ${PROVEEDOR.ruc ? esc(PROVEEDOR.ruc) : 'por completar'}, con domicilio en ${esc(PROVEEDOR.domicilio)}.</p>
       </section>
       ${safetyPanel({ k: 'about' })}
     </div></div>`;
@@ -3490,7 +3499,109 @@ if (typeof module !== 'undefined') module.exports = LT;
     </div>`, 'textarea');
     const ta = $('#modal textarea'); if (ta) ta.select();
   }
+  /* ---------- Pago con el motor de cobros ---------- */
+  function cobroActivo() {
+    if (!PAGO.consulta) {
+      PAGO.consulta = fetch(`${COBROS.url}/disponible?producto=${COBROS.producto}`)
+        .then(r => (r.ok ? r.json() : null)).then(j => (j ? j.disponible === true : null)).catch(() => null)
+        .then(v => { PAGO.activo = v; return v; });
+    }
+    return PAGO.consulta;
+  }
+  function payDialog() {
+    const cab = `<p class="eyebrow">Pago seguro</p><h2 class="h2" id="dlg-p">Reporte completo · S/ ${PRICE.report}</h2>`;
+    if (PAGO.codigo) {
+      return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-p">${cab}
+        <p><b>Pago confirmado.</b> Tu reporte completo ya está abierto en esta página.</p>
+        <p>Anota tu código de acceso: <b class="mono">${esc(PAGO.codigo)}</b></p>
+        <p class="small muted">Como Lo Tuyo no guarda nada en tu dispositivo, si cierras esta página tendrás que hacer el test de nuevo. Con este código abres el reporte completo sin volver a pagar.</p>
+        <div class="row"><button class="btn btn-primary" data-act="payDone">Ver mi reporte</button></div></div>`;
+    }
+    const boton = PAGO.url
+      ? `<a class="btn btn-primary" href="${esc(PAGO.url)}" target="_blank" rel="noopener" data-act="payGo">Pagar S/ ${PRICE.report} con tarjeta</a>`
+      : `<button class="btn btn-primary" ${PAGO.preparando ? 'disabled' : 'data-act="payPrep"'}>${PAGO.preparando ? 'Preparando el pago…' : 'Volver a intentar'}</button>`;
+    return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-p">${cab}
+      <p>Pagas una sola vez, con tarjeta de crédito o débito, en la página segura de Mercado Pago, que se abre en otra pestaña. Cuando termines, vuelve a esta pestaña: tu reporte se abre solo.</p>
+      <p class="small muted">No vemos ni guardamos los datos de tu tarjeta, y en tu estado de cuenta figura como PORTUGALRI. Tu reporte se arma en esta página y no queda guardado en ningún lado.</p>
+      ${PAGO.timer && !PAGO.error ? '<p class="small" role="status">Esperando la confirmación de Mercado Pago…</p>' : ''}
+      ${PAGO.error ? `<p class="small" role="alert">${esc(PAGO.error)}</p>` : ''}
+      <div class="row">${boton}<button class="btn btn-ghost" data-act="closeModal">Cancelar</button></div>
+      <details class="small"><summary>¿Ya pagaste? Abre tu reporte con tu código</summary>
+        <div class="row"><input id="lt-cod" autocomplete="off" autocapitalize="characters" placeholder="LT-XXXX-XXXX" aria-label="Código de acceso"><button class="btn btn-ghost btn-sm" data-act="redeem">Abrir</button></div>
+        <p class="small" id="lt-cod-err" role="alert"></p></details></div>`;
+  }
+  function refreshPay() { if (S.modal && $('#dlg-p')) $('#modal').firstElementChild.innerHTML = payDialog(); }
+  async function prepararPago() {
+    PAGO.preparando = true; PAGO.error = ''; refreshPay();
+    try {
+      const r = await fetch(COBROS.url + '/crear', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ producto: COBROS.producto, variante: COBROS.variante, volver: location.origin + location.pathname }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.url || !j.pedido) throw new Error(j.error || 'pago');
+      PAGO.pedido = j.pedido; PAGO.url = j.url;
+    } catch (e) {
+      PAGO.error = 'No pudimos preparar el pago. Revisa tu conexión e intenta de nuevo.';
+    }
+    PAGO.preparando = false; refreshPay();
+  }
+  async function revisarPago() {
+    if (!PAGO.pedido || PAGO.codigo || exited) return;
+    try {
+      const r = await fetch(`${COBROS.url}/estado?pedido=${PAGO.pedido}`);
+      const j = r.ok ? await r.json() : null;
+      if (j && j.estado === 'pagado' && j.codigo) pagoConfirmado(j.codigo);
+    } catch (e) { /* sin red: se reintenta */ }
+  }
+  /* Mientras se paga en la otra pestaña, se consulta el estado cada pocos segundos (hasta 20 minutos) */
+  function vigilarPago() {
+    if (PAGO.timer || !PAGO.pedido || PAGO.codigo) return;
+    PAGO.hasta = Date.now() + 20 * 60e3;
+    const paso = async () => {
+      await revisarPago();
+      PAGO.timer = (!PAGO.codigo && !exited && Date.now() < PAGO.hasta) ? setTimeout(paso, 4000) : null;
+    };
+    PAGO.timer = setTimeout(paso, 3000);
+    refreshPay();
+  }
+  function pagoConfirmado(codigo) {
+    PAGO.codigo = codigo;
+    clearTimeout(PAGO.timer); PAGO.timer = null;
+    S.unlocked = true;
+    trClick('desbloqueo');
+    if (S.modal && $('#dlg-p')) refreshPay();
+    else if (S.view === 'pagado' || S.view === 'result') render({ noFocus: S.view !== 'pagado' });
+    if (S.view !== 'pagado' && !S.modal) toast('Pago confirmado: tu reporte completo ya está abierto');
+  }
+  async function canjear() {
+    const inp = $('#lt-cod'), err = $('#lt-cod-err');
+    const codigo = String(inp && inp.value || '').toUpperCase().replace(/\s+/g, '');
+    if (!/^LT-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(codigo)) { err.textContent = 'El código tiene la forma LT-XXXX-XXXX.'; return; }
+    try {
+      const r = await fetch(COBROS.url + '/codigo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo, producto: COBROS.producto }) });
+      if (!r.ok) { err.textContent = 'Ese código no es válido. Revisa que esté bien escrito.'; return; }
+      PAGO.codigo = codigo; S.unlocked = true; trClick('codigo');
+      closeModal(); render(); toast('Listo: tu reporte completo está abierto');
+    } catch (e) { err.textContent = 'No pudimos revisar el código. Intenta de nuevo.'; }
+  }
+  /* Pestaña a la que vuelve Mercado Pago: confirma el pago y entrega el código, sin guardar nada */
+  function pagado() {
+    const listo = !!PAGO.codigo;
+    return `<div class="wrap page"><div class="narrow stack" style="--gap:22px">
+      <header class="page-head"><p class="eyebrow">Tu pago</p><h1 class="h1" tabindex="-1">${listo ? 'Pago confirmado' : 'Confirmando tu pago…'}</h1></header>
+      ${listo ? `<p>Vuelve a la pestaña donde hiciste el test: tu reporte completo ya se abrió ahí.</p>
+        <p>Anota tu código de acceso: <b class="mono">${esc(PAGO.codigo)}</b></p>
+        <p class="small muted">¿Cerraste esa pestaña? Haz el test de nuevo y, al tocar «Obtener mi reporte», abre el reporte con tu código, sin volver a pagar. Lo Tuyo no guarda nada en tu dispositivo, así que este código solo queda donde tú lo anotes.</p>
+        <div class="row"><button class="btn btn-primary" data-act="start">Hacer el test</button></div>`
+      : '<p>Esto toma unos segundos. No cierres esta página.</p>'}
+    </div></div>`;
+  }
+
   function openPay() {
+    if (pagoReal()) {
+      openModal(payDialog(), '.btn-primary');
+      if (!PAGO.url && !PAGO.codigo && !PAGO.preparando) prepararPago();
+      return;
+    }
     openModal(`<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-p">
       <p class="eyebrow">Versión de prueba</p>
       <h2 class="h2" id="dlg-p">Reporte completo · S/ ${PRICE.report}</h2>
@@ -3794,8 +3905,8 @@ if (typeof module !== 'undefined') module.exports = LT;
   }
 
   /* ---------- Navegación ---------- */
-  const VIEWS = { home, test, result, guides, guide, myths, tools, about, analytics };
-  const NAV = { home: 'home', test: 'test', result: 'test', guides: 'guides', guide: 'guides', myths: 'myths', tools: 'tools', about: '', analytics: '' };
+  const VIEWS = { home, test, result, guides, guide, myths, tools, about, analytics, pagado };
+  const NAV = { home: 'home', test: 'test', result: 'test', guides: 'guides', guide: 'guides', myths: 'myths', tools: 'tools', about: '', analytics: '', pagado: '' };
   function render(opt) {
     opt = opt || {};
     if (exited) return;
@@ -3951,6 +4062,10 @@ if (typeof module !== 'undefined') module.exports = LT;
       if (TR.d && SEPQ.every(([k]) => S.sep[k])) TR.d.herr.sep = LT.sepAdvice(S.sep).level;
     },
     unlock: () => { trClick('reporte'); openPay(); },
+    payPrep: () => prepararPago(),
+    payGo: () => { trClick('pago'); vigilarPago(); },
+    payDone: () => { closeModal(); render(); },
+    redeem: () => canjear(),
     confirmPay: () => { trClick('desbloqueo'); S.unlocked = true; closeModal(); render(); toast('Reporte completo desbloqueado (prueba)'); },
     closeModal: (el, e) => { if (el.dataset.self && e.target !== el) return; closeModal(); },
     copy: el => {
@@ -4020,6 +4135,7 @@ if (typeof module !== 'undefined') module.exports = LT;
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset && e.target.dataset.search) { e.preventDefault(); searchRecord(); } });
   document.addEventListener('focusout', e => { if (e.target.dataset && e.target.dataset.search) searchRecord(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && TR.t) { clearTimeout(TR.t); trFlush(); } });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && PAGO.timer) revisarPago(); });
   document.addEventListener('change', e => {
     const el = e.target;
     if (exited) return;
@@ -4067,6 +4183,19 @@ if (typeof module !== 'undefined') module.exports = LT;
   function start(data) {
     data = data && typeof data === 'object' ? data : {};
     if (data.exited) { quickExit(); return; }
+    cobroActivo().then(activo => {
+      // Con el pago activo, los textos de prueba cambian; se redibuja sin mover la pantalla
+      if (!activo || exited || S.modal || !['home', 'result', 'about'].includes(S.view)) return;
+      const y = window.scrollY; render({ noFocus: true }); window.scrollTo(0, y);
+    });
+    const pq = new URLSearchParams(location.search).get('pago');
+    if (/^[a-f0-9]{24}$/.test(pq || '')) {
+      try { history.replaceState(null, '', location.pathname); } catch (e) { /* sin historial */ }
+      PAGO.pedido = pq; S.view = 'pagado'; render();
+      revisarPago();
+      vigilarPago();
+      return;
+    }
     const hash = (location.hash || '').slice(1).toLowerCase();
     if (data.view && VIEWS[data.view]) {
       S.view = data.view; S.guide = data.guide || null; S.cat = data.cat || 'all';

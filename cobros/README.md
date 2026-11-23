@@ -5,7 +5,7 @@ Un solo servicio de pagos para los tests del dueño: Pídelo Bien, Buen Partido,
 - Función: `supabase/functions/cobros/` (Supabase Edge Function, proyecto "NelsonPortugalR's Project", `unzbrfdqsjjpnokirlsk`). La lógica está en `nucleo.js` y se prueba sin Deno.
 - Tablas: `supabase/migrations/20261118120000_cobros.sql` (`cb_productos`, `cb_pedidos`, `cb_accesos`, `cb_config`, `cb_reclamos`, `cb_contadores`). Tienen RLS sin políticas y sin permisos para `anon` ni `authenticated`: solo las usa la función, con la clave secreta del proyecto.
 - Dirección pública: `https://unzbrfdqsjjpnokirlsk.supabase.co/functions/v1/cobros`.
-- Pruebas: `node cobros/pruebas/cobros.test.mjs` (también corre con `npm test`).
+- Pruebas: `node cobros/pruebas/cobros.test.mjs` (también corre con `npm test`). De punta a punta en Chromium, con el motor real, la tienda en memoria y Mercado Pago simulado: `cobros/pruebas/e2e/` (Lo Tuyo desde `sitios/lo-tuyo`; Buen Partido y Buen Ojo desde sus repositorios armados).
 
 ## Cómo se activa
 
