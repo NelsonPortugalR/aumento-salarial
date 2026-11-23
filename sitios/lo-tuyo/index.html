@@ -552,6 +552,132 @@ button.sr:hover { border-color: var(--violet-line); box-shadow: var(--shadow); }
   <article><h2>Viernes · Pescado a la plancha</h2><p>Filete de bonito con sal, pimienta y limón, con ensalada criolla y camote.</p></article>
 </div>
 <script>
+/* Libro de Reclamaciones virtual, compartido por Lo Tuyo, Buen Partido y Buen Ojo.
+   La hoja se guarda en el motor de cobros central (ruta /reclamo), con número correlativo por página y año,
+   y la persona recibe su constancia en pantalla para imprimirla o guardarla. Sin dependencias.
+   Uso: LibroReclamaciones.montar(contenedor, { cobros, sitio, servicio, proveedor: { nombre, ruc, domicilio }, privacidad })
+   Fuente única: cobros/web/libro-reclamaciones.js (repositorio aumento-salarial). Cada sitio lleva una copia. */
+(function (global) {
+  'use strict';
+  var esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  };
+  var CSS = '.lr{display:grid;gap:18px}.lr fieldset{border:1px solid rgba(127,127,127,.35);border-radius:12px;padding:14px 16px;margin:0;display:grid;gap:12px}' +
+    '.lr legend{font-weight:700;padding:0 6px}.lr label{display:grid;gap:6px;font-size:.95rem}.lr input,.lr select,.lr textarea{font:inherit;color:inherit;background:transparent;border:1px solid rgba(127,127,127,.5);border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box}' +
+    '.lr textarea{min-height:110px;resize:vertical}.lr .lr-dos{display:grid;gap:12px}@media(min-width:620px){.lr .lr-dos{grid-template-columns:1fr 1fr}}' +
+    '.lr .lr-op{display:flex;gap:18px;flex-wrap:wrap}.lr .lr-op label,.lr .lr-check{display:flex;gap:8px;align-items:center}.lr .lr-op input,.lr .lr-check input{width:auto}' +
+    '.lr .lr-fino{font-size:.86rem;opacity:.8;margin:0}.lr .lr-err{color:#b3261e;font-weight:600;margin:0}.lr dl{display:grid;gap:8px;margin:0}.lr dl div{display:grid;grid-template-columns:minmax(110px,32%) 1fr;gap:10px}' +
+    '.lr dt{opacity:.75}.lr dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.lr .lr-num{font-size:1.4rem;font-weight:700;letter-spacing:.02em}' +
+    '.lr .lr-boton{font:inherit;font-weight:700;cursor:pointer;border:0;border-radius:999px;padding:12px 20px;background:#1f2937;color:#fff}' +
+    '.lr .lr-boton[disabled]{opacity:.6;cursor:wait}@media print{.lr .lr-noimp{display:none}}';
+
+  function montar(raiz, op) {
+    op = op || {};
+    var P = op.proveedor || {};
+    if (!document.getElementById('lr-css')) {
+      var st = document.createElement('style');
+      st.id = 'lr-css'; st.textContent = CSS;
+      document.head.appendChild(st);
+    }
+    var pendiente = function (v, etiqueta) { return v ? esc(v) : esc(etiqueta) + ' por completar'; };
+    raiz.innerHTML =
+      '<div class="lr">' +
+      '<p>Conforme al Código de Protección y Defensa del Consumidor, este sitio cuenta con un Libro de Reclamaciones virtual a tu disposición.</p>' +
+      '<dl><div><dt>Proveedor</dt><dd>' + pendiente(P.nombre, 'Razón social') + '</dd></div>' +
+      '<div><dt>RUC</dt><dd>' + pendiente(P.ruc, 'RUC') + '</dd></div>' +
+      '<div><dt>Domicilio</dt><dd>' + pendiente(P.domicilio, 'Domicilio') + '</dd></div>' +
+      '<div><dt>Hoja N.°</dt><dd>Se asigna al enviar</dd></div></dl>' +
+      '<form class="lr" novalidate>' +
+      '<fieldset><legend>1. Tus datos</legend>' +
+      '<label>Nombre completo<input name="nombre" required maxlength="120" autocomplete="name"></label>' +
+      '<div class="lr-dos"><label>Documento<select name="tipo_documento"><option>DNI</option><option>Carné de extranjería</option><option>Pasaporte</option></select></label>' +
+      '<label>Número de documento<input name="documento" required maxlength="20" autocomplete="off"></label></div>' +
+      '<label>Domicilio<input name="domicilio" required maxlength="200" autocomplete="street-address"></label>' +
+      '<div class="lr-dos"><label>Teléfono (opcional)<input name="telefono" type="tel" maxlength="20" autocomplete="tel"></label>' +
+      '<label>Correo electrónico<input name="email" type="email" required maxlength="120" autocomplete="email"></label></div>' +
+      '<label class="lr-check"><input type="checkbox" name="menor"> Soy menor de edad</label>' +
+      '<label class="lr-apoderado" hidden>Nombre de tu madre, padre o apoderado<input name="apoderado" maxlength="120"></label>' +
+      '</fieldset>' +
+      '<fieldset><legend>2. Lo que contrataste</legend>' +
+      '<div class="lr-op"><label><input type="radio" name="bien" value="Servicio" checked> Servicio</label><label><input type="radio" name="bien" value="Producto"> Producto</label></div>' +
+      '<label>Descripción<input name="descripcion" maxlength="200" value="' + esc(op.servicio || '') + '"></label>' +
+      '<div class="lr-dos"><label>Monto reclamado en soles (opcional)<input name="monto" maxlength="12" inputmode="decimal"></label>' +
+      '<label>Código de compra (opcional)<input name="compra" maxlength="40" autocomplete="off" placeholder="XX-XXXX-XXXX"></label></div>' +
+      '</fieldset>' +
+      '<fieldset><legend>3. Tu reclamo o queja</legend>' +
+      '<div class="lr-op"><label><input type="radio" name="tipo" value="reclamo" checked> Reclamo</label><label><input type="radio" name="tipo" value="queja"> Queja</label></div>' +
+      '<p class="lr-fino"><b>Reclamo:</b> disconformidad con el producto o el servicio. <b>Queja:</b> disconformidad que no se relaciona con el producto o el servicio, o malestar con la atención.</p>' +
+      '<label>Detalle<textarea name="detalle" required maxlength="4000"></textarea></label>' +
+      '<label>Tu pedido: qué solución esperas<textarea name="pedido" required maxlength="2000"></textarea></label>' +
+      '</fieldset>' +
+      '<p class="lr-fino">Usamos estos datos solo para atender tu reclamo, como exige la ley' + (op.privacidad ? ' (ver la ' + op.privacidad + ')' : '') + '. Se guardan aparte de todo lo demás y por lo menos dos años.</p>' +
+      '<p class="lr-err" role="alert"></p>' +
+      '<p><button type="submit" class="lr-boton">Enviar hoja de reclamación</button></p>' +
+      '<p class="lr-fino">Te responderemos al correo que indiques en un plazo máximo de 15 días hábiles. La formulación del reclamo no impide acudir a otras vías de solución de controversias ni es requisito previo para interponer una denuncia ante el INDECOPI.</p>' +
+      '</form></div>';
+
+    var form = raiz.querySelector('form');
+    var err = raiz.querySelector('.lr-err');
+    var apod = raiz.querySelector('.lr-apoderado');
+    form.menor.addEventListener('change', function () { apod.hidden = !form.menor.checked; });
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      err.textContent = '';
+      var v = function (k) { return String((form[k] && form[k].value) || '').trim(); };
+      var datos = {
+        sitio: op.sitio, nombre: v('nombre'), tipo_documento: v('tipo_documento'), documento: v('documento'), domicilio: v('domicilio'),
+        telefono: v('telefono'), email: v('email'), menor: !!form.menor.checked, apoderado: v('apoderado'),
+        bien: (form.querySelector('[name=bien]:checked') || {}).value || 'Servicio', descripcion: v('descripcion'), monto: v('monto'), compra: v('compra'),
+        tipo: (form.querySelector('[name=tipo]:checked') || {}).value || 'reclamo', detalle: v('detalle'), pedido: v('pedido')
+      };
+      var falta = [];
+      if (datos.nombre.length < 3) falta.push('tu nombre');
+      if (datos.documento.length < 4) falta.push('tu número de documento');
+      if (datos.domicilio.length < 3) falta.push('tu domicilio');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(datos.email)) falta.push('un correo válido');
+      if (datos.menor && datos.apoderado.length < 3) falta.push('el nombre de tu apoderado');
+      if (datos.detalle.length < 5) falta.push('el detalle');
+      if (datos.pedido.length < 3) falta.push('tu pedido');
+      if (falta.length) { err.textContent = 'Falta completar: ' + falta.join(', ') + '.'; return; }
+      var boton = form.querySelector('button[type=submit]');
+      boton.disabled = true; boton.textContent = 'Enviando…';
+      fetch(op.cobros + '/reclamo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { r: r, j: j }; }); })
+        .then(function (x) {
+          if (x.r.ok && x.j.ok && x.j.numero) { constancia(raiz, P, datos, x.j); return; }
+          boton.disabled = false; boton.textContent = 'Enviar hoja de reclamación';
+          err.textContent = x.r.status === 429 ? 'Enviaste varias hojas seguidas. Espera unos minutos y vuelve a intentarlo.'
+            : x.r.status === 400 ? 'Revisa los campos: alguno quedó incompleto.' : 'No pudimos registrar tu hoja. Intenta de nuevo en un momento.';
+        })
+        .catch(function () {
+          boton.disabled = false; boton.textContent = 'Enviar hoja de reclamación';
+          err.textContent = 'No pudimos conectar. Revisa tu conexión e intenta de nuevo.';
+        });
+    });
+  }
+
+  function constancia(raiz, P, d, r) {
+    var fecha = new Date(r.fecha || Date.now()).toLocaleString('es-PE', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/Lima' });
+    var filas = [
+      ['Proveedor', [P.nombre, P.ruc ? 'RUC ' + P.ruc : ''].filter(Boolean).join(', ')], ['Fecha', fecha],
+      ['Nombre', d.nombre], [d.tipo_documento, d.documento], ['Domicilio', d.domicilio], ['Teléfono', d.telefono], ['Correo', d.email],
+      ['Menor de edad', d.menor ? 'Sí. Apoderado: ' + d.apoderado : 'No'], ['Contrató', [d.bien, d.descripcion].filter(Boolean).join(': ')],
+      ['Monto reclamado', d.monto ? 'S/ ' + d.monto : ''], ['Código de compra', d.compra], ['Tipo', d.tipo === 'queja' ? 'Queja' : 'Reclamo'],
+      ['Detalle', d.detalle], ['Pedido', d.pedido]
+    ].filter(function (f) { return f[1]; });
+    raiz.innerHTML = '<div class="lr"><h2>Recibimos tu hoja de reclamación</h2>' +
+      '<p>Hoja N.° <span class="lr-num">' + esc(r.numero) + '</span></p>' +
+      '<p>Guarda o imprime esta constancia. Te responderemos al correo que indicaste en un plazo máximo de 15 días hábiles.</p>' +
+      '<dl>' + filas.map(function (f) { return '<div><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>'; }).join('') + '</dl>' +
+      '<p class="lr-noimp"><button type="button" class="lr-boton">Imprimir o guardar en PDF</button></p></div>';
+    raiz.querySelector('button').addEventListener('click', function () { window.print(); });
+    try { raiz.scrollIntoView({ block: 'start' }); } catch (e) { /* sin desplazamiento */ }
+  }
+
+  global.LibroReclamaciones = { montar: montar };
+})(window);
+</script>
+<script>
 /* Lo Tuyo — contenido y motor de reglas. Sin acceso al DOM: se prueba en Node. */
 const LT = (() => {
   const UPDATED = '11 de octubre de 2026';
@@ -3248,16 +3374,23 @@ if (typeof module !== 'undefined') module.exports = LT;
         ${pagoReal()
           ? `<p>El reporte completo se paga con tarjeta, en la página segura de Mercado Pago: no vemos ni guardamos los datos de tu tarjeta. De cada compra guardamos solo un número de pedido al azar, el precio, la fecha, el estado del pago y el código de acceso, sin nada que te identifique. En el estado de cuenta y en el correo de Mercado Pago figura como «Reporte personalizado» de PORTUGALRI. Las consultas y los trámites con abogadas todavía no están activos.</p>`
           : '<p>Esta es una versión de prueba: los pagos, las consultas y los trámites con abogadas todavía no están activos y no se realiza ningún cobro.</p>'}
-        <p class="small muted">Lo Tuyo es un servicio de ${esc(PROVEEDOR.nombre)}, RUC ${PROVEEDOR.ruc ? esc(PROVEEDOR.ruc) : 'por completar'}, con domicilio en ${esc(PROVEEDOR.domicilio)}.</p>
+        <p class="small muted">Lo Tuyo es un servicio de ${esc(PROVEEDOR.nombre)}, RUC ${PROVEEDOR.ruc ? esc(PROVEEDOR.ruc) : 'por completar'}, con domicilio en ${esc(PROVEEDOR.domicilio)}. Si quieres presentar un reclamo o una queja, usa el <button class="link small" data-act="go" data-view="libro">Libro de Reclamaciones</button>: los datos que escribas ahí se usan solo para atenderte, como exige la ley, y se guardan aparte por lo menos dos años.</p>
       </section>
       ${safetyPanel({ k: 'about' })}
+    </div></div>`;
+  }
+
+  function libro() {
+    return `<div class="wrap page"><div class="narrow stack" style="--gap:22px">
+      <header class="page-head"><p class="eyebrow">Atención</p><h1 class="h1" tabindex="-1">Libro de Reclamaciones</h1></header>
+      <div id="libro-root"></div>
     </div></div>`;
   }
 
   const footer = () => `<div class="wrap foot-grid">
       <div class="stack" style="--gap:10px"><p class="brand-s">Lo Tuyo</p><p>Información legal general para mujeres en el Perú, en lenguaje claro. No reemplaza la asesoría de una abogada para tu caso.</p><p class="fine">Contenido actualizado al ${esc(LT.UPDATED)}. Versión de prueba, pendiente de revisión legal.</p></div>
       <div class="stack" style="--gap:10px"><p class="eyebrow">Ayuda gratuita</p><ul class="nums"><li><b>105</b>Policía, si estás en peligro</li><li><b>100</b>Línea 100, las 24 horas</li><li><b>1884</b>Fono ALEGRA, Defensa Pública</li></ul><p class="small"><a href="https://chat100.warminan.gob.pe/" target="_blank" rel="noopener noreferrer">Chat 100</a>, si prefieres escribir</p></div>
-      <div class="stack" style="--gap:10px;align-items:flex-start"><p class="eyebrow">Lo Tuyo</p><button class="link small" data-act="go" data-view="about">Privacidad y aviso legal</button><button class="link small" data-act="go" data-view="guides">Guías</button><button class="link small" data-act="go" data-view="myths">Mitos</button><button class="link small" data-act="go" data-view="tools">Herramientas</button>${ANA.can ? '<button class="link small" data-act="go" data-view="analytics">Analítica (equipo)</button>' : ''}</div>
+      <div class="stack" style="--gap:10px;align-items:flex-start"><p class="eyebrow">Lo Tuyo</p><button class="link small" data-act="go" data-view="about">Privacidad y aviso legal</button><button class="link small" data-act="go" data-view="libro">Libro de Reclamaciones</button><button class="link small" data-act="go" data-view="guides">Guías</button><button class="link small" data-act="go" data-view="myths">Mitos</button><button class="link small" data-act="go" data-view="tools">Herramientas</button>${ANA.can ? '<button class="link small" data-act="go" data-view="analytics">Analítica (equipo)</button>' : ''}</div>
     </div>`;
 
   /* ---------- Textos para copiar ---------- */
@@ -3619,7 +3752,7 @@ if (typeof module !== 'undefined') module.exports = LT;
   const CONFIG = {"endpoint":"https://unzbrfdqsjjpnokirlsk.supabase.co","key":"sb_publishable_pQl7uS1o7RBKFbBT4HvKZA_AtzcWanV"}; /* p. ej. endpoint: 'https://<proyecto>.supabase.co', key: '<clave pública anon>' */
   const DNT = (() => { try { return navigator.globalPrivacyControl === true || navigator.doNotTrack === '1' || window.doNotTrack === '1'; } catch (e) { return false; } })();
   const TR = { on: !DNT, dnt: DNT, ready: false, dead: false, started: false, db: null, sid: '', d: null, t: null, busy: false, again: false, last: '', retried: false, lastView: '' };
-  const VNAME = { home: 'inicio', test: 'test', result: 'resultado', guides: 'guias', myths: 'mitos', tools: 'herramientas', about: 'privacidad' };
+  const VNAME = { home: 'inicio', test: 'test', result: 'resultado', guides: 'guias', myths: 'mitos', tools: 'herramientas', about: 'privacidad', libro: 'libro' };
   function rid() {
     try { const b = new Uint8Array(16); crypto.getRandomValues(b); return Array.from(b, x => x.toString(16).padStart(2, '0')).join(''); }
     catch (e) { let s = ''; while (s.length < 32) s += Math.random().toString(36).slice(2); return s.slice(0, 32); }
@@ -3905,13 +4038,16 @@ if (typeof module !== 'undefined') module.exports = LT;
   }
 
   /* ---------- Navegación ---------- */
-  const VIEWS = { home, test, result, guides, guide, myths, tools, about, analytics, pagado };
-  const NAV = { home: 'home', test: 'test', result: 'test', guides: 'guides', guide: 'guides', myths: 'myths', tools: 'tools', about: '', analytics: '', pagado: '' };
+  const VIEWS = { home, test, result, guides, guide, myths, tools, about, analytics, pagado, libro };
+  const NAV = { home: 'home', test: 'test', result: 'test', guides: 'guides', guide: 'guides', myths: 'myths', tools: 'tools', about: '', analytics: '', pagado: '', libro: '' };
   function render(opt) {
     opt = opt || {};
     if (exited) return;
     const v = $('#view');
     v.innerHTML = (VIEWS[S.view] || home)();
+    if (S.view === 'libro' && window.LibroReclamaciones) {
+      window.LibroReclamaciones.montar($('#libro-root'), { cobros: COBROS.url, sitio: 'lo-tuyo', servicio: 'Reporte completo de Lo Tuyo', proveedor: PROVEEDOR, privacidad: 'sección «Privacidad y aviso legal»' });
+    }
     trView();
     const cur = NAV[S.view];
     $$('.nav [data-view]').forEach(b => { if (b.dataset.view === cur) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
@@ -4174,7 +4310,7 @@ if (typeof module !== 'undefined') module.exports = LT;
   trInit(); /* crea el registro en memoria ya mismo; la base de datos llega después, si la hay */
   capInit(); /* el PDF se ofrece solo si este visor permite descargas */
   $('#foot').innerHTML = footer();
-  const DEEP = { test: 'test', guias: 'guides', glosario: 'guides', mitos: 'myths', herramientas: 'tools', privacidad: 'about', analitica: 'analytics' };
+  const DEEP = { test: 'test', guias: 'guides', glosario: 'guides', mitos: 'myths', herramientas: 'tools', privacidad: 'about', analitica: 'analytics', 'libro-de-reclamaciones': 'libro' };
   const hot = window.claude && window.claude.hot;
   /* Si la página se actualiza mientras está abierta: se conserva la salida rápida y la sección, nunca las respuestas. */
   try {

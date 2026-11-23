@@ -6,7 +6,7 @@
 //   GET  /estado?pedido=           confirma el pago con Mercado Pago; si está pagado, entrega el código de acceso
 //   POST /aviso                    aviso de Mercado Pago (webhook)
 //   POST /codigo                   valida un código de acceso en otro equipo
-//   POST /reclamo                  registra una hoja del Libro de Reclamaciones (Lo Tuyo y Buen Partido)
+//   POST /reclamo                  registra una hoja del Libro de Reclamaciones (Lo Tuyo, Buen Partido y Buen Ojo)
 //   GET  /resumen                  panel: ventas, pedidos y reclamos (cabecera x-panel con el token)
 //   POST /reclamo/respondido       panel: marca una hoja como respondida
 import { crearPreferencia, estadoEnMP, pedidoDePago } from './mp.js';

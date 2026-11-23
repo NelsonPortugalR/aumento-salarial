@@ -31,6 +31,10 @@ Sin la clave, cada página sigue como antes (beta, demo o pedido por WhatsApp) y
 
 Hay un límite de solicitudes por IP en `crear`, `cupon`, `codigo`, `reclamo` y el panel.
 
+## Libro de Reclamaciones
+
+`web/libro-reclamaciones.js` es el formulario único (sin dependencias) que usan Lo Tuyo (vista `#libro-de-reclamaciones`), Buen Partido (`/#libro`) y Buen Ojo (`/libro-de-reclamaciones/`): pide los datos que exige la ley, guarda la hoja con `POST /reclamo` y muestra la constancia con su número para imprimir. Cada sitio lleva una copia; si lo cambias, cópialo a los tres. Las hojas se ven y se marcan como respondidas en `/panel` de Pídelo Bien. Responde al correo de cada persona en un plazo máximo de 15 días hábiles.
+
 ## Cómo se conecta una página
 
 1. Al cargar, `GET /disponible?producto=<id>`. Si es `true`, muestra el pago con tarjeta; si no, deja su comportamiento actual.
